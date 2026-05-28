@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     console.log('✅ Stripe key loaded successfully')
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
+      apiVersion: '2023-10-16',
     })
 
     const { successUrl, cancelUrl } = await req.json()
