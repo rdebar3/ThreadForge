@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 9 9 11;
+  --foreground: 244 244 245;
+}
+
+body {
+  font-feature-settings: "rlig" 1, "kern" 1;
+}
+
+.thread-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.thread-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.tweet {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.copy-button {
+  transition: all 0.1s ease;
+}
+
+.copy-button:active {
+  transform: scale(0.97);
+}
