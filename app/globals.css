@@ -9,6 +9,10 @@
 
 body {
   font-feature-settings: "rlig" 1, "kern" 1;
+  background-color: #0a0a0c;
+  background-image: 
+    radial-gradient(circle at 25% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
 }
 
 .thread-card {
@@ -31,4 +35,11 @@ body {
 
 .copy-button:active {
   transform: scale(0.97);
+}
+
+/* Cool animated blob effect for hero */
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 30px) scale(0.95); }
 }

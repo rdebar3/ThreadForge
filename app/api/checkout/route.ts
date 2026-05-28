@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-})
+import { auth } from '@clerk/nextjs/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { successUrl, cancelUrl } = await req.json()
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('❌ STRIPE_SECRET_KEY is missing!')
+      throw new Error('Stripe API key is not set')
+    }
 
-    // Create a Stripe Checkout Session for $9 one-time
+    console.log('✅ Stripe key loaded successfully')
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-06-20',
+    })
+
+    const { successUrl, cancelUrl } = await req.json()
+    const { userId } = await auth()
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -21,23 +29,24 @@ export async function POST(req: NextRequest) {
               name: 'ThreadForge - Unlimited Access',
               description: 'One-time payment for unlimited thread generations',
             },
-            unit_amount: 900, // $9.00 in cents
+            unit_amount: 900,
           },
           quantity: 1,
         },
       ],
       success_url: successUrl || `${req.nextUrl.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${req.nextUrl.origin}/generate?cancelled=true`,
+      cancel_url: cancelUrl || `${req.nextUrl.origin}/`,
+      client_reference_id: userId || undefined,
       metadata: {
         product: 'threadforge_unlimited',
       },
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Stripe checkout error:', error)
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: error.message || 'Failed to create checkout session' },
       { status: 500 }
     )
   }
