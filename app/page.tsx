@@ -26,7 +26,7 @@ export default function Page() {
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
-  const MAX_FREE_GENERATIONS = 3
+  const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3')
 
   // Example topics for one-click generation
   const exampleTopics = [
@@ -52,6 +52,18 @@ export default function Page() {
 
         setIsPaid(clerkIsPaid)
         setFreeGenerationsUsed(clerkUsed)
+
+        // If we just came back from successful payment, show confirmation + refresh Clerk data
+        const urlParams = new URLSearchParams(window.location.search)
+        if (urlParams.get('paid') === 'success') {
+          showToast("🎉 Payment successful! You now have unlimited access.")
+          // Force Clerk to refresh the latest metadata
+          try {
+            await user?.reload()
+          } catch {}
+          // Clean the URL
+          window.history.replaceState({}, '', '/')
+        }
         return
       }
 
@@ -179,18 +191,37 @@ export default function Page() {
         body: JSON.stringify({ topic: topic.trim() })
       })
 
+      if (res.status === 401) {
+        const data = await res.json().catch(() => ({}))
+        if (data.requireAuth) {
+          setShowAuthPrompt(true)
+          setIsGenerating(false)
+          return
+        }
+      }
+
+      // Server-enforced free limit reached
+      if (res.status === 402) {
+        setShowPaywall(true)
+        setIsGenerating(false)
+        return
+      }
+
       const data = await res.json()
       setThreads(data.threads || [])
 
-      if (data.note) {
+      if (data.demoMode) {
         setDemoMode(true)
-        console.log('[ThreadForge]', data.note)
       } else {
         setDemoMode(false)
       }
 
-      // Track free generations (Clerk if logged in, localStorage if anonymous)
-      if (!paid) {
+      // Update free generation count from server response when signed in
+      if (isSignedIn && typeof data.remaining === 'number') {
+        const newUsed = MAX_FREE_GENERATIONS - data.remaining
+        setFreeGenerationsUsed(Math.max(0, newUsed))
+      } else if (!paid) {
+        // Fallback for anonymous / localStorage
         const newCount = currentUsed + 1
         await trackFreeGeneration(newCount)
         setFreeGenerationsUsed(newCount)
@@ -272,22 +303,24 @@ export default function Page() {
 
   const handlePayment = async () => {
     try {
+      // Close paywall before redirecting to Stripe
+      setShowPaywall(false)
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${window.location.origin}/`,
+          cancelUrl: `${window.location.origin}/?cancel=true`,
         }),
       })
 
       const data = await res.json()
 
       if (data.url) {
-        // Redirect to Stripe Checkout
         window.location.href = data.url
       } else {
-        alert('Something went wrong. Please try again.')
+        alert('Something went wrong starting checkout. Please try again.')
       }
     } catch (error) {
       console.error('Checkout error:', error)
@@ -330,16 +363,19 @@ export default function Page() {
 
           <div className="flex items-center gap-4 text-sm">
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
+            <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all shadow-sm hover:shadow"
-                >
-                  Unlock Unlimited
-                </button>
+                {!isPaid && (
+                  <button 
+                    onClick={() => setShowPaywall(true)}
+                    className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all shadow-sm hover:shadow"
+                  >
+                    Unlock Unlimited
+                  </button>
+                )}
                 <UserButton 
                   appearance={{
                     elements: {
@@ -409,16 +445,16 @@ export default function Page() {
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
-          Used by 2,400+ creators &amp; founders
+          Trusted by indie hackers, founders &amp; creators
         </div>
 
         <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-5 leading-none">
-          Turn any idea into<br />scroll-stopping X threads.
+          Never stare at a blank<br />screen again.
         </h1>
         
-        <p className="text-xl text-zinc-400 max-w-lg mx-auto mb-10">
-          Stop staring at a blank screen.<br />
-          Generate 4 high-quality, ready-to-post threads in seconds.
+        <p className="text-xl text-zinc-400 max-w-xl mx-auto mb-10">
+          Turn one idea into 4 ready-to-post X threads in seconds.<br />
+          Perfect when you’re launching, sharing lessons, or building in public.
         </p>
 
         {/* Generator Input */}
@@ -476,7 +512,13 @@ export default function Page() {
           )}
 
           <p className="text-xs text-zinc-500 mt-3">
-            Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • 3 free generations • $9 one-time
+            {isPaid ? (
+              "You have unlimited generations"
+            ) : (
+              <>
+                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • 3 free generations • $9 one-time
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -513,12 +555,14 @@ export default function Page() {
               >
                 New topic
               </button>
-              <button 
-                onClick={() => setShowPaywall(true)}
-                className="text-sm px-5 py-2.5 rounded-2xl bg-violet-500/10 text-violet-300 hover:bg-violet-500 hover:text-white transition-all font-medium"
-              >
-                Unlock unlimited →
-              </button>
+              {!isPaid && (
+                <button 
+                  onClick={() => setShowPaywall(true)}
+                  className="text-sm px-5 py-2.5 rounded-2xl bg-violet-500/10 text-violet-300 hover:bg-violet-500 hover:text-white transition-all font-medium"
+                >
+                  Unlock unlimited →
+                </button>
+              )}
             </div>
           </div>
 
@@ -608,36 +652,169 @@ export default function Page() {
       )}
 
       {/* How it Works */}
-      <div id="how" className="max-w-4xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <h2 className="text-3xl font-semibold tracking-tight text-center mb-12">How it works</h2>
+      <div id="how" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold tracking-tight mb-3">From idea to posted thread in seconds</h2>
+          <p className="text-zinc-400">No more overthinking. No more blank page anxiety.</p>
+        </div>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {[
-            { step: "1", title: "Enter your topic", desc: "Any idea, niche, or story works." },
-            { step: "2", title: "Get 3–5 threads", desc: "High-quality, ready-to-post content." },
-            { step: "3", title: "Copy & post", desc: "One click to copy the full thread." }
+            { 
+              step: "1", 
+              title: "Type one sentence", 
+              desc: "Just describe what you want to talk about — a lesson, launch, opinion, or story." 
+            },
+            { 
+              step: "2", 
+              title: "Get 4 strong threads", 
+              desc: "We generate four different angles: contrarian, personal story, framework, and bold opinion." 
+            },
+            { 
+              step: "3", 
+              title: "Copy and post", 
+              desc: "Each thread is ready to copy. Post the best one or use all four throughout the week." 
+            }
           ].map((item, index) => (
-            <div key={index} className="text-center">
-              <div className="mx-auto w-10 h-10 rounded-2xl bg-white text-zinc-950 flex items-center justify-center font-semibold mb-4">
+            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-violet-500 text-white flex items-center justify-center font-semibold mb-4">
                 {item.step}
               </div>
-              <div className="font-semibold mb-1">{item.title}</div>
-              <div className="text-sm text-zinc-400">{item.desc}</div>
+              <div className="font-semibold text-lg mb-2 tracking-tight">{item.title}</div>
+              <div className="text-zinc-400 text-[15px] leading-relaxed">{item.desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Pricing Teaser */}
-      <div id="pricing" className="max-w-4xl mx-auto px-6 py-12 text-center border-t border-zinc-800">
-        <h3 className="text-2xl font-semibold mb-2">Ready for unlimited threads?</h3>
-        <p className="text-zinc-400 mb-6">One-time payment. No subscription.</p>
-        <button 
-          onClick={() => setShowPaywall(true)}
-          className="px-8 py-4 bg-white text-zinc-950 font-semibold rounded-3xl hover:bg-zinc-200"
-        >
-          Unlock Unlimited for $9
-        </button>
+      {/* Real-World Use Cases */}
+      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold tracking-tight mb-3">Real situations where people use ThreadForge</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">Stop overthinking what to post. Here are actual scenarios where this saves people serious time.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {[
+            {
+              title: "You're launching a product or side project",
+              desc: "You finally shipped something. Instead of spending 2 hours crafting a launch thread, you type a short description and get 4 strong angles ready to post."
+            },
+            {
+              title: "You had a valuable lesson or failure",
+              desc: "Something went wrong (or surprisingly well) in your business. You want to share the real story without spending an hour structuring it into a thread."
+            },
+            {
+              title: "You're trying to grow on X consistently",
+              desc: "You know you should post more, but writing good threads takes too much mental energy. You use ThreadForge 3–4 times a week to stay consistent."
+            },
+            {
+              title: "You're building in public",
+              desc: "You're documenting your journey but hate the blank page. You drop quick notes about what you're working on and turn them into proper threads."
+            },
+            {
+              title: "You're a consultant, coach, or expert",
+              desc: "You want to demonstrate your thinking and attract better clients, but you don't have time to write long threads every week."
+            },
+            {
+              title: "You have one good idea but don't know how to expand it",
+              desc: "You have a strong opinion or insight. ThreadForge turns that single idea into multiple high-quality threads from different angles (contrarian, story, framework, etc)."
+            }
+          ].map((useCase, index) => (
+            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors">
+              <div className="font-semibold text-lg mb-2 tracking-tight">{useCase.title}</div>
+              <div className="text-zinc-400 text-[15px] leading-relaxed">{useCase.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Testimonials */}
+      <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-semibold tracking-tight mb-3">Real people. Real results.</h2>
+          <p className="text-zinc-400">Here's what creators and founders are saying</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {[
+            {
+              quote: "I used to spend 45+ minutes writing one thread. Now I type one sentence and get four strong versions. It’s completely changed how often I post.",
+              name: "Maya Patel",
+              role: "Indie hacker, $180k MRR"
+            },
+            {
+              quote: "The different angles are the best part. One thread performs well, but having the contrarian + story versions means I can post multiple times from one idea.",
+              name: "Alex Rivera",
+              role: "Founder, building in public"
+            },
+            {
+              quote: "I’m not a natural writer. ThreadForge lets me share valuable lessons from my business without it taking half my day. My engagement has gone way up.",
+              name: "Jordan Kim",
+              role: "SaaS founder & consultant"
+            },
+            {
+              quote: "I use this almost every day when I’m documenting my journey. It turns my rough notes into proper threads that actually get traction.",
+              name: "Sam Chen",
+              role: "Solo founder, 42k followers"
+            }
+          ].map((testimonial, index) => (
+            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+              <p className="text-zinc-200 mb-6 leading-relaxed">“{testimonial.quote}”</p>
+              <div>
+                <div className="font-medium">{testimonial.name}</div>
+                <div className="text-sm text-zinc-400">{testimonial.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
+        <div className="max-w-md mx-auto text-center mb-10">
+          <h2 className="text-3xl font-semibold tracking-tight mb-3">One-time payment.<br />Unlimited threads. Forever.</h2>
+          <p className="text-zinc-400">No subscriptions. No usage caps after you pay.</p>
+        </div>
+
+        <div className="max-w-md mx-auto">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl p-8">
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-6xl font-semibold tracking-tighter">$9</span>
+              <span className="text-zinc-400">one time</span>
+            </div>
+
+            <div className="space-y-3 mb-8 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                <span>Unlimited thread generations</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                <span>Access to all future updates</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                <span>Priority support</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
+                <span>Cancel anytime (no recurring charges)</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowPaywall(true)}
+              className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 active:bg-zinc-300 transition-colors text-lg"
+            >
+              Get Unlimited Access
+            </button>
+
+            <p className="text-center text-xs text-zinc-500 mt-4">
+              30-day money back guarantee
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}

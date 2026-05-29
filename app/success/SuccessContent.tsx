@@ -23,17 +23,23 @@ export default function SuccessContent() {
         const data = await res.json()
 
         if (data.paid) {
-          localStorage.setItem('threadforge_paid', 'true')
-          localStorage.setItem('threadforge_paid_at', new Date().toISOString())
-
-          // Also mark the user as paid in Clerk if they're logged in
+          // Mark the user as paid in Clerk (this is the source of truth)
           try {
             await fetch('/api/mark-paid', { method: 'POST' })
           } catch (e) {
-            console.log('Could not sync paid status to Clerk (user may not be logged in)')
+            console.error('Could not mark user as paid in Clerk')
           }
 
+          // Clear any old localStorage data (cleanup)
+          localStorage.removeItem('threadforge_paid')
+          localStorage.removeItem('threadforge_paid_at')
+
           setStatus('success')
+
+          // Redirect back to app with success flag so it can refresh paid status
+          setTimeout(() => {
+            window.location.href = '/?paid=success'
+          }, 1800)
         } else {
           setStatus('error')
         }
@@ -110,7 +116,7 @@ export default function SuccessContent() {
         </div>
 
         <p className="text-[10px] text-zinc-500 mt-6">
-          Note: Unlimited access is saved in your browser for now. Clearing browser data will reset it.
+          Unlimited access is saved to your account.
         </p>
       </div>
     </div>

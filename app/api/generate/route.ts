@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 
-const XAI_API_KEY = process.env.XAI_API_KEY
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
 
 interface Thread {
@@ -9,23 +9,62 @@ interface Thread {
   tweets: string[]
 }
 
+const MAX_FREE_GENERATIONS = 3
+
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json(
+        { 
+          error: 'Please sign in to generate threads',
+          requireAuth: true 
+        },
+        { status: 401 }
+      )
+    }
+
     const { topic } = await req.json()
 
     if (!topic || typeof topic !== 'string') {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
     }
 
-    if (!XAI_API_KEY) {
-      // Fallback to high-quality mock if no API key (for development)
-      return NextResponse.json({ 
-        threads: generateMockThreads(topic),
-        note: "Using demo mode. Add XAI_API_KEY to .env.local for real Grok generation."
-      })
+    // ============================================
+    // ENFORCE FREE TIER + PAID STATUS (Server side)
+    // ============================================
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const metadata = user.publicMetadata as {
+      hasPaid?: boolean
+      freeGenerationsUsed?: number
     }
 
-    const systemPrompt = `You are a world-class Twitter/X thread writer known for creating highly shareable, natural-sounding threads that perform well.
+    const hasPaid = metadata?.hasPaid === true
+    const used = metadata?.freeGenerationsUsed ?? 0
+
+    if (!hasPaid && used >= MAX_FREE_GENERATIONS) {
+      return NextResponse.json({
+        error: 'Free generation limit reached',
+        limitReached: true,
+        used,
+        max: MAX_FREE_GENERATIONS,
+      }, { status: 402 })
+    }
+
+    // Get API key
+    const apiKey = process.env.XAI_API_KEY?.trim()
+
+    let threads: Thread[] = []
+    let demoMode = false
+
+    if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
+      console.warn('⚠️ No valid XAI_API_KEY found — falling back to demo mode')
+      threads = generateMockThreads(topic)
+      demoMode = true
+    } else {
+      const systemPrompt = `You are a world-class Twitter/X thread writer known for creating highly shareable, natural-sounding threads that perform well.
 
 Core rules for every thread:
 - Write like a smart, articulate human — not like an AI or corporate account.
@@ -57,92 +96,113 @@ Format:
   ]
 }`
 
-    const userPrompt = `Topic: ${topic}
+      const userPrompt = `Topic: ${topic}\n\nWrite 4 high-quality, viral-style X threads about this topic.`
 
-Write 4 high-quality, viral-style X threads about this topic.`
+      const response = await fetch(XAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'grok-3',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.85,
+          max_tokens: 2800,
+        }),
+      })
 
-    const response = await fetch(XAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${XAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'grok-2-1212', // or 'grok-beta' depending on what's available
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.85,
-        max_tokens: 2800,
-      }),
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Grok API error:', response.status, errorText)
+
+        if (response.status === 429 || response.status >= 500) {
+          threads = generateMockThreads(topic)
+          demoMode = true
+        } else {
+          return NextResponse.json(
+            { error: "Failed to generate threads" },
+            { status: 502 }
+          )
+        }
+      } else {
+        const data = await response.json()
+        const content = data.choices?.[0]?.message?.content
+
+        if (content) {
+          try {
+            const jsonMatch = content.match(/\{[\s\S]*\}/)
+            const jsonString = jsonMatch ? jsonMatch[0] : content
+            const parsed = JSON.parse(jsonString)
+            threads = parsed.threads || []
+          } catch (e) {
+            console.error('Failed to parse JSON from Grok')
+            threads = generateMockThreads(topic)
+            demoMode = true
+          }
+        } else {
+          threads = generateMockThreads(topic)
+          demoMode = true
+        }
+      }
+    }
+
+    // ============================================
+    // INCREMENT FREE GENERATION COUNT (if not paid)
+    // ============================================
+    if (!hasPaid) {
+      const newUsed = used + 1
+      try {
+        await client.users.updateUserMetadata(userId, {
+          publicMetadata: {
+            ...metadata,
+            freeGenerationsUsed: newUsed,
+          },
+        })
+      } catch (err) {
+        console.error('Failed to update free generation count:', err)
+      }
+    }
+
+    return NextResponse.json({ 
+      threads, 
+      demoMode,
+      remaining: hasPaid ? null : Math.max(0, MAX_FREE_GENERATIONS - (used + 1))
     })
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Grok API error:', error)
-      return NextResponse.json({ 
-        threads: generateMockThreads(topic),
-        note: "AI generation failed. Using high-quality demo threads instead."
-      })
-    }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
-      return NextResponse.json({ 
-        threads: generateMockThreads(topic),
-        note: "Could not parse AI response. Using demo threads."
-      })
-    }
-
-    // Parse the JSON from Grok's response
-    let parsed
-    try {
-      // Grok sometimes wraps JSON in markdown code blocks
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      const jsonString = jsonMatch ? jsonMatch[0] : content
-      parsed = JSON.parse(jsonString)
-    } catch (e) {
-      console.error('Failed to parse Grok response:', content)
-      return NextResponse.json({ 
-        threads: generateMockThreads(topic),
-        note: "AI returned unexpected format. Using demo threads."
-      })
-    }
-
-    return NextResponse.json({ threads: parsed.threads || [] })
 
   } catch (error) {
     console.error('Generation error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       threads: generateMockThreads('general topic'),
-      note: "Something went wrong. Using demo threads."
+      demoMode: true
     }, { status: 500 })
   }
 }
 
-// Fallback high-quality mock generator (used when no API key)
+// Fallback mock generator
 function generateMockThreads(topic: string): Thread[] {
+  const cleanTopic = topic.toLowerCase()
   return [
     {
       id: 1,
       title: "The Contrarian Take",
       tweets: [
-        `1/ Most people get ${topic} completely wrong.`,
+        `1/ Most people get ${cleanTopic} completely wrong.`,
         `2/ They focus on the obvious stuff and miss what actually moves the needle.`,
         `3/ After studying this for months, here's the uncomfortable truth:`,
         `4/ The people winning aren't doing what the gurus are teaching.`,
         `5/ They're doing the boring, unsexy version that actually compounds.`,
-        `6/ Save this if you're serious about ${topic}.`
+        `6/ Save this if you're serious about ${cleanTopic}.`
       ]
     },
     {
       id: 2,
       title: "Story + Lesson",
       tweets: [
-        `1/ I used to suck at ${topic}.`,
+        `1/ I used to suck at ${cleanTopic}.`,
         `2/ I tried all the popular advice. Nothing worked.`,
         `3/ Then I tried something different.`,
         `4/ Within 60 days, everything changed.`,
@@ -154,7 +214,7 @@ function generateMockThreads(topic: string): Thread[] {
       id: 3,
       title: "Simple Framework",
       tweets: [
-        `1/ Here's the exact framework I use for ${topic}:`,
+        `1/ Here's the exact framework I use for ${cleanTopic}:`,
         `2/ Step 1: Start embarrassingly small.`,
         `3/ Step 2: Focus only on the highest leverage action.`,
         `4/ Step 3: Create fast feedback loops.`,
@@ -166,7 +226,7 @@ function generateMockThreads(topic: string): Thread[] {
       id: 4,
       title: "Bold Opinion",
       tweets: [
-        `1/ Hot take on ${topic}:`,
+        `1/ Hot take on ${cleanTopic}:`,
         `2/ The "beginner friendly" advice is actually keeping most people stuck.`,
         `3/ Real progress requires doing the hard, uncomfortable version early.`,
         `4/ Comfort is the enemy of growth in this game.`,

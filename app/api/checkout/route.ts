@@ -4,14 +4,17 @@ import { auth } from '@clerk/nextjs/server'
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('❌ STRIPE_SECRET_KEY is missing!')
-      throw new Error('Stripe API key is not set')
+    const secretKey = process.env.STRIPE_SECRET_KEY
+
+    if (!secretKey) {
+      console.error('STRIPE_SECRET_KEY is missing in environment variables')
+      return NextResponse.json(
+        { error: 'Payment system not configured' },
+        { status: 500 }
+      )
     }
 
-    console.log('✅ Stripe key loaded successfully')
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    const stripe = new Stripe(secretKey, {
       apiVersion: '2023-10-16',
     })
 
@@ -23,14 +26,7 @@ export async function POST(req: NextRequest) {
       mode: 'payment',
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'ThreadForge - Unlimited Access',
-              description: 'One-time payment for unlimited thread generations',
-            },
-            unit_amount: 900,
-          },
+          price: 'price_1TcFakCS6rFBWmntHVjrbe8t',
           quantity: 1,
         },
       ],

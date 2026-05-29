@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeSecret = process.env.STRIPE_SECRET_KEY
+
+if (!stripeSecret) {
+  console.error('❌ STRIPE_SECRET_KEY is missing')
+}
+
+const stripe = new Stripe(stripeSecret || '', {
   apiVersion: '2023-10-16',
 })
 
