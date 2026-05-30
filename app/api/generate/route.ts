@@ -104,57 +104,61 @@ export async function POST(req: NextRequest) {
       threads = generateMockThreads(topic)
       demoMode = true
     } else {
-      // Dynamic angles for variety (shuffled each generation)
+      // High-signal angles that tend to perform well on X in 2026
       const allAngles = [
-        "Contrarian / Unexpected truth that challenges common beliefs",
-        "Personal story or \"I used to think...\" transformation",
-        "Clear, actionable framework with specific steps",
-        "Strong opinion backed by real observations or data",
-        "Behind-the-scenes look or 'what no one tells you'",
-        "30-day experiment or real-world test results",
-        "Common mistakes and how to avoid them",
-        "Counterintuitive insight that actually works better"
+        "Contrarian take that challenges popular advice on the topic",
+        "Personal story or \"I used to believe... until I tried it\" transformation",
+        "Specific mistake you made + what you learned from it",
+        "Behind-the-scenes observation or 'what no one talks about'",
+        "What actually worked for you after testing (with receipts or specifics)",
+        "Counterintuitive insight that goes against conventional wisdom",
+        "How the game has changed in 2025–2026 and what to do instead",
+        "Common pattern you’ve noticed that most people miss"
       ]
 
-      // Shuffle and pick 4 unique angles
+      // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const systemPrompt = `You are a world-class Twitter/X thread writer known for creating highly shareable, natural-sounding threads that perform well in 2026.
+      const systemPrompt = `You are an excellent X (Twitter) thread writer in 2026. You write threads that actually perform well on the current platform — not generic, outdated thread templates.
 
-Core rules for every thread:
-- Write like a smart, articulate human — not like an AI or corporate account.
-- Use short sentences. Lots of line breaks. Make it easy to read on mobile.
-- Strong hook in the very first tweet (question, bold statement, or surprising claim).
-- Mix storytelling, contrarian angles, specific insights, and practical value.
-- Number every single tweet (1/, 2/, 3/ ...).
-- Keep most tweets under 260 characters.
-- End with a strong closer, question, or subtle CTA.
-- Never sound salesy or generic.
+Core rules:
+- Sound like a real, thoughtful person — not like a content creator or AI.
+- Use short sentences. Break lines frequently. Make it easy to read on mobile.
+- Every thread needs a strong, specific hook in the first tweet.
+- Focus on specific observations, personal experience, or current platform realities rather than generic advice.
+- Avoid overused structures (especially basic numbered lists or "Here are X things...").
+- Number every tweet (1/, 2/, 3/, etc.).
+- Keep most tweets short and tight (under 260 characters).
+- End with a strong, memorable closer — not a weak summary.
+- Never sound salesy, motivational, or corporate.
 
-IMPORTANT FOR UNIQUENESS:
-- Make these threads feel fresh and different from the typical generic advice on this topic.
-- Avoid overused tropes and common thread structures that appear everywhere.
-- Focus on current 2026 realities on X (algorithm changes, audience behavior, what actually gets engagement right now).
-- Prioritize specific, contrarian, story-driven, or "I tested this" angles over basic lists.
+CRITICAL INSTRUCTIONS FOR QUALITY:
+- Make every thread feel fresh and specific to 2026 X culture.
+- Avoid tired tropes and advice that has been repeated a thousand times.
+- Prioritize honesty, specificity, and current observations over "frameworks."
+- If using data or claims, they should feel grounded (or clearly presented as personal experience).
+- Focus on what actually moves the needle on X right now.
 
-Create exactly 4 distinct threads for the topic. Each thread must use a **different** one of these angles:
+Create exactly 4 distinct threads on the topic. Each one must use a different one of these angles:
 ${shuffledAngles.map((angle, i) => `${i + 1}. ${angle}`).join('\n')}
 
-Return ONLY valid JSON. No explanations, no markdown, no extra text outside the JSON.
+Return ONLY valid JSON. Nothing else.
 
 Format:
 {
   "threads": [
     {
       "id": 1,
-      "title": "Short descriptive title for this angle",
-      "tweets": ["1/ hook...", "2/ ..."]
+      "title": "Short, natural title for this thread",
+      "tweets": ["1/ Strong specific hook...", "2/ ..."]
     },
     ...
   ]
 }`
 
-      const userPrompt = `Topic: ${topic}\n\nWrite 4 high-quality, viral-style X threads about this topic that feel fresh and unique for 2026.`
+      const userPrompt = `Topic: ${topic}
+
+Write 4 high-quality, distinct X threads that feel current and useful in 2026. Focus on real observations and avoid generic advice.`
 
       const response = await fetch(XAI_API_URL, {
         method: 'POST',
