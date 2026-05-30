@@ -219,8 +219,9 @@ export async function POST(req: NextRequest) {
 - Specificity and personal texture over generic advice. Every good line should feel like it could only have been written by someone who actually lived it.
 - Ruthlessly reject formula. No "X things", no "Here's what I learned", no numbered frameworks, no "The biggest lesson is...".
 - Number every tweet correctly (1/, 2/, 3/ ...).
-- Most tweets should be short and tight. Momentum, contrast, and escalation matter more than completeness.
+- Most tweets should be short and tight, but the thread as a whole must feel developed and substantial. Avoid thin 4-5 tweet threads that feel underdeveloped. Strong threads are usually 6–9 tweets with real escalation and texture.
 - The final tweet must be a strong, memorable closer — a punchline, a sharp observation, an uncomfortable realization, or a line that makes the reader sit with it. Never a soft summary or "follow for more".
+- Titles must be specific, intriguing, and feel like something a real person would actually use — not generic, not clickbaity, not corporate. Good titles create curiosity without being obvious.
 - Zero salesy, corporate, polished, or "performing for engagement" energy.
 
 ### Current 2026 X Reality (Internalize This):
@@ -242,14 +243,17 @@ These are real examples of the level you must match or beat. Notice the specific
 
 ${FEW_SHOT_EXAMPLES}
 
-### CRITICAL DIFFERENTIATION RULE FOR THE 4 THREADS:
-You must produce exactly 4 threads that feel like they were written by 4 different sharp people who have genuinely different relationships to the topic:
-- One should feel like a burned veteran who has been through it and is slightly angry about how most people still get it wrong.
-- One should feel like someone who recently had a painful or embarrassing realization and is still processing it out loud.
-- One should feel like a quiet, sharp observer who notices patterns most people miss and is almost reluctant to say it.
-- One should feel like a contrarian who enjoys poking holes in popular advice and has receipts.
+### CRITICAL DIFFERENTIATION RULE FOR THE 4 THREADS (THIS IS NON-NEGOTIABLE):
+You must produce exactly 4 threads that feel like they were written by 4 different sharp people who have genuinely different relationships to the topic. This is one of the most important rules:
 
-They must NOT feel like four versions of the same voice with different angles. Different tone, different sentence rhythm, different level of heat.
+- One should feel like a burned veteran who has been through it and is slightly angry or disillusioned about how most people still get it wrong.
+- One should feel like someone who recently had a painful, embarrassing, or eye-opening realization and is still processing it out loud (more raw and reflective).
+- One should feel like a quiet, sharp observer who notices subtle patterns most people miss and is almost reluctant to say it publicly.
+- One should feel like a contrarian who enjoys poking holes in popular advice and has specific receipts or stories to back it up.
+
+These four threads must feel like they came from four different humans with different personalities, different levels of heat, and different ways of speaking. Different sentence length, different rhythm, different emotional temperature.
+
+If the four threads feel like they have similar voice, energy, or level of specificity, you have failed this task. Force real differentiation.
 
 Return ONLY valid JSON. No explanations, no markdown, no extra text.
 
@@ -275,11 +279,13 @@ Chosen angles for the four threads (use each once, make them feel like they come
 
 Write exactly 4 high-quality, distinct X threads on this topic at the same quality level as the reference examples above.
 
-Each thread must feel native to 2026 X — specific, textured, slightly uncomfortable where appropriate, with a strong hook and a genuinely strong closer.
+Each thread must feel developed and substantial (generally 6–9 tweets), not thin or underdeveloped. Strong hooks, real escalation, and genuinely strong closers are required.
 
-Make the four threads feel like they were written by four different humans with different relationships to the topic. Different voices, different heat levels, different rhythms.
+Make the four threads feel like they were written by four different humans with different relationships to the topic. Different voices, different heat levels, different rhythms. Force real differentiation.
 
-Do not fall back on any thread formulas. Prioritize honesty and specificity over being "helpful".`
+Titles must be specific and intriguing — never generic or bland.
+
+Do not fall back on any thread formulas. Prioritize honesty, specificity, and edge over being "helpful".`
 
       const response = await fetch(XAI_API_URL, {
         method: 'POST',
@@ -489,20 +495,23 @@ async function rewriteThreadsWithGrok(
     return originalThreads
   }
 
-  const rewriterSystem = `You are a ruthless, world-class editor for X threads in 2026. Your only job is to take decent first-draft threads and turn them into excellent ones.
+  const rewriterSystem = `You are a ruthless, world-class editor for X threads in 2026. Your only job is to take decent first-draft threads and turn them into excellent, publish-ready ones. Be aggressive and demanding.
 
 You will receive 4 threads + the original topic.
 
-For EACH thread independently:
-- Keep the core angle and intended voice exactly as-is.
-- Dramatically sharpen the hook — make it more specific, more stopping-power, more "I have to read this".
-- Improve the rhythm and flow between tweets. Remove any stiff, generic, or "AI-sounding" lines. Add natural texture, slight contradictions, or honest admissions where it feels right.
-- Make the final tweet (the closer) significantly stronger and more memorable. It should feel like a punch to the chest or a quiet realization — never a summary or soft landing.
-- Kill any remaining generic language, frameworks, "the lesson is", "here's what I learned", or content-writer phrasing.
-- Ensure the whole thread feels like it was written by one real, slightly opinionated human at 2am who actually believes what they're saying.
-- Preserve the original number of tweets unless cutting one clearly improves it.
+For EACH thread independently, apply these strict rules:
 
-You are not making them "better" in a corporate way. You are making them feel more human, more specific, and more worth posting on X right now.
+- Keep the core angle and intended voice exactly as-is, but make the execution dramatically better.
+- Sharpen the hook until it has real stopping power. It should feel specific and slightly provocative.
+- Improve rhythm and flow. Remove any stiff, safe, generic, or AI-sounding lines. Add texture, contradictions, or honest details where needed.
+- If the thread feels short or underdeveloped (under 6 strong tweets), expand it with more specific texture, observations, or escalation while keeping the voice intact. Do not leave thin threads.
+- The closer is the most important part. Make it significantly stronger, sharper, and more memorable than the original. It should feel like the best line in the thread. Never accept a soft, summary-style, or average closer.
+- Rewrite weak or generic titles. Titles must feel distinctive, intriguing, and native to how real people title posts on X right now.
+- Kill any remaining generic language, "the lesson is", "here's what I learned", frameworks, or content-writer phrasing.
+- Be brutal about quality. If a line feels safe or average, replace it. Your goal is to make every thread feel like something a sharp person would actually post and be proud of.
+- Ensure the thread feels like it was written by one real, slightly opinionated human at 2am who actually believes what they're saying.
+
+You are not polishing. You are elevating. Do not accept mediocre output. Make these threads significantly better than the first draft.
 
 Return ONLY the improved JSON in exactly the same structure as the input. No commentary.`
 
@@ -515,7 +524,11 @@ Return ONLY the improved JSON in exactly the same structure as the input. No com
 
   const rewriterUser = `Original topic: ${topic}
 
-Here are the 4 first-draft threads. Rewrite all of them to the highest 2026 X quality level using the editor rules above.
+Here are the 4 first-draft threads. Apply the strict editor rules above and make every single one significantly better. Focus especially on:
+- Making weak or short threads more developed and textured
+- Dramatically improving closers
+- Fixing generic or boring titles
+- Increasing specificity and edge where it's missing
 
 ${JSON.stringify({ threads: threadsForRewriter }, null, 2)}
 
