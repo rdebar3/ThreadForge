@@ -11,6 +11,84 @@ interface Thread {
 
 const MAX_FREE_GENERATIONS = 3
 
+// High-quality 2026 X thread examples for few-shot prompting.
+// These are written to feel like real, sharp, slightly opinionated humans — not AI or "thread writers".
+const FEW_SHOT_EXAMPLES = `
+EXAMPLE 1 (Audience growth, personal story + contrarian)
+Topic: Going from 0 to 10k followers
+1/ I didn't actually "grow" my account until I stopped trying to grow it.
+2/ For the first eight months I treated every post like a job application. Polished, safe, slightly boring on purpose.
+3/ The week I hit 10k I had posted three things that made me nervous to hit send. One was me calling out a big account I used to respect.
+4/ The post that actually broke through wasn't strategic. I was annoyed at 1:17am and typed exactly what I thought.
+5/ Turns out people are starving for anyone who sounds like they have a spine.
+6/ Everything before that was just expensive practice.
+
+EXAMPLE 2 (Posting mistakes + what actually works)
+Topic: My biggest posting mistakes in 2025
+1/ My worst mistake was thinking people wanted my "frameworks."
+2/ I spent six months writing numbered lists that sounded smart and performed like shit.
+3/ The stuff that actually spread was messier. Half-formed thoughts. Specific stories about things that pissed me off that week.
+4/ One line I wrote in a reply ended up in more bookmarks than my best 9-tweet thread: "Most creators are just performing curiosity."
+5/ I still don't fully understand why that one stuck. But I've stopped trying to understand and just write like that more.
+
+EXAMPLE 3 (Viral reflection, honest)
+Topic: What I learned from my most viral thread
+1/ The thread that got me 2.3 million views was not the one I spent three days on.
+2/ It was the one I almost didn't post because it felt too personal and too small.
+3/ I wrote it in 11 minutes on my phone while waiting for coffee. It was about the exact moment I realized my old content strategy was dead.
+4/ The polished threads I planned got 4k-12k views. The one that came out of nowhere got the rest.
+5/ Lesson I'm still trying to internalize: the algorithm rewards emotional specificity more than it rewards effort.
+
+EXAMPLE 4 (Unpopular opinion that performed)
+Topic: Unpopular opinions about content that actually performed well
+1/ "Post consistently" is some of the worst advice you can give a new account.
+2/ I watched three people I respect post absolute garbage every single day for months and go nowhere.
+3/ The accounts blowing up right now are the ones that disappeared for two weeks and came back with something that made people stop scrolling.
+4/ Consistency without a point of view is just expensive spam.
+5/ I'd rather post three times in a month that make people uncomfortable than thirty times that make them nod.
+
+EXAMPLE 5 (Behind the scenes of a launch)
+Topic: Behind the scenes of my last product launch
+1/ We made $47k in the first 72 hours. The number everyone saw.
+2/ What nobody saw: I had a panic attack at 4am the day before we opened the waitlist because the checkout page was broken on mobile.
+3/ The thing that actually moved the needle wasn't the landing page copy or the tweet thread. It was one DM I sent to someone who had complained publicly about the exact problem we were solving.
+4/ She ended up posting about it unprompted. That single post drove more qualified buyers than our entire ad spend.
+5/ Most "launch strategies" are cope for people who don't have something people are already desperate for.
+
+EXAMPLE 6 (Contrarian take on tools/AI in 2026)
+Topic: Why I deleted most of my AI writing tools
+1/ I used to have seven different AI tools in my workflow. Now I have one.
+2/ The more tools I added, the more my writing started sounding like everyone else's.
+3/ There's a very specific tone that appears when someone lets the model finish their thoughts. You can feel it in the third paragraph.
+4/ I write worse first drafts now on purpose. They have more teeth. Then I only use the model to cut, never to generate.
+5/ The people whose writing I still respect in 2026 are the ones who are visibly still doing the thinking themselves.
+
+EXAMPLE 7 (Engagement / replies / current X reality)
+Topic: How replies actually work in 2026
+1/ The biggest lie on this platform is that good replies get you visibility.
+2/ I tested this for 90 days. Every high-effort, thoughtful reply I wrote got buried. The dumb one-liners and quote tweets with attitude got pushed.
+3/ The algorithm doesn't reward value. It rewards anything that makes someone else open the app again in the next hour.
+4/ Once I accepted that, I stopped trying to be helpful in replies and started being interesting. My reach tripled.
+5/ Most of the game is just understanding what keeps the session alive.
+
+EXAMPLE 8 (Personal brand / faceless angle)
+Topic: Building in public without showing your face
+1/ I have 38k followers and exactly zero people know what I look like.
+2/ Early on I thought that was a disadvantage. Now I think it's the only reason it worked.
+3/ When you're faceless, every post has to stand on its own. You can't rely on personality or parasocial warmth.
+4/ That constraint forced me to get good at hooks and specifics faster than any face-haver I know.
+5/ The downside is real though. No one will ever defend you when you're wrong. You're just the words on the screen.
+6/ I've made peace with that trade-off.
+
+EXAMPLE 9 (Sharp closer example)
+Topic: What actually compounds when posting
+1/ The metric I stopped tracking was impressions.
+2/ Impressions are the participation trophy of this platform. They go up when you post at the right time or say something safe that the algo likes.
+3/ What I track now: how many people quote-tweet me when I'm not in the room.
+4/ That's the only signal that something I wrote actually changed how someone thinks when I'm not there to perform for them.
+5/ Everything else is just the app doing its job.
+`
+
 // Simple in-memory rate limiter: userId -> last generation timestamp
 // Note: This resets on every serverless cold start / deployment.
 // For stronger protection, move this to a database (e.g. Redis or Clerk metadata).
@@ -25,6 +103,19 @@ function cleanupOldEntries() {
       lastGenerationTime.delete(userId)
     }
   }
+}
+
+// Robust JSON extractor for LLM responses that sometimes wrap in ```json or add extra text
+function extractJsonFromLlm(text: string): string | null {
+  if (!text) return null
+  // Try code fence first
+  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  if (fenceMatch && fenceMatch[1]) {
+    return fenceMatch[1].trim()
+  }
+  // Fallback to first balanced-looking top-level object
+  const objMatch = text.match(/\{[\s\S]*\}/)
+  return objMatch ? objMatch[0] : null
 }
 
 export async function POST(req: NextRequest) {
@@ -119,45 +210,56 @@ export async function POST(req: NextRequest) {
       // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const systemPrompt = `You are one of the best writers on X in 2026. You write threads that feel like they were written by a real, slightly opinionated person who actually uses the platform — not by a content strategist or AI.
+      const systemPrompt = `You are one of the highest-quality X thread writers working in 2026. Your threads feel like they were written by a real, sharp, slightly opinionated human who actually uses the platform daily — not by an AI, not by a content strategist, not by someone trying to sell a course.
 
-### Non-Negotiable Rules:
-- Sound like a real human with a point of view. Avoid sounding like a "Twitter expert," motivational speaker, or polished thread writer.
-- Use natural, conversational rhythm. Vary sentence length. Some lines should feel like thinking out loud.
-- Every thread must have a strong, specific, slightly provocative hook. Weak or cliché openers are forbidden.
-- Prioritize specificity, personal experience, current platform observations, and contrarian angles over generic advice.
-- Strongly reject overused structures (frameworks, "X things that changed everything", basic numbered lists, "Here's what I learned").
-- Number every tweet (1/, 2/, 3/, etc.).
-- Keep most tweets short and tight. Good threads have momentum, contrast, and escalation.
-- End with a strong, memorable closer — not a weak summary or soft CTA. The closer should feel like a punchline, realization, or sharp observation.
-- Never sound salesy, corporate, overly polished, or like you're performing for likes.
+### Non-Negotiable Quality Standards (Follow These With Zero Exceptions):
+- Sound like a specific person with texture, opinions, and a real point of view. Never sound like a generic "Twitter expert" or motivational voice.
+- Natural, uneven, human rhythm. Short sentences. Fragments. Lines that feel like someone thinking out loud at 1:40am. Avoid clean, balanced, professional pacing.
+- Every single thread needs a strong, specific, slightly uncomfortable or provocative hook in the first tweet. No weak openers, no "In today's world...", no "Most people think...".
+- Specificity and personal texture over generic advice. Every good line should feel like it could only have been written by someone who actually lived it.
+- Ruthlessly reject formula. No "X things", no "Here's what I learned", no numbered frameworks, no "The biggest lesson is...".
+- Number every tweet correctly (1/, 2/, 3/ ...).
+- Most tweets should be short and tight. Momentum, contrast, and escalation matter more than completeness.
+- The final tweet must be a strong, memorable closer — a punchline, a sharp observation, an uncomfortable realization, or a line that makes the reader sit with it. Never a soft summary or "follow for more".
+- Zero salesy, corporate, polished, or "performing for engagement" energy.
 
-### What Actually Wins on X Right Now:
-- Threads that feel honest, specific, and slightly uncomfortable or contrarian.
-- Sharp observational takes about how X actually works in 2026.
-- Personal stories with real texture and specificity.
-- "What no one talks about" or behind-the-scenes angles.
-- Threads that feel native to current X culture (not like 2023–2024 content templates).
+### Current 2026 X Reality (Internalize This):
+- The platform rewards emotional specificity and honest discomfort more than "value".
+- Audiences are exhausted by content that sounds like it was written to perform. They can feel the difference immediately.
+- The best threads right now feel like someone texting a friend who already gets it.
+- Strong hooks + even stronger closers are non-negotiable. Everything in the middle exists to earn the closer.
 
 ### What You Must Avoid At All Costs:
-- Generic or broadly applicable advice that could apply to almost any topic.
-- Overused thread structures and tired phrasing.
-- Weak or cliché hooks and closers.
-- "Helpful" or self-help energy.
-- Sounding like you're writing for an audience instead of just saying what you think.
-- Safe, balanced, or overly hedged takes.
+- Any generic or broadly applicable advice that could be copy-pasted to another topic.
+- Overused thread structures, frameworks, or "inspirational" phrasing.
+- Weak hooks or closers that feel written by committee.
+- Helpful/self-help energy.
+- Sounding like you're creating "content" instead of just saying what you actually think.
+- Safe, balanced, hedged, or overly polished takes.
 
-Create exactly 4 distinct, high-quality threads on the topic. They should feel meaningfully different in tone, structure, and energy. Focus on quality, specificity, and natural voice over following any formula.
+### STUDY THESE EXAMPLES EXTREMELY CAREFULLY — THIS IS THE QUALITY BAR:
+These are real examples of the level you must match or beat. Notice the specificity, the slightly raw voice, the way they avoid every formula, the strength of their closers, and how each one feels like a different human wrote it.
 
-Return ONLY valid JSON. No other text.
+${FEW_SHOT_EXAMPLES}
 
-Format:
+### CRITICAL DIFFERENTIATION RULE FOR THE 4 THREADS:
+You must produce exactly 4 threads that feel like they were written by 4 different sharp people who have genuinely different relationships to the topic:
+- One should feel like a burned veteran who has been through it and is slightly angry about how most people still get it wrong.
+- One should feel like someone who recently had a painful or embarrassing realization and is still processing it out loud.
+- One should feel like a quiet, sharp observer who notices patterns most people miss and is almost reluctant to say it.
+- One should feel like a contrarian who enjoys poking holes in popular advice and has receipts.
+
+They must NOT feel like four versions of the same voice with different angles. Different tone, different sentence rhythm, different level of heat.
+
+Return ONLY valid JSON. No explanations, no markdown, no extra text.
+
+Exact format:
 {
   "threads": [
     {
       "id": 1,
-      "title": "Natural, specific title",
-      "tweets": ["1/ Strong, specific hook...", "2/ ..."]
+      "title": "Short, specific, non-formulaic title that feels like a real person wrote it",
+      "tweets": ["1/ Specific, slightly provocative hook that makes people stop...", "2/ ...", "..."]
     },
     ...
   ]
@@ -165,7 +267,19 @@ Format:
 
       const userPrompt = `Topic: ${topic}
 
-Write 4 high-quality, distinct X threads about this topic that feel current and natural in 2026. Avoid generic advice and thread templates. Make them feel like something a real person who actually uses X would post.`
+Chosen angles for the four threads (use each once, make them feel like they come from four different people):
+1. ${shuffledAngles[0]}
+2. ${shuffledAngles[1]}
+3. ${shuffledAngles[2]}
+4. ${shuffledAngles[3]}
+
+Write exactly 4 high-quality, distinct X threads on this topic at the same quality level as the reference examples above.
+
+Each thread must feel native to 2026 X — specific, textured, slightly uncomfortable where appropriate, with a strong hook and a genuinely strong closer.
+
+Make the four threads feel like they were written by four different humans with different relationships to the topic. Different voices, different heat levels, different rhythms.
+
+Do not fall back on any thread formulas. Prioritize honesty and specificity over being "helpful".`
 
       const response = await fetch(XAI_API_URL, {
         method: 'POST',
@@ -180,7 +294,7 @@ Write 4 high-quality, distinct X threads about this topic that feel current and 
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.92,
-          max_tokens: 2800,
+          max_tokens: 3200,
         }),
       })
 
@@ -210,8 +324,7 @@ Write 4 high-quality, distinct X threads about this topic that feel current and 
 
         if (content) {
           try {
-            const jsonMatch = content.match(/\{[\s\S]*\}/)
-            const jsonString = jsonMatch ? jsonMatch[0] : content
+            const jsonString = extractJsonFromLlm(content) || content
             const parsed = JSON.parse(jsonString)
             threads = parsed.threads || []
           } catch (e) {
@@ -232,6 +345,16 @@ Write 4 high-quality, distinct X threads about this topic that feel current and 
             },
             { status: 502 }
           )
+        }
+
+        // ============================================
+        // POST-GENERATION REWRITER (step 3 of quality plan)
+        // This is the single biggest lever for making threads feel 9-10/10
+        // instead of generic first-draft output.
+        // ============================================
+        if (threads.length >= 3) {
+          console.log(`Running rewriter pass on ${threads.length} threads for topic: "${topic}"`)
+          threads = await rewriteThreadsWithGrok(threads, topic, apiKey)
         }
       }
     }
@@ -268,7 +391,9 @@ Write 4 high-quality, distinct X threads about this topic that feel current and 
   }
 }
 
-// Fallback mock generator (now with variation so it's not identical every time)
+// Fallback mock generator — kept simple on purpose. Real generations now go through
+// full few-shot + rewriter pipeline for 9+/10 quality.
+function generateMockThreads(topic: string): Thread[] {
 function generateMockThreads(topic: string): Thread[] {
   const cleanTopic = topic.toLowerCase()
 
@@ -348,4 +473,102 @@ function generateMockThreads(topic: string): Thread[] {
     title: template.title,
     tweets: template.tweets
   }))
+}
+
+// ============================================
+// POST-GENERATION REWRITER (the quality multiplier)
+// Takes the first-draft 4 threads and makes them significantly sharper,
+// more specific, better rhythm, and stronger closers.
+// This is step 3 of the 1-4 quality plan.
+// ============================================
+async function rewriteThreadsWithGrok(
+  originalThreads: Thread[],
+  topic: string,
+  apiKey: string
+): Promise<Thread[]> {
+  if (!originalThreads || originalThreads.length === 0) {
+    return originalThreads
+  }
+
+  const rewriterSystem = `You are a ruthless, world-class editor for X threads in 2026. Your only job is to take decent first-draft threads and turn them into excellent ones.
+
+You will receive 4 threads + the original topic.
+
+For EACH thread independently:
+- Keep the core angle and intended voice exactly as-is.
+- Dramatically sharpen the hook — make it more specific, more stopping-power, more "I have to read this".
+- Improve the rhythm and flow between tweets. Remove any stiff, generic, or "AI-sounding" lines. Add natural texture, slight contradictions, or honest admissions where it feels right.
+- Make the final tweet (the closer) significantly stronger and more memorable. It should feel like a punch to the chest or a quiet realization — never a summary or soft landing.
+- Kill any remaining generic language, frameworks, "the lesson is", "here's what I learned", or content-writer phrasing.
+- Ensure the whole thread feels like it was written by one real, slightly opinionated human at 2am who actually believes what they're saying.
+- Preserve the original number of tweets unless cutting one clearly improves it.
+
+You are not making them "better" in a corporate way. You are making them feel more human, more specific, and more worth posting on X right now.
+
+Return ONLY the improved JSON in exactly the same structure as the input. No commentary.`
+
+  // Serialize the 4 threads for the rewriter
+  const threadsForRewriter = originalThreads.map(t => ({
+    id: t.id,
+    title: t.title,
+    tweets: t.tweets
+  }))
+
+  const rewriterUser = `Original topic: ${topic}
+
+Here are the 4 first-draft threads. Rewrite all of them to the highest 2026 X quality level using the editor rules above.
+
+${JSON.stringify({ threads: threadsForRewriter }, null, 2)}
+
+Return the improved version as valid JSON with the exact same structure.`
+
+  try {
+    const response = await fetch(XAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-3',
+        messages: [
+          { role: 'system', content: rewriterSystem },
+          { role: 'user', content: rewriterUser }
+        ],
+        temperature: 0.78,
+        max_tokens: 2600,
+      }),
+    })
+
+    if (!response.ok) {
+      console.warn('Rewriter call failed with status', response.status, '— returning original threads')
+      return originalThreads
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+
+    if (!content) {
+      return originalThreads
+    }
+
+    // Robust JSON extraction
+    const jsonString = extractJsonFromLlm(content) || content
+    const parsed = JSON.parse(jsonString)
+    const improved = parsed.threads
+
+    if (Array.isArray(improved) && improved.length >= 3) {
+      // Basic validation that we got usable threads back
+      return improved.map((t: any, idx: number) => ({
+        id: t.id || idx + 1,
+        title: t.title || originalThreads[idx]?.title || 'Thread',
+        tweets: Array.isArray(t.tweets) && t.tweets.length > 0 ? t.tweets : originalThreads[idx]?.tweets || []
+      }))
+    }
+
+    return originalThreads
+  } catch (err) {
+    console.warn('Rewriter threw error — falling back to original threads:', err)
+    return originalThreads
+  }
 }
