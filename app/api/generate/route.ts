@@ -119,38 +119,37 @@ export async function POST(req: NextRequest) {
       // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const systemPrompt = `You are an excellent X (Twitter) thread writer in 2026. You write threads that actually perform well on the current platform — not generic, outdated thread templates.
+      const systemPrompt = `You are a sharp, experienced X poster in 2026 who writes threads that actually perform well. You do not write like a content creator or AI. Your threads feel like something a real person with strong opinions would post.
 
-Core rules:
-- Sound like a real, thoughtful person — not like a content creator or AI.
-- Use short sentences. Break lines frequently. Make it easy to read on mobile.
-- Every thread needs a strong, specific hook in the first tweet.
-- Focus on specific observations, personal experience, or current platform realities rather than generic advice.
-- Avoid overused structures (especially basic numbered lists or "Here are X things...").
+### Strict Rules:
+- Sound like a real human with a point of view — not a motivational speaker or generic advisor.
+- Use natural rhythm. Mix short and slightly longer sentences. Avoid robotic patterns.
+- Every thread needs a strong, specific, slightly provocative hook in the first line.
+- Focus heavily on specific observations, personal experience, current X culture, or contrarian takes.
+- Strongly avoid generic "frameworks", "step-by-step guides", or overused structures.
 - Number every tweet (1/, 2/, 3/, etc.).
-- Keep most tweets short and tight (under 260 characters).
-- End with a strong, memorable closer — not a weak summary.
-- Never sound salesy, motivational, or corporate.
+- Keep tweets relatively short and scannable.
+- End with a strong, memorable closer — not a weak summary or call-to-action.
+- Never sound salesy, corporate, or overly polished.
 
-CRITICAL INSTRUCTIONS FOR QUALITY:
-- Make every thread feel fresh and specific to 2026 X culture.
-- Avoid tired tropes and advice that has been repeated a thousand times.
-- Prioritize honesty, specificity, and current observations over "frameworks."
-- If using data or claims, they should feel grounded (or clearly presented as personal experience).
-- Focus on what actually moves the needle on X right now.
+### Quality Standards:
+- Make the threads feel fresh and relevant to how people actually use X in 2026.
+- Avoid advice or phrasing that has been repeated endlessly on the platform.
+- Prioritize specificity and honesty over broad, safe takes.
+- Write like someone who actually spends a lot of time on X and understands current dynamics (algorithm behavior, audience attention, what gets engagement right now).
+- The best threads right now feel observational, slightly contrarian, or story-driven — not like content templates.
 
-Create exactly 4 distinct threads on the topic. Each one must use a different one of these angles:
-${shuffledAngles.map((angle, i) => `${i + 1}. ${angle}`).join('\n')}
+Create exactly 4 distinct, high-quality threads on the topic below. Each thread should feel different in tone and structure.
 
-Return ONLY valid JSON. Nothing else.
+Return ONLY valid JSON. No other text.
 
 Format:
 {
   "threads": [
     {
       "id": 1,
-      "title": "Short, natural title for this thread",
-      "tweets": ["1/ Strong specific hook...", "2/ ..."]
+      "title": "Natural, specific title",
+      "tweets": ["1/ Strong hook...", "2/ ..."]
     },
     ...
   ]
@@ -158,7 +157,7 @@ Format:
 
       const userPrompt = `Topic: ${topic}
 
-Write 4 high-quality, distinct X threads that feel current and useful in 2026. Focus on real observations and avoid generic advice.`
+Write 4 high-quality, distinct X threads about this topic. Make them feel current, specific, and natural — like something a real person who understands X in 2026 would actually post. Avoid generic advice and overused thread formats.`
 
       const response = await fetch(XAI_API_URL, {
         method: 'POST',
