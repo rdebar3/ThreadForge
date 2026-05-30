@@ -30,14 +30,54 @@ export default function Page() {
 
   const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3')
 
-  // Example topics for one-click generation
-  const exampleTopics = [
-    "building in public",
-    "cold email outreach",
-    "personal branding",
-    "indie hacking",
-    "founder mental health"
+  // Large pool of example topics - focused on how people actually post on X in 2026
+  const ALL_EXAMPLE_TOPICS = [
+    "30 day experiments",
+    "what I learned from going viral",
+    "AI tools that actually moved the needle",
+    "posting through algorithm changes",
+    "turning tweets into customers",
+    "behind the scenes of a launch",
+    "why most threads get ignored",
+    "building in public with receipts",
+    "the threads that made me real money",
+    "personal brand in the AI era",
+    "what actually works on X right now",
+    "from 0 to 10k followers",
+    "documenting vs creating content",
+    "reply guy to thought leader pipeline",
+    "unpopular opinions that performed well",
+    "how I turned one tweet into a product",
+    "what no one tells you about growing on X",
+    "my biggest posting mistakes",
+    "how I use AI to write better threads",
+    "the real way distribution works in 2026"
   ]
+
+  // Currently displayed examples (randomized)
+  const [exampleTopics, setExampleTopics] = useState<string[]>([])
+  const [previousExamples, setPreviousExamples] = useState<string[]>([])
+
+  // Helper to get random examples while avoiding the previous set
+  const getRandomExamples = (count: number = 5, exclude: string[] = []): string[] => {
+    let pool = ALL_EXAMPLE_TOPICS.filter(topic => !exclude.includes(topic))
+
+    // Fallback if we filtered out too many
+    if (pool.length < count) {
+      pool = [...ALL_EXAMPLE_TOPICS]
+    }
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5)
+    const selected = shuffled.slice(0, count)
+
+    setPreviousExamples(selected)
+    return selected
+  }
+
+  // Randomize examples on initial load
+  useEffect(() => {
+    setExampleTopics(getRandomExamples(5))
+  }, [])
 
   // Load paid status and free generation count on mount + when Clerk user changes
   useEffect(() => {
@@ -189,6 +229,9 @@ export default function Page() {
       } else {
         setDemoMode(false)
       }
+
+      // Reshuffle example topics after a successful generation (avoid previous set)
+      setExampleTopics(getRandomExamples(5, previousExamples))
 
       // Update free generation count from server response when signed in
       if (isSignedIn && typeof data.remaining === 'number') {

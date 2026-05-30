@@ -104,7 +104,22 @@ export async function POST(req: NextRequest) {
       threads = generateMockThreads(topic)
       demoMode = true
     } else {
-      const systemPrompt = `You are a world-class Twitter/X thread writer known for creating highly shareable, natural-sounding threads that perform well.
+      // Dynamic angles for variety (shuffled each generation)
+      const allAngles = [
+        "Contrarian / Unexpected truth that challenges common beliefs",
+        "Personal story or \"I used to think...\" transformation",
+        "Clear, actionable framework with specific steps",
+        "Strong opinion backed by real observations or data",
+        "Behind-the-scenes look or 'what no one tells you'",
+        "30-day experiment or real-world test results",
+        "Common mistakes and how to avoid them",
+        "Counterintuitive insight that actually works better"
+      ]
+
+      // Shuffle and pick 4 unique angles
+      const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
+
+      const systemPrompt = `You are a world-class Twitter/X thread writer known for creating highly shareable, natural-sounding threads that perform well in 2026.
 
 Core rules for every thread:
 - Write like a smart, articulate human — not like an AI or corporate account.
@@ -116,11 +131,14 @@ Core rules for every thread:
 - End with a strong closer, question, or subtle CTA.
 - Never sound salesy or generic.
 
-Create exactly 4 distinct threads for the topic. Each thread must use a different angle:
-1. Contrarian / Unexpected truth
-2. Personal story or "I used to think..." style
-3. Clear, actionable framework or steps
-4. Strong opinion backed by reasoning or observation
+IMPORTANT FOR UNIQUENESS:
+- Make these threads feel fresh and different from the typical generic advice on this topic.
+- Avoid overused tropes and common thread structures that appear everywhere.
+- Focus on current 2026 realities on X (algorithm changes, audience behavior, what actually gets engagement right now).
+- Prioritize specific, contrarian, story-driven, or "I tested this" angles over basic lists.
+
+Create exactly 4 distinct threads for the topic. Each thread must use a **different** one of these angles:
+${shuffledAngles.map((angle, i) => `${i + 1}. ${angle}`).join('\n')}
 
 Return ONLY valid JSON. No explanations, no markdown, no extra text outside the JSON.
 
@@ -129,14 +147,14 @@ Format:
   "threads": [
     {
       "id": 1,
-      "title": "Contrarian Take",
+      "title": "Short descriptive title for this angle",
       "tweets": ["1/ hook...", "2/ ..."]
     },
     ...
   ]
 }`
 
-      const userPrompt = `Topic: ${topic}\n\nWrite 4 high-quality, viral-style X threads about this topic.`
+      const userPrompt = `Topic: ${topic}\n\nWrite 4 high-quality, viral-style X threads about this topic that feel fresh and unique for 2026.`
 
       const response = await fetch(XAI_API_URL, {
         method: 'POST',
@@ -150,7 +168,7 @@ Format:
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
           ],
-          temperature: 0.85,
+          temperature: 0.92,
           max_tokens: 2800,
         }),
       })
@@ -239,12 +257,12 @@ Format:
   }
 }
 
-// Fallback mock generator
+// Fallback mock generator (now with variation so it's not identical every time)
 function generateMockThreads(topic: string): Thread[] {
   const cleanTopic = topic.toLowerCase()
-  return [
+
+  const templates = [
     {
-      id: 1,
       title: "The Contrarian Take",
       tweets: [
         `1/ Most people get ${cleanTopic} completely wrong.`,
@@ -256,7 +274,6 @@ function generateMockThreads(topic: string): Thread[] {
       ]
     },
     {
-      id: 2,
       title: "Story + Lesson",
       tweets: [
         `1/ I used to suck at ${cleanTopic}.`,
@@ -268,7 +285,6 @@ function generateMockThreads(topic: string): Thread[] {
       ]
     },
     {
-      id: 3,
       title: "Simple Framework",
       tweets: [
         `1/ Here's the exact framework I use for ${cleanTopic}:`,
@@ -280,7 +296,6 @@ function generateMockThreads(topic: string): Thread[] {
       ]
     },
     {
-      id: 4,
       title: "Bold Opinion",
       tweets: [
         `1/ Hot take on ${cleanTopic}:`,
@@ -290,6 +305,36 @@ function generateMockThreads(topic: string): Thread[] {
         `5/ If it feels easy, you're probably not doing it right yet.`,
         `6/ The people who win embrace the discomfort early.`
       ]
+    },
+    {
+      title: "30-Day Experiment",
+      tweets: [
+        `1/ I ran a 30-day experiment on ${cleanTopic}.`,
+        `2/ The results surprised me.`,
+        `3/ Here's what actually happened day by day:`,
+        `4/ The biggest shift came from something stupidly simple.`,
+        `5/ Most people overcomplicate this.`,
+        `6/ Save this for when you want real results.`
+      ]
+    },
+    {
+      title: "What No One Tells You",
+      tweets: [
+        `1/ Everyone talks about ${cleanTopic}.`,
+        `2/ Almost no one talks about this part.`,
+        `3/ It's the real reason most people fail at it.`,
+        `4/ Once I figured this out, everything got easier.`,
+        `5/ This is the missing piece in almost every thread on the topic.`,
+        `6/ Bookmark this.`
+      ]
     }
   ]
+
+  // Shuffle templates and pick 4 different ones
+  const shuffled = [...templates].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, 4).map((template, index) => ({
+    id: index + 1,
+    title: template.title,
+    tweets: template.tweets
+  }))
 }
