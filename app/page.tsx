@@ -230,7 +230,6 @@ export default function Page() {
       handleGenerate()
     }
   }
-  }
 
   const copyThread = (thread: Thread) => {
     const fullThread = thread.tweets.join('\n\n')
