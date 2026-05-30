@@ -65,11 +65,11 @@ Topic: Why I deleted most of my AI writing tools
 
 EXAMPLE 7 (Engagement / replies / current X reality)
 Topic: How replies actually work in 2026
-1/ The biggest lie on this platform is that good replies get you visibility.
-2/ I tested this for 90 days. Every high-effort, thoughtful reply I wrote got buried. The dumb one-liners and quote tweets with attitude got pushed.
-3/ The algorithm doesn't reward value. It rewards anything that makes someone else open the app again in the next hour.
-4/ Once I accepted that, I stopped trying to be helpful in replies and started being interesting. My reach tripled.
-5/ Most of the game is just understanding what keeps the session alive.
+1/ I used to treat every reply like it was content. Long, thoughtful, trying to be helpful.
+2/ Most of them got almost no traction.
+3/ The replies that actually spread were usually shorter, more specific, and a little more opinionated.
+4/ Not mean — just clear. People seem to engage more when they can immediately tell where you stand.
+5/ I've started writing replies like I'm texting someone who already gets the context. It changed how often people quote or save them.
 
 EXAMPLE 8 (Personal brand / faceless angle)
 Topic: Building in public without showing your face
@@ -222,6 +222,7 @@ export async function POST(req: NextRequest) {
 - Most tweets should be short and tight, but the thread as a whole must feel developed and substantial. Avoid thin 4-5 tweet threads that feel underdeveloped. Strong threads are usually 6–9 tweets with real escalation and texture.
 - The final tweet must be a strong, memorable closer — a punchline, a sharp observation, an uncomfortable realization, or a line that makes the reader sit with it. Never a soft summary or "follow for more".
 - Titles must be specific, intriguing, and feel like something a real person would actually use — not generic, not clickbaity, not corporate. Good titles create curiosity without being obvious.
+- Prefer honest and insightful perspectives over purely negative or cynical ones. Sharp takes are welcome, but avoid threads that feel mostly like complaining or doomposting.
 - Zero salesy, corporate, polished, or "performing for engagement" energy.
 
 ### Current 2026 X Reality (Internalize This):
@@ -241,17 +242,21 @@ export async function POST(req: NextRequest) {
 ### STUDY THESE EXAMPLES EXTREMELY CAREFULLY — THIS IS THE QUALITY BAR:
 These are real examples of the level you must match or beat. Notice the specificity, the slightly raw voice, the way they avoid every formula, the strength of their closers, and how each one feels like a different human wrote it.
 
+Important: While some examples have edge, most lean honest and insightful rather than purely negative or cynical. Match the quality and specificity, not excessive negativity.
+
 ${FEW_SHOT_EXAMPLES}
 
 ### CRITICAL DIFFERENTIATION RULE FOR THE 4 THREADS (THIS IS NON-NEGOTIABLE):
 You must produce exactly 4 threads that feel like they were written by 4 different sharp people who have genuinely different relationships to the topic. This is one of the most important rules:
 
-- One should feel like a burned veteran who has been through it and is slightly angry or disillusioned about how most people still get it wrong.
+- One should feel like an experienced person who has strong opinions and focuses on what actually works after trying many things.
 - One should feel like someone who recently had a painful, embarrassing, or eye-opening realization and is still processing it out loud (more raw and reflective).
 - One should feel like a quiet, sharp observer who notices subtle patterns most people miss and is almost reluctant to say it publicly.
-- One should feel like a contrarian who enjoys poking holes in popular advice and has specific receipts or stories to back it up.
+- One should feel like a clear thinker who can be contrarian when needed, but prefers honest, specific, and useful perspectives over pure negativity.
 
 These four threads must feel like they came from four different humans with different personalities, different levels of heat, and different ways of speaking. Different sentence length, different rhythm, different emotional temperature.
+
+Prioritize honest and insightful takes. Sharpness and edge are good, but avoid threads that are mostly complaining, cynical, or demotivating without real texture or useful observation.
 
 If the four threads feel like they have similar voice, energy, or level of specificity, you have failed this task. Force real differentiation.
 
@@ -508,6 +513,7 @@ For EACH thread independently, apply these strict rules:
 - The closer is the most important part. Make it significantly stronger, sharper, and more memorable than the original. It should feel like the best line in the thread. Never accept a soft, summary-style, or average closer.
 - Rewrite weak or generic titles. Titles must feel distinctive, intriguing, and native to how real people title posts on X right now.
 - Kill any remaining generic language, "the lesson is", "here's what I learned", frameworks, or content-writer phrasing.
+- Reduce excessive negativity. If a thread feels overly cynical or demotivating, add honest texture and useful insight instead of letting it stay purely negative.
 - Be brutal about quality. If a line feels safe or average, replace it. Your goal is to make every thread feel like something a sharp person would actually post and be proud of.
 - Ensure the thread feels like it was written by one real, slightly opinionated human at 2am who actually believes what they're saying.
 
