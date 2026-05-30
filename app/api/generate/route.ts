@@ -394,7 +394,6 @@ Do not fall back on any thread formulas. Prioritize honesty and specificity over
 // Fallback mock generator — kept simple on purpose. Real generations now go through
 // full few-shot + rewriter pipeline for 9+/10 quality.
 function generateMockThreads(topic: string): Thread[] {
-function generateMockThreads(topic: string): Thread[] {
   const cleanTopic = topic.toLowerCase()
 
   const templates = [
