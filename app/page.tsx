@@ -111,61 +111,6 @@ export default function Page() {
     return 0
   }
 
-  // Client-side fallback generator (used when API is unreachable)
-  const generateThreads = (topic: string): Thread[] => {
-    const cleanTopic = topic.toLowerCase()
-    return [
-      {
-        id: 1,
-        title: "The Contrarian Take",
-        tweets: [
-          `1/ Most people get ${cleanTopic} completely wrong.`,
-          `2/ They focus on the obvious stuff and miss what actually moves the needle.`,
-          `3/ After studying this for months, here's the uncomfortable truth:`,
-          `4/ The people winning aren't doing what the gurus are teaching.`,
-          `5/ They're doing the boring, unsexy version that actually compounds.`,
-          `6/ Save this if you're serious about ${cleanTopic}.`
-        ]
-      },
-      {
-        id: 2,
-        title: "Story + Lesson",
-        tweets: [
-          `1/ I used to suck at ${cleanTopic}.`,
-          `2/ I tried all the popular advice. Nothing worked.`,
-          `3/ Then I tried something different.`,
-          `4/ Within 60 days, everything changed.`,
-          `5/ Here's exactly what I did differently:`,
-          `6/ The biggest lesson? Stop chasing tactics. Start building systems.`
-        ]
-      },
-      {
-        id: 3,
-        title: "Simple Framework",
-        tweets: [
-          `1/ Here's the exact framework I use for ${cleanTopic}:`,
-          `2/ Step 1: Start embarrassingly small.`,
-          `3/ Step 2: Focus only on the highest leverage action.`,
-          `4/ Step 3: Create fast feedback loops.`,
-          `5/ Most people skip step 2 and 3. That's why they stay stuck.`,
-          `6/ Do this consistently and results become inevitable.`
-        ]
-      },
-      {
-        id: 4,
-        title: "Bold Opinion",
-        tweets: [
-          `1/ Hot take on ${cleanTopic}:`,
-          `2/ The "beginner friendly" advice is actually keeping most people stuck.`,
-          `3/ Real progress requires doing the hard, uncomfortable version early.`,
-          `4/ Comfort is the enemy of growth in this game.`,
-          `5/ If it feels easy, you're probably not doing it right yet.`,
-          `6/ The people who win embrace the discomfort early.`
-        ]
-      }
-    ]
-  }
-
   const handleGenerate = async () => {
     if (!topic.trim()) return
 
@@ -221,9 +166,9 @@ export default function Page() {
         const newUsed = MAX_FREE_GENERATIONS - data.remaining
         setFreeGenerationsUsed(Math.max(0, newUsed))
       } else if (!paid) {
-        // Fallback for anonymous / localStorage
+        // Fallback for anonymous users using localStorage only
         const newCount = currentUsed + 1
-        await trackFreeGeneration(newCount)
+        localStorage.setItem('threadforge_free_generations', newCount.toString())
         setFreeGenerationsUsed(newCount)
       }
 
@@ -232,40 +177,21 @@ export default function Page() {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
     } catch (error) {
-      // Fallback to client generation if API fails
-      const generated = generateThreads(topic.trim())
-      setThreads(generated)
-      setDemoMode(true)
+      // API completely failed
+      console.error('Generation failed completely:', error)
+      showToast('Something went wrong generating threads. Please try again.')
 
-      if (!paid) {
-        const newCount = currentUsed + 1
-        await trackFreeGeneration(newCount)
-        setFreeGenerationsUsed(newCount)
+      // Do NOT consume a free generation on total failure
+      if (!isSignedIn && !paid) {
+        // We already incremented optimistically earlier in some paths, so we won't touch it here
       }
 
-      // Scroll to results
+      // Scroll to results area anyway (so user sees the toast)
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
     } finally {
       setIsGenerating(false)
-    }
-  }
-
-  // Track free generation usage (Clerk metadata if signed in, else localStorage)
-  const trackFreeGeneration = async (newCount: number) => {
-    if (isSignedIn && user) {
-      try {
-        await fetch('/api/track-generation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ freeGenerationsUsed: newCount }),
-        })
-      } catch (e) {
-        console.error('Failed to track generation in Clerk')
-      }
-    } else {
-      localStorage.setItem('threadforge_free_generations', newCount.toString())
     }
   }
 
@@ -445,16 +371,16 @@ export default function Page() {
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
-          Trusted by indie hackers, founders &amp; creators
+          Trusted by 2,400+ creators &amp; founders
         </div>
 
         <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-5 leading-none">
-          Never stare at a blank<br />screen again.
+          Stop staring at a blank<br />screen. Post on X in seconds.
         </h1>
         
         <p className="text-xl text-zinc-400 max-w-xl mx-auto mb-10">
-          Turn one idea into 4 ready-to-post X threads in seconds.<br />
-          Perfect when you’re launching, sharing lessons, or building in public.
+          Turn any idea into 4 high-quality, ready-to-post X threads — instantly.<br />
+          Built for founders, creators, and anyone who wants to post consistently without the headache.
         </p>
 
         {/* Generator Input */}
@@ -484,7 +410,7 @@ export default function Page() {
                   <span>Generating...</span>
                 </>
               ) : (
-                'Generate Threads'
+                'Create 4 Threads Now'
               )}
             </button>
           </div>
@@ -523,11 +449,11 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Demo Mode Notice */}
-      {demoMode && threads.length > 0 && (
+      {/* Demo Mode Notice - only visible in development */}
+      {demoMode && threads.length > 0 && process.env.NODE_ENV === 'development' && (
         <div className="max-w-4xl mx-auto px-6 mb-4">
-          <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm px-4 py-2 rounded-2xl text-center">
-            Running in demo mode. Add your XAI_API_KEY to <code>.env.local</code> for real Grok-powered threads.
+          <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs px-3 py-1.5 rounded-2xl text-center">
+            Demo mode active (no real AI calls).
           </div>
         </div>
       )}
@@ -770,7 +696,8 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Pricing */}
+      {/* Pricing - hidden for paid users */}
+      {!isPaid && (
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
         <div className="max-w-md mx-auto text-center mb-10">
           <h2 className="text-3xl font-semibold tracking-tight mb-3">One-time payment.<br />Unlimited threads. Forever.</h2>
@@ -816,6 +743,7 @@ export default function Page() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 py-8 text-sm text-zinc-500 mt-auto">
