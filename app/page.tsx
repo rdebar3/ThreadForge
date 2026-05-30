@@ -23,6 +23,7 @@ export default function Page() {
   const [copiedTweetKey, setCopiedTweetKey] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
@@ -287,7 +288,8 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4 text-sm">
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
@@ -326,6 +328,87 @@ export default function Page() {
               </div>
             )}
           </div>
+
+          {/* Mobile Hamburger */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 text-zinc-400 hover:text-white"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <span className="text-xl">✕</span>
+            ) : (
+              <span className="text-xl">☰</span>
+            )}
+          </button>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-white/10 bg-zinc-950 px-6 py-4 flex flex-col gap-3 text-sm">
+              <a 
+                href="#how" 
+                className="text-zinc-400 hover:text-white py-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                How it works
+              </a>
+              <a 
+                href="#use-cases" 
+                className="text-zinc-400 hover:text-white py-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Use cases
+              </a>
+              <a 
+                href="#pricing" 
+                className="text-zinc-400 hover:text-white py-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              
+              <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
+                {isSignedIn ? (
+                  <>
+                    {!isPaid && (
+                      <button 
+                        onClick={() => {
+                          setShowPaywall(true)
+                          setMobileMenuOpen(false)
+                        }}
+                        className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center"
+                      >
+                        Unlock Unlimited
+                      </button>
+                    )}
+                    <div className="flex justify-center">
+                      <UserButton />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <SignInButton mode="modal">
+                      <button 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-zinc-400 hover:text-white py-1 text-left"
+                      >
+                        Sign in
+                      </button>
+                    </SignInButton>
+                    <button 
+                      onClick={() => {
+                        setShowPaywall(true)
+                        setMobileMenuOpen(false)
+                      }}
+                      className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all"
+                    >
+                      Unlock Unlimited
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
