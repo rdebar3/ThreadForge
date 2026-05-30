@@ -24,6 +24,7 @@ export default function Page() {
   const [toast, setToast] = useState<string | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
@@ -57,11 +58,20 @@ export default function Page() {
         // If we just came back from successful payment, show confirmation + refresh Clerk data
         const urlParams = new URLSearchParams(window.location.search)
         if (urlParams.get('paid') === 'success') {
+          // Show both a toast and a more prominent banner
           showToast("🎉 Payment successful! You now have unlimited access.")
+          setShowPaymentSuccess(true)
+
           // Force Clerk to refresh the latest metadata
           try {
             await user?.reload()
           } catch {}
+
+          // Auto-hide the prominent success banner after 12 seconds
+          setTimeout(() => {
+            setShowPaymentSuccess(false)
+          }, 12000)
+
           // Clean the URL
           window.history.replaceState({}, '', '/')
         }
@@ -153,6 +163,24 @@ export default function Page() {
         return
       }
 
+      // Rate limited (new free tier protection)
+      if (res.status === 429) {
+        const data = await res.json().catch(() => ({}))
+        const waitMessage = data.error || 'Please wait before generating again.'
+        showToast(waitMessage)
+        setIsGenerating(false)
+        return
+      }
+
+      // Handle proper errors from the backend (new improved error handling)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        const message = data.error || 'Something went wrong generating threads. Please try again.'
+        showToast(message)
+        setIsGenerating(false)
+        return
+      }
+
       const data = await res.json()
       setThreads(data.threads || [])
 
@@ -194,6 +222,14 @@ export default function Page() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleRetry = () => {
+    // Allow user to easily retry the last topic
+    if (topic.trim()) {
+      handleGenerate()
+    }
+  }
   }
 
   const copyThread = (thread: Thread) => {
@@ -412,8 +448,25 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Free Plan Banner - Redesigned to be less intrusive and more premium */}
-      {!isPaid && (
+      {/* Payment Success Banner - Clear confirmation after buying */}
+      {showPaymentSuccess && (
+        <div className="bg-emerald-500/10 border-b border-emerald-500/30">
+          <div className="max-w-5xl mx-auto px-6 py-4 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-2xl">🎉</div>
+              <div className="text-lg font-semibold text-emerald-400">
+                Welcome to Unlimited!
+              </div>
+              <p className="text-emerald-300/90 text-sm max-w-md">
+                Your payment was successful. You now have unlimited generations — no limits, no subscriptions.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Free Plan Banner - Hidden while showing payment success */}
+      {!isPaid && !showPaymentSuccess && (
         <div className="bg-zinc-900 border-b border-zinc-800">
           <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <span className="text-zinc-300 font-medium">
@@ -823,6 +876,12 @@ export default function Page() {
             <p className="text-center text-xs text-zinc-500 mt-4">
               30-day money back guarantee
             </p>
+
+            <p className="text-center text-[10px] text-zinc-500 mt-3">
+              By purchasing, you agree to our{' '}
+              <a href="/terms" className="underline hover:text-zinc-400">Terms</a> and{' '}
+              <a href="/privacy" className="underline hover:text-zinc-400">Privacy Policy</a>.
+            </p>
           </div>
         </div>
       </div>
@@ -833,8 +892,8 @@ export default function Page() {
         <div className="max-w-5xl mx-auto px-6 text-center flex flex-col items-center gap-2">
           <p>© {new Date().getFullYear()} ThreadForge. All rights reserved.</p>
           <div className="flex gap-4 text-xs">
-            <a href="/privacy" className="hover:text-zinc-400">Privacy</a>
-            <a href="/terms" className="hover:text-zinc-400">Terms</a>
+            <a href="/privacy" className="hover:text-zinc-400">Privacy Policy</a>
+            <a href="/terms" className="hover:text-zinc-400">Terms of Service</a>
             <a href="/refund" className="hover:text-zinc-400">Refund Policy</a>
           </div>
         </div>

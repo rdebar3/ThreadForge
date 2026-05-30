@@ -11,6 +11,22 @@ interface Thread {
 
 const MAX_FREE_GENERATIONS = 3
 
+// Simple in-memory rate limiter: userId -> last generation timestamp
+// Note: This resets on every serverless cold start / deployment.
+// For stronger protection, move this to a database (e.g. Redis or Clerk metadata).
+const lastGenerationTime = new Map<string, number>()
+const RATE_LIMIT_SECONDS = 45
+
+// Occasional cleanup of old entries (runs roughly every 100 generations)
+function cleanupOldEntries() {
+  const cutoff = Date.now() - (RATE_LIMIT_SECONDS * 1000 * 10) // keep last 10 rate limit windows
+  for (const [userId, timestamp] of lastGenerationTime.entries()) {
+    if (timestamp < cutoff) {
+      lastGenerationTime.delete(userId)
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth()
@@ -51,6 +67,30 @@ export async function POST(req: NextRequest) {
         used,
         max: MAX_FREE_GENERATIONS,
       }, { status: 402 })
+    }
+
+    // ============================================
+    // RATE LIMITING (prevent abuse)
+    // ============================================
+    const now = Date.now()
+    const lastTime = lastGenerationTime.get(userId) || 0
+    const timeSinceLast = (now - lastTime) / 1000
+
+    if (timeSinceLast < RATE_LIMIT_SECONDS) {
+      const waitTime = Math.ceil(RATE_LIMIT_SECONDS - timeSinceLast)
+      return NextResponse.json({
+        error: `Please wait ${waitTime} second${waitTime === 1 ? '' : 's'} before generating again.`,
+        rateLimited: true,
+        waitSeconds: waitTime,
+      }, { status: 429 })
+    }
+
+    // Record this generation attempt
+    lastGenerationTime.set(userId, now)
+
+    // Occasionally clean up old entries
+    if (lastGenerationTime.size > 100) {
+      cleanupOldEntries()
     }
 
     // Get API key
@@ -119,9 +159,16 @@ Format:
         const errorText = await response.text()
         console.error('Grok API error:', response.status, errorText)
 
+        // Only fall back to mock for temporary server-side issues
         if (response.status === 429 || response.status >= 500) {
-          threads = generateMockThreads(topic)
-          demoMode = true
+          console.warn('Grok temporarily unavailable, returning error to user instead of mock')
+          return NextResponse.json(
+            { 
+              error: "The AI is temporarily busy. Please try again in a moment.",
+              canRetry: true 
+            },
+            { status: 503 }
+          )
         } else {
           return NextResponse.json(
             { error: "Failed to generate threads" },
@@ -140,12 +187,22 @@ Format:
             threads = parsed.threads || []
           } catch (e) {
             console.error('Failed to parse JSON from Grok')
-            threads = generateMockThreads(topic)
-            demoMode = true
+            return NextResponse.json(
+              { 
+                error: "Something went wrong while generating threads. Please try again.",
+                canRetry: true 
+              },
+              { status: 500 }
+            )
           }
         } else {
-          threads = generateMockThreads(topic)
-          demoMode = true
+          return NextResponse.json(
+            { 
+              error: "The AI returned an empty response. Please try again.",
+              canRetry: true 
+            },
+            { status: 502 }
+          )
         }
       }
     }
@@ -176,8 +233,8 @@ Format:
   } catch (error) {
     console.error('Generation error:', error)
     return NextResponse.json({
-      threads: generateMockThreads('general topic'),
-      demoMode: true
+      error: "Something went wrong while generating threads. Please try again.",
+      canRetry: true
     }, { status: 500 })
   }
 }
