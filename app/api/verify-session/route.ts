@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
+/**
+ * Verify Stripe Session
+ * 
+ * ⚠️ DISABLED DURING FREE TESTING PHASE
+ * This route is kept for future paid functionality.
+ */
+
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
 if (!stripeSecret) {

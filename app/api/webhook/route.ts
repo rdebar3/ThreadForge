@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { clerkClient } from '@clerk/nextjs/server'
 
+/**
+ * Stripe Webhook Handler
+ * 
+ * ⚠️ DISABLED DURING FREE TESTING PHASE
+ * This route is kept for when we turn on paid plans.
+ */
+
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 

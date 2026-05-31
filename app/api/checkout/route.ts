@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { auth } from '@clerk/nextjs/server'
 
+/**
+ * Stripe Checkout Route
+ * 
+ * ⚠️ DISABLED DURING FREE TESTING PHASE
+ * This route is kept for when we enable paid plans.
+ * Currently not used in the UI.
+ */
+
 export async function POST(req: NextRequest) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY

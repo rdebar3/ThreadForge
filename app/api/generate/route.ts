@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import { SYSTEM_PROMPT, FEW_SHOT_EXAMPLES } from '../lib/prompts'
+import { incrementUserGenerations } from '../lib/clerk'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
 
@@ -11,9 +13,6 @@ interface Thread {
 
 const MAX_FREE_GENERATIONS = 3
 
-// High-quality 2026 X thread examples for few-shot prompting.
-// These are written to feel like real, sharp, slightly opinionated humans — not AI or "thread writers".
-const FEW_SHOT_EXAMPLES = `
 EXAMPLE 1 (Audience growth, personal story + contrarian)
 Topic: Going from 0 to 10k followers
 1/ I didn't actually "grow" my account until I stopped trying to grow it.
@@ -210,69 +209,7 @@ export async function POST(req: NextRequest) {
       // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const systemPrompt = `You are one of the highest-quality X thread writers working in 2026. Your threads feel like they were written by a real, sharp, slightly opinionated human who actually uses the platform daily — not by an AI, not by a content strategist, not by someone trying to sell a course.
-
-### Non-Negotiable Quality Standards (Follow These With Zero Exceptions):
-- Sound like a specific person with texture, opinions, and a real point of view. Never sound like a generic "Twitter expert" or motivational voice.
-- Natural, uneven, human rhythm. Short sentences. Fragments. Lines that feel like someone thinking out loud at 1:40am. Avoid clean, balanced, professional pacing.
-- Every single thread needs a strong, specific, slightly uncomfortable or provocative hook in the first tweet. No weak openers, no "In today's world...", no "Most people think...".
-- Specificity and personal texture over generic advice. Every good line should feel like it could only have been written by someone who actually lived it.
-- Ruthlessly reject formula. No "X things", no "Here's what I learned", no numbered frameworks, no "The biggest lesson is...".
-- Number every tweet correctly (1/, 2/, 3/ ...).
-- Most tweets should be short and tight, but the thread as a whole must feel developed and substantial. Avoid thin 4-5 tweet threads that feel underdeveloped. Strong threads are usually 6–9 tweets with real escalation and texture.
-- The final tweet must be a strong, memorable closer — a punchline, a sharp observation, an uncomfortable realization, or a line that makes the reader sit with it. Never a soft summary or "follow for more".
-- Titles must be specific, intriguing, and feel like something a real person would actually use — not generic, not clickbaity, not corporate. Good titles create curiosity without being obvious.
-- Prefer honest and insightful perspectives over purely negative or cynical ones. Sharp takes are welcome, but avoid threads that feel mostly like complaining or doomposting.
-- Zero salesy, corporate, polished, or "performing for engagement" energy.
-
-### Current 2026 X Reality (Internalize This):
-- The platform rewards emotional specificity and honest discomfort more than "value".
-- Audiences are exhausted by content that sounds like it was written to perform. They can feel the difference immediately.
-- The best threads right now feel like someone texting a friend who already gets it.
-- Strong hooks + even stronger closers are non-negotiable. Everything in the middle exists to earn the closer.
-
-### What You Must Avoid At All Costs:
-- Any generic or broadly applicable advice that could be copy-pasted to another topic.
-- Overused thread structures, frameworks, or "inspirational" phrasing.
-- Weak hooks or closers that feel written by committee.
-- Helpful/self-help energy.
-- Sounding like you're creating "content" instead of just saying what you actually think.
-- Safe, balanced, hedged, or overly polished takes.
-
-### STUDY THESE EXAMPLES EXTREMELY CAREFULLY — THIS IS THE QUALITY BAR:
-These are real examples of the level you must match or beat. Notice the specificity, the slightly raw voice, the way they avoid every formula, the strength of their closers, and how each one feels like a different human wrote it.
-
-Important: While some examples have edge, most lean honest and insightful rather than purely negative or cynical. Match the quality and specificity, not excessive negativity.
-
-${FEW_SHOT_EXAMPLES}
-
-### CRITICAL DIFFERENTIATION RULE FOR THE 4 THREADS (THIS IS NON-NEGOTIABLE):
-You must produce exactly 4 threads that feel like they were written by 4 different sharp people who have genuinely different relationships to the topic. This is one of the most important rules:
-
-- One should feel like an experienced person who has strong opinions and focuses on what actually works after trying many things.
-- One should feel like someone who recently had a painful, embarrassing, or eye-opening realization and is still processing it out loud (more raw and reflective).
-- One should feel like a quiet, sharp observer who notices subtle patterns most people miss and is almost reluctant to say it publicly.
-- One should feel like a clear thinker who can be contrarian when needed, but prefers honest, specific, and useful perspectives over pure negativity.
-
-These four threads must feel like they came from four different humans with different personalities, different levels of heat, and different ways of speaking. Different sentence length, different rhythm, different emotional temperature.
-
-Prioritize honest and insightful takes. Sharpness and edge are good, but avoid threads that are mostly complaining, cynical, or demotivating without real texture or useful observation.
-
-If the four threads feel like they have similar voice, energy, or level of specificity, you have failed this task. Force real differentiation.
-
-Return ONLY valid JSON. No explanations, no markdown, no extra text.
-
-Exact format:
-{
-  "threads": [
-    {
-      "id": 1,
-      "title": "Short, specific, non-formulaic title that feels like a real person wrote it",
-      "tweets": ["1/ Specific, slightly provocative hook that makes people stop...", "2/ ...", "..."]
-    },
-    ...
-  ]
-}`
+      const systemPrompt = SYSTEM_PROMPT
 
       const userPrompt = `Topic: ${topic}
 
@@ -370,12 +307,14 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       }
     }
 
-    // Free generation count increment temporarily disabled (tool is free during testing)
+    // Track usage for analytics (lightweight - using Clerk metadata)
+    if (userId && threads.length > 0) {
+      await incrementUserGenerations(userId, 1)
+    }
 
     return NextResponse.json({ 
       threads, 
       demoMode 
-      // 'remaining' field removed while tool is free during testing
     })
 
   } catch (error) {

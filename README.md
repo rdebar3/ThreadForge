@@ -2,7 +2,7 @@
 
 Turn any topic into viral X/Twitter threads.
 
-**Production-ready version with Clerk authentication + persistent payments.**
+**Currently in free testing phase** — payments are disabled while we gather real user feedback.
 
 ## Features
 
@@ -11,7 +11,7 @@ Turn any topic into viral X/Twitter threads.
 - (Pricing will be introduced after initial testing phase)
 - Optional sign-in with Google / email (powered by Clerk)
 - Beautiful dark UI with excellent copy UX
-- Real Stripe checkout + webhook
+- Stripe integration ready (currently disabled during free testing)
 
 ## Quick Start (Development)
 
@@ -51,10 +51,10 @@ See `STRIPE_SETUP.md` and the "Launch Checklist" section below.
 7. **Switch Stripe to Live mode**
 8. **Update webhook to production URL**
 
-## Pricing Model
+## Pricing Model (Planned)
 
-- Free during testing phase (unlimited generations while we gather feedback)
-- Paid plans coming after initial validation
+- Currently **completely free** during testing phase
+- Paid plans will be introduced after we validate the product with real users
 
 ## Legal Pages Included
 

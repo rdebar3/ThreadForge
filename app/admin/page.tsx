@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 
 interface GrantResult {
@@ -8,12 +8,49 @@ interface GrantResult {
   trialEndsAt: string
 }
 
+interface UsageStats {
+  totalUsers: number
+  usersWithGenerations: number
+  totalGenerations: number
+  topUsers: Array<{
+    id: string
+    email: string
+    firstName?: string | null
+    lastName?: string | null
+    totalGenerations: number
+    lastGeneratedAt?: string
+  }>
+  error?: string
+}
+
 export default function AdminPage() {
   const { isSignedIn } = useUser()
-  const [input, setInput] = useState('') // can be userId or email
+  const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [recentGrants, setRecentGrants] = useState<GrantResult[]>([])
+  const [stats, setStats] = useState<UsageStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+
+  // Fetch usage stats on load
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchStats()
+    }
+  }, [isSignedIn])
+
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true)
+      const res = await fetch('/api/admin/stats')
+      const data = await res.json()
+      setStats(data)
+    } catch (error) {
+      console.error('Failed to fetch stats', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
 
   if (!isSignedIn) {
     return (
@@ -73,6 +110,67 @@ export default function AdminPage() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">ThreadForge Admin</h1>
         <p className="text-zinc-400 mb-8">Giveaway / 7-Day Trial Management</p>
+
+        {/* Usage Stats */}
+        <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Usage Analytics</h2>
+            <button 
+              onClick={fetchStats} 
+              disabled={statsLoading}
+              className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+            >
+              {statsLoading ? 'Loading...' : 'Refresh'}
+            </button>
+          </div>
+
+          {statsLoading ? (
+            <p className="text-zinc-400">Loading stats...</p>
+          ) : stats?.error ? (
+            <p className="text-red-400">{stats.error}</p>
+          ) : stats ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-zinc-800 p-4 rounded-xl">
+                  <div className="text-2xl font-bold">{stats.totalGenerations}</div>
+                  <div className="text-xs text-zinc-400">Total Generations</div>
+                </div>
+                <div className="bg-zinc-800 p-4 rounded-xl">
+                  <div className="text-2xl font-bold">{stats.usersWithGenerations}</div>
+                  <div className="text-xs text-zinc-400">Active Users</div>
+                </div>
+                <div className="bg-zinc-800 p-4 rounded-xl">
+                  <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                  <div className="text-xs text-zinc-400">Total Signed-up Users</div>
+                </div>
+              </div>
+
+              {stats.topUsers.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2 text-sm text-zinc-400">Top Users by Generations</h3>
+                  <div className="space-y-2">
+                    {stats.topUsers.slice(0, 8).map((user, index) => (
+                      <div key={index} className="bg-zinc-800 p-3 rounded-lg text-sm flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">
+                            {user.firstName || user.lastName 
+                              ? `${user.firstName || ''} ${user.lastName || ''}`.trim() 
+                              : user.email}
+                          </div>
+                          <div className="text-[10px] text-zinc-500">{user.id}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">{user.totalGenerations}</div>
+                          <div className="text-[10px] text-zinc-500">generations</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
 
         <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 mb-8">
           <label className="block text-sm text-zinc-400 mb-2">

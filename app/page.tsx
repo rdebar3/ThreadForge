@@ -15,8 +15,6 @@ export default function Page() {
   const [topic, setTopic] = useState('')
   const [threads, setThreads] = useState<Thread[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
-  // showPaywall state removed during free testing phase
-  const [isPaid, setIsPaid] = useState(false)
   const [demoMode, setDemoMode] = useState(false)
   const [freeGenerationsUsed, setFreeGenerationsUsed] = useState(0)
   const [copiedThreadId, setCopiedThreadId] = useState<number | null>(null)
@@ -24,7 +22,6 @@ export default function Page() {
   const [toast, setToast] = useState<string | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false)
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
@@ -79,20 +76,18 @@ export default function Page() {
     setExampleTopics(getRandomExamples(5))
   }, [])
 
-  // Load free generation status
+  // Load free generation status (free testing phase)
   useEffect(() => {
     const loadStatus = async () => {
       if (isSignedIn) {
-        // During testing phase: signed-in users get unlimited
-        setIsPaid(true)
+        // Signed-in users get unlimited access during free testing phase
         setFreeGenerationsUsed(0)
         return
       }
 
-      // Anonymous users: use localStorage for the 3 free generations
+      // Anonymous users limited to 3 generations via localStorage
       const used = getFreeGenerationsUsed()
       setFreeGenerationsUsed(used)
-      setIsPaid(false)
     }
 
     loadStatus()
@@ -104,17 +99,7 @@ export default function Page() {
     }
   }, [isSignedIn, user])
 
-  // Paywall escape handler removed during free testing phase
-
-  // Check if user has paid (for testing / demo)
-  const checkPaidStatus = () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('threadforge_paid') === 'true'
-    }
-    return false
-  }
-
-  // Load free generation count for anonymous users
+  // Load free generation count for anonymous users (free testing phase)
   const getFreeGenerationsUsed = () => {
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('threadforge_free_generations') || '0')
@@ -127,18 +112,16 @@ export default function Page() {
 
     setIsGenerating(true)
 
-    // Free tier rules during testing phase:
-    // - Anonymous users: max 3 generations
-    // - Signed-in users: unlimited (testing phase)
-    const currentUsed = freeGenerationsUsed;
+    // Free testing phase rules:
+    // - Anonymous users: limited to 3 generations
+    // - Signed-in users: unlimited access
+    const currentUsed = freeGenerationsUsed
 
     if (!isSignedIn && currentUsed >= MAX_FREE_GENERATIONS) {
-      setShowAuthPrompt(true);
-      setIsGenerating(false);
-      return;
+      setShowAuthPrompt(true)
+      setIsGenerating(false)
+      return
     }
-
-    // If signed in → unlimited during testing (no further checks)
 
     try {
       const res = await fetch('/api/generate', {
@@ -156,9 +139,6 @@ export default function Page() {
         }
       }
 
-      // (Free limit enforcement temporarily removed during testing)
-
-      // Rate limited (new free tier protection)
       if (res.status === 429) {
         const data = await res.json().catch(() => ({}))
         const waitMessage = data.error || 'Please wait before generating again.'
@@ -167,7 +147,6 @@ export default function Page() {
         return
       }
 
-      // Handle proper errors from the backend (new improved error handling)
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         const message = data.error || 'Something went wrong generating threads. Please try again.'
@@ -178,35 +157,24 @@ export default function Page() {
 
       const data = await res.json()
       setThreads(data.threads || [])
+      setDemoMode(!!data.demoMode)
 
-      if (data.demoMode) {
-        setDemoMode(true)
-      } else {
-        setDemoMode(false)
-      }
-
-      // Reshuffle example topics after a successful generation (avoid previous set)
+      // Reshuffle example topics
       setExampleTopics(getRandomExamples(5, previousExamples))
 
-      // Increment anonymous free generation count
+      // Track anonymous usage
       if (!isSignedIn) {
-        const newCount = currentUsed + 1;
-        localStorage.setItem('threadforge_free_generations', newCount.toString());
-        setFreeGenerationsUsed(newCount);
+        const newCount = currentUsed + 1
+        localStorage.setItem('threadforge_free_generations', newCount.toString())
+        setFreeGenerationsUsed(newCount)
       }
 
-      // Scroll to results after generation
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
     } catch (error) {
-      // API completely failed
-      console.error('Generation failed completely:', error)
+      console.error('Generation failed:', error)
       showToast('Something went wrong generating threads. Please try again.')
-
-      // (Free generation tracking disabled during testing - no action needed on failure)
-
-      // Scroll to results area anyway (so user sees the toast)
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
@@ -399,25 +367,8 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Payment Success Banner - Clear confirmation after buying */}
-      {showPaymentSuccess && (
-        <div className="bg-emerald-500/10 border-b border-emerald-500/30">
-          <div className="max-w-5xl mx-auto px-6 py-4 text-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-2xl">🎉</div>
-              <div className="text-lg font-semibold text-emerald-400">
-                Welcome to Unlimited!
-              </div>
-              <p className="text-emerald-300/90 text-sm max-w-md">
-                Your payment was successful. You now have unlimited generations — no limits, no subscriptions.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Free Plan Banner - Hidden while showing payment success */}
-      {!isPaid && !showPaymentSuccess && (
+      {/* Free Testing Banner */}
+      {!isSignedIn && (
         <div className="bg-zinc-900 border-b border-zinc-800">
           <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <span className="text-zinc-300 font-medium">
@@ -525,8 +476,8 @@ export default function Page() {
           )}
 
           <p className="text-xs text-zinc-500 mt-3">
-            {isPaid ? (
-              "You have unlimited generations"
+            {isSignedIn ? (
+              "Unlimited generations (free testing phase)"
             ) : (
               <>
                 Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • Free while testing
