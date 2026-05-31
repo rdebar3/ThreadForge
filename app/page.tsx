@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useUser, SignInButton, UserButton } from '@clerk/nextjs'
+import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 
 interface Thread {
   id: number
