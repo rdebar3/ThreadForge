@@ -1,5 +1,7 @@
 # ThreadForge – Full Setup Guide
 
+> **Note:** As of now, ThreadForge is **completely free** during our testing phase. The payment flow is temporarily disabled while we validate the tool with real users.
+
 This guide walks you through everything you need to set up ThreadForge so you can test payments properly and prepare for launch.
 
 ---
@@ -65,7 +67,7 @@ stripe listen --forward-to localhost:3000/api/webhook
 
 1. Deploy your app to Vercel first.
 2. In Stripe Dashboard → **Developers → Webhooks** → **Add endpoint**.
-3. Set the URL to: `https://yourdomain.com/api/webhook`
+3. Set the URL to: `https://threadforge.space/api/webhook`
 4. Select the event: `checkout.session.completed`
 5. Copy the **Signing secret** after creating the endpoint.
 
@@ -98,6 +100,14 @@ CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxx
 # === Stripe ===
 STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxx
 STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_PRICE_ID=price_xxxxxxxxxxxxxxxxxxxxxxxx     # Optional but recommended (fallback exists in code)
+
+# === Admin / Giveaway Access (for manual 7-day trial grants) ===
+# Only this Clerk user can access /admin and grant free trials via the giveaway
+THREADFORGE_OWNER_ID=user_xxxxxxxxxxxxxxxxxxxxxxxx
+
+# After someone signs up via your X giveaway, go to /admin and enter their Clerk User ID (or email)
+# to grant them 7 days of unlimited access.
 ```
 
 ---

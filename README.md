@@ -7,8 +7,8 @@ Turn any topic into viral X/Twitter threads.
 ## Features
 
 - High-quality thread generation (Grok-powered or demo mode)
-- 3 free generations for anonymous users
-- $9 one-time payment for unlimited access (persistent via Clerk)
+- Currently free / unlimited while we test the tool
+- (Pricing will be introduced after initial testing phase)
 - Optional sign-in with Google / email (powered by Clerk)
 - Beautiful dark UI with excellent copy UX
 - Real Stripe checkout + webhook
@@ -43,7 +43,7 @@ See `STRIPE_SETUP.md` and the "Launch Checklist" section below.
 1. **Create Clerk account** → https://clerk.com
 2. **Create Stripe account** → https://dashboard.stripe.com
 3. **Set up Stripe Webhook** (important)
-   - Endpoint: `https://yourdomain.com/api/webhook`
+   - Endpoint: `https://threadforge.space/api/webhook`
    - Events: `checkout.session.completed`
 4. **Get xAI API key** (recommended for quality)
 5. **Deploy to Vercel**
@@ -53,8 +53,8 @@ See `STRIPE_SETUP.md` and the "Launch Checklist" section below.
 
 ## Pricing Model
 
-- Free: 3 generations (per browser for anonymous users)
-- $9 one-time: Unlimited generations (tied to Clerk account when signed in)
+- Free during testing phase (unlimited generations while we gather feedback)
+- Paid plans coming after initial validation
 
 ## Legal Pages Included
 

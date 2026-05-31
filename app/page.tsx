@@ -370,7 +370,7 @@ export default function Page() {
           <div className="hidden md:flex items-center gap-4 text-sm">
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
-            <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
+            {/* <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a> */}
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
@@ -519,7 +519,7 @@ export default function Page() {
               onClick={() => setShowPaywall(true)}
               className="text-white underline font-medium hover:text-zinc-300 transition-colors"
             >
-              Get unlimited for $9
+              Currently free while testing
             </button>
 
             {!isSignedIn && (
@@ -620,7 +620,7 @@ export default function Page() {
               "You have unlimited generations"
             ) : (
               <>
-                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • 3 free generations • $9 one-time
+                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • Free while testing
               </>
             )}
           </p>
@@ -659,14 +659,7 @@ export default function Page() {
               >
                 New topic
               </button>
-              {!isPaid && (
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="text-sm px-5 py-2.5 rounded-2xl bg-violet-500/10 text-violet-300 hover:bg-violet-500 hover:text-white transition-all font-medium"
-                >
-                  Unlock unlimited →
-                </button>
-              )}
+              {/* "Unlock unlimited" button hidden during free testing period */}
             </div>
           </div>
 
@@ -722,36 +715,8 @@ export default function Page() {
             ))}
           </div>
 
-          {!isPaid && threads.length > 0 && (
-            <div className="mt-8 p-8 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl text-center">
-              <div className="mb-4">
-                <span className="text-4xl">🔒</span>
-              </div>
-              <p className="text-xl font-semibold mb-2">You’ve used your free generations</p>
-              <p className="text-zinc-400 mb-6 max-w-sm mx-auto">
-                {isSignedIn 
-                  ? "Unlock unlimited threads forever for just $9 one-time." 
-                  : "Sign in to save your progress + get more free generations, or unlock unlimited for $9."
-                }
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {!isSignedIn && (
-                  <SignInButton mode="modal">
-                    <button className="px-8 py-3.5 border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/10 transition-colors text-base">
-                      Sign in for free
-                    </button>
-                  </SignInButton>
-                )}
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold rounded-2xl hover:from-violet-600 hover:to-indigo-600 transition-all text-base shadow-lg"
-                >
-                  Unlock unlimited for $9
-                </button>
-              </div>
-            </div>
-          )}
+          {/* "Limit reached" banner hidden during free testing period */}
+          {/* Original paid upsell banner removed while tool is free */}
         </div>
       )}
 
@@ -874,60 +839,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Pricing - hidden for paid users */}
-      {!isPaid && (
-      <div id="pricing" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <div className="max-w-md mx-auto text-center mb-10">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3">One-time payment.<br />Unlimited threads. Forever.</h2>
-          <p className="text-zinc-400">No subscriptions. No usage caps after you pay.</p>
-        </div>
-
-        <div className="max-w-md mx-auto">
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl p-8">
-            <div className="flex items-baseline gap-2 mb-6">
-              <span className="text-6xl font-semibold tracking-tighter">$9</span>
-              <span className="text-zinc-400">one time</span>
-            </div>
-
-            <div className="space-y-3 mb-8 text-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
-                <span>Unlimited thread generations</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
-                <span>Access to all future updates</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
-                <span>Priority support</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
-                <span>Cancel anytime (no recurring charges)</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowPaywall(true)}
-              className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 active:bg-zinc-300 transition-colors text-lg"
-            >
-              Get Unlimited Access
-            </button>
-
-            <p className="text-center text-xs text-zinc-500 mt-4">
-              30-day money back guarantee
-            </p>
-
-            <p className="text-center text-[10px] text-zinc-500 mt-3">
-              By purchasing, you agree to our{' '}
-              <a href="/terms" className="underline hover:text-zinc-400">Terms</a> and{' '}
-              <a href="/privacy" className="underline hover:text-zinc-400">Privacy Policy</a>.
-            </p>
-          </div>
-        </div>
-      </div>
-      )}
+      {/* Pricing section hidden during free testing period */}
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 py-8 text-sm text-zinc-500 mt-auto">
@@ -949,7 +861,7 @@ export default function Page() {
         </div>
       )}
 
-      {/* Auth / Sign-in Prompt Modal (shown when anonymous user hits free limit) */}
+      {/* Auth Prompt Modal - simplified during free testing */}
       {showAuthPrompt && (
         <div 
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6"
@@ -959,98 +871,31 @@ export default function Page() {
             className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-semibold mb-2">You’ve used your 3 free generations</h3>
+            <h3 className="text-2xl font-semibold mb-2">Sign in to save your threads</h3>
             <p className="text-zinc-400 mb-6">
-              Sign in for free to save your progress across devices and get 3 more free generations on your account.
+              Create a free account to save your generated threads across devices.
             </p>
 
-            <div className="space-y-3">
-              <SignInButton mode="modal">
-                <button 
-                  onClick={() => setShowAuthPrompt(false)}
-                  className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
-                >
-                  Sign in with Google or Email
-                </button>
-              </SignInButton>
-
+            <SignInButton mode="modal">
               <button 
-                onClick={() => {
-                  setShowAuthPrompt(false)
-                  setShowPaywall(true)
-                }}
-                className="w-full py-4 border border-zinc-700 text-white font-medium rounded-2xl hover:bg-zinc-800 transition-colors"
+                onClick={() => setShowAuthPrompt(false)}
+                className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
               >
-                Or pay $9 for unlimited instead
+                Sign in with Google or Email
               </button>
-            </div>
-
-            <p className="text-center text-xs text-zinc-500 mt-4">
-              No credit card required to sign in.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Paywall Modal */}
-      {showPaywall && (
-        <div 
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6"
-          onClick={() => setShowPaywall(false)}
-        >
-          <div 
-            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white p-2 rounded-lg hover:bg-zinc-800 transition-colors"
-              aria-label="Close"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="text-5xl mb-4">✨</div>
-              <h3 className="text-3xl font-semibold tracking-tight">Go unlimited</h3>
-              <p className="text-zinc-400 mt-2">One-time payment. No subscriptions. Lifetime access.</p>
-            </div>
-
-            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 mb-6">
-              <div className="flex justify-between items-end mb-4">
-                <div>
-                  <span className="text-5xl font-semibold tracking-tighter">$9</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-emerald-400 font-semibold text-sm">ONE-TIME</div>
-                  <div className="text-zinc-400 text-xs">Lifetime access</div>
-                </div>
-              </div>
-              <ul className="text-sm text-zinc-300 space-y-2 pt-4 border-t border-zinc-800">
-                <li className="flex items-center gap-2">✓ Unlimited thread generations</li>
-                <li className="flex items-center gap-2">✓ No limits, ever</li>
-                <li className="flex items-center gap-2">✓ Works on any account</li>
-              </ul>
-            </div>
+            </SignInButton>
 
             <button 
-              onClick={handlePayment}
-              className="w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 text-zinc-950 font-semibold rounded-2xl mb-3 transition-all text-lg active:scale-[0.985]"
-            >
-              Pay $9 with Card
-            </button>
-            
-            <button 
-              onClick={() => setShowPaywall(false)}
-              className="w-full text-sm text-zinc-400 hover:text-white py-2 transition-colors"
+              onClick={() => setShowAuthPrompt(false)}
+              className="w-full mt-3 text-sm text-zinc-400 hover:text-white"
             >
               Maybe later
             </button>
           </div>
         </div>
       )}
+
+      {/* Paywall Modal hidden during free testing period */}
     </div>
   )
 }

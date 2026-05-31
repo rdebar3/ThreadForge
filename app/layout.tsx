@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'ThreadForge - Turn Any Topic Into Viral X Threads',
-  description: 'Generate high-quality, ready-to-post Twitter/X threads in seconds. $9 one-time for unlimited access.',
+  description: 'Generate high-quality, ready-to-post Twitter/X threads in seconds. Currently free while we test the tool.',
   icons: {
     icon: '/favicon.ico',
   },

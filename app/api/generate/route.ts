@@ -139,26 +139,12 @@ export async function POST(req: NextRequest) {
     }
 
     // ============================================
-    // ENFORCE FREE TIER + PAID STATUS (Server side)
+    // TEMPORARILY DISABLED: Free tier + paid enforcement
+    // Tool is currently free/unlimited while testing
     // ============================================
-    const client = await clerkClient()
-    const user = await client.users.getUser(userId)
-    const metadata = user.publicMetadata as {
-      hasPaid?: boolean
-      freeGenerationsUsed?: number
-    }
-
-    const hasPaid = metadata?.hasPaid === true
-    const used = metadata?.freeGenerationsUsed ?? 0
-
-    if (!hasPaid && used >= MAX_FREE_GENERATIONS) {
-      return NextResponse.json({
-        error: 'Free generation limit reached',
-        limitReached: true,
-        used,
-        max: MAX_FREE_GENERATIONS,
-      }, { status: 402 })
-    }
+    // const client = await clerkClient()
+    // const user = await client.users.getUser(userId)
+    // ... (original limit checks removed for now)
 
     // ============================================
     // RATE LIMITING (prevent abuse)
@@ -370,27 +356,12 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       }
     }
 
-    // ============================================
-    // INCREMENT FREE GENERATION COUNT (if not paid)
-    // ============================================
-    if (!hasPaid) {
-      const newUsed = used + 1
-      try {
-        await client.users.updateUserMetadata(userId, {
-          publicMetadata: {
-            ...metadata,
-            freeGenerationsUsed: newUsed,
-          },
-        })
-      } catch (err) {
-        console.error('Failed to update free generation count:', err)
-      }
-    }
+    // Free generation count increment temporarily disabled (tool is free during testing)
 
     return NextResponse.json({ 
       threads, 
-      demoMode,
-      remaining: hasPaid ? null : Math.max(0, MAX_FREE_GENERATIONS - (used + 1))
+      demoMode 
+      // 'remaining' field removed while tool is free during testing
     })
 
   } catch (error) {

@@ -1,5 +1,7 @@
 # ThreadForge - Payment Setup Guide
 
+> **Important:** Payments are currently disabled while we test the tool. The entire free + paid flow is temporarily turned off so we can focus on getting real user feedback.
+
 This document explains exactly how to make the $9 one-time payment flow work.
 
 ## Current Status
@@ -53,7 +55,7 @@ The code is set up with:
 
 #### For Production (Vercel):
 1. Go to Stripe Dashboard → Developers → Webhooks
-2. Add endpoint: `https://yourdomain.com/api/webhook`
+2. Add endpoint: `https://threadforge.space/api/webhook`
 3. Copy the **Signing secret** and add it as an environment variable on Vercel.
 
 ### 3. Environment Variables Needed
