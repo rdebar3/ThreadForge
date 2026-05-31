@@ -138,13 +138,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
     }
 
-    // ============================================
-    // TEMPORARILY DISABLED: Free tier + paid enforcement
-    // Tool is currently free/unlimited while testing
-    // ============================================
-    // const client = await clerkClient()
-    // const user = await client.users.getUser(userId)
-    // ... (original limit checks removed for now)
+    // Testing phase rules (as requested):
+    // - Anonymous users: limited to 3 generations
+    // - Signed-in users: unlimited access (no payment required during testing)
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const metadata = user.publicMetadata as {
+      hasPaid?: boolean
+      freeGenerationsUsed?: number
+    }
+
+    const hasPaid = metadata?.hasPaid === true
+    const used = metadata?.freeGenerationsUsed ?? 0
+
+    // Block only anonymous users who hit the limit
+    if (!userId && used >= MAX_FREE_GENERATIONS) {
+      return NextResponse.json({
+        error: 'Free generation limit reached. Please sign in for unlimited access during testing.',
+        limitReached: true,
+        requireAuth: true
+      }, { status: 402 })
+    }
 
     // ============================================
     // RATE LIMITING (prevent abuse)

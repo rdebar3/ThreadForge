@@ -15,7 +15,7 @@ export default function Page() {
   const [topic, setTopic] = useState('')
   const [threads, setThreads] = useState<Thread[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showPaywall, setShowPaywall] = useState(false)
+  // showPaywall state removed during free testing phase
   const [isPaid, setIsPaid] = useState(false)
   const [demoMode, setDemoMode] = useState(false)
   const [freeGenerationsUsed, setFreeGenerationsUsed] = useState(0)
@@ -79,51 +79,20 @@ export default function Page() {
     setExampleTopics(getRandomExamples(5))
   }, [])
 
-  // Load paid status and free generation count on mount + when Clerk user changes
+  // Load free generation status
   useEffect(() => {
     const loadStatus = async () => {
-      // If user is signed in via Clerk, prefer Clerk metadata
-      if (isSignedIn && user) {
-        const metadata = user.publicMetadata as {
-          hasPaid?: boolean
-          freeGenerationsUsed?: number
-        }
-
-        const clerkIsPaid = metadata?.hasPaid === true
-        const clerkUsed = metadata?.freeGenerationsUsed ?? 0
-
-        setIsPaid(clerkIsPaid)
-        setFreeGenerationsUsed(clerkUsed)
-
-        // If we just came back from successful payment, show confirmation + refresh Clerk data
-        const urlParams = new URLSearchParams(window.location.search)
-        if (urlParams.get('paid') === 'success') {
-          // Show both a toast and a more prominent banner
-          showToast("🎉 Payment successful! You now have unlimited access.")
-          setShowPaymentSuccess(true)
-
-          // Force Clerk to refresh the latest metadata
-          try {
-            await user?.reload()
-          } catch {}
-
-          // Auto-hide the prominent success banner after 12 seconds
-          setTimeout(() => {
-            setShowPaymentSuccess(false)
-          }, 12000)
-
-          // Clean the URL
-          window.history.replaceState({}, '', '/')
-        }
+      if (isSignedIn) {
+        // During testing phase: signed-in users get unlimited
+        setIsPaid(true)
+        setFreeGenerationsUsed(0)
         return
       }
 
-      // Fall back to localStorage for anonymous users
-      const paid = checkPaidStatus()
-      setIsPaid(paid)
-
+      // Anonymous users: use localStorage for the 3 free generations
       const used = getFreeGenerationsUsed()
       setFreeGenerationsUsed(used)
+      setIsPaid(false)
     }
 
     loadStatus()
@@ -135,18 +104,9 @@ export default function Page() {
     }
   }, [isSignedIn, user])
 
-  // Close paywall on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showPaywall) {
-        setShowPaywall(false)
-      }
-    }
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [showPaywall])
+  // Paywall escape handler removed during free testing phase
 
-  // Check if user has paid (demo using localStorage)
+  // Check if user has paid (for testing / demo)
   const checkPaidStatus = () => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('threadforge_paid') === 'true'
@@ -154,7 +114,7 @@ export default function Page() {
     return false
   }
 
-  // Load free generation count
+  // Load free generation count for anonymous users
   const getFreeGenerationsUsed = () => {
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('threadforge_free_generations') || '0')
@@ -165,20 +125,20 @@ export default function Page() {
   const handleGenerate = async () => {
     if (!topic.trim()) return
 
-    // Use the state we maintain (Clerk-aware for logged-in users, localStorage for anonymous)
-    const paid = isPaid
-    const currentUsed = freeGenerationsUsed
+    setIsGenerating(true)
 
-    if (!paid && currentUsed >= MAX_FREE_GENERATIONS) {
-      if (isSignedIn) {
-        setShowPaywall(true)
-      } else {
-        setShowAuthPrompt(true)
-      }
-      return
+    // Free tier rules during testing phase:
+    // - Anonymous users: max 3 generations
+    // - Signed-in users: unlimited (testing phase)
+    const currentUsed = freeGenerationsUsed;
+
+    if (!isSignedIn && currentUsed >= MAX_FREE_GENERATIONS) {
+      setShowAuthPrompt(true);
+      setIsGenerating(false);
+      return;
     }
 
-    setIsGenerating(true)
+    // If signed in → unlimited during testing (no further checks)
 
     try {
       const res = await fetch('/api/generate', {
@@ -196,12 +156,7 @@ export default function Page() {
         }
       }
 
-      // Server-enforced free limit reached
-      if (res.status === 402) {
-        setShowPaywall(true)
-        setIsGenerating(false)
-        return
-      }
+      // (Free limit enforcement temporarily removed during testing)
 
       // Rate limited (new free tier protection)
       if (res.status === 429) {
@@ -233,15 +188,11 @@ export default function Page() {
       // Reshuffle example topics after a successful generation (avoid previous set)
       setExampleTopics(getRandomExamples(5, previousExamples))
 
-      // Update free generation count from server response when signed in
-      if (isSignedIn && typeof data.remaining === 'number') {
-        const newUsed = MAX_FREE_GENERATIONS - data.remaining
-        setFreeGenerationsUsed(Math.max(0, newUsed))
-      } else if (!paid) {
-        // Fallback for anonymous users using localStorage only
-        const newCount = currentUsed + 1
-        localStorage.setItem('threadforge_free_generations', newCount.toString())
-        setFreeGenerationsUsed(newCount)
+      // Increment anonymous free generation count
+      if (!isSignedIn) {
+        const newCount = currentUsed + 1;
+        localStorage.setItem('threadforge_free_generations', newCount.toString());
+        setFreeGenerationsUsed(newCount);
       }
 
       // Scroll to results after generation
@@ -253,10 +204,7 @@ export default function Page() {
       console.error('Generation failed completely:', error)
       showToast('Something went wrong generating threads. Please try again.')
 
-      // Do NOT consume a free generation on total failure
-      if (!isSignedIn && !paid) {
-        // We already incremented optimistically earlier in some paths, so we won't touch it here
-      }
+      // (Free generation tracking disabled during testing - no action needed on failure)
 
       // Scroll to results area anyway (so user sees the toast)
       setTimeout(() => {
@@ -306,32 +254,7 @@ export default function Page() {
     }, 2200)
   }
 
-  const handlePayment = async () => {
-    try {
-      // Close paywall before redirecting to Stripe
-      setShowPaywall(false)
-
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${window.location.origin}/?cancel=true`,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        alert('Something went wrong starting checkout. Please try again.')
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
-    }
-  }
+  // handlePayment removed during free testing phase (payments temporarily disabled)
 
   // Simple inline copy icon (replaces Font Awesome)
   const CopyIcon = () => (
@@ -374,14 +297,6 @@ export default function Page() {
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
-                {!isPaid && (
-                  <button 
-                    onClick={() => setShowPaywall(true)}
-                    className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all shadow-sm hover:shadow"
-                  >
-                    Unlock Unlimited
-                  </button>
-                )}
                 <UserButton 
                   appearance={{
                     elements: {
@@ -397,12 +312,6 @@ export default function Page() {
                     Sign in
                   </button>
                 </SignInButton>
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all shadow-sm hover:shadow"
-                >
-                  Unlock Unlimited
-                </button>
               </div>
             )}
           </div>
@@ -451,7 +360,7 @@ export default function Page() {
                     {!isPaid && (
                       <button 
                         onClick={() => {
-                          setShowPaywall(true)
+                          {/* Payment removed during testing */}
                           setMobileMenuOpen(false)
                         }}
                         className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center"
@@ -475,7 +384,7 @@ export default function Page() {
                     </SignInButton>
                     <button 
                       onClick={() => {
-                        setShowPaywall(true)
+                        {/* Payment removed during testing */}
                         setMobileMenuOpen(false)
                       }}
                       className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all"
@@ -512,15 +421,15 @@ export default function Page() {
         <div className="bg-zinc-900 border-b border-zinc-800">
           <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <span className="text-zinc-300 font-medium">
-              Free plan — {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} generations left
+              {isSignedIn 
+                ? "Unlimited access (testing phase)" 
+                : `Free — ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} generations left`
+              }
             </span>
             
-            <button 
-              onClick={() => setShowPaywall(true)}
-              className="text-white underline font-medium hover:text-zinc-300 transition-colors"
-            >
+            <span className="text-white font-medium">
               Currently free while testing
-            </button>
+            </span>
 
             {!isSignedIn && (
               <SignInButton mode="modal">
@@ -659,7 +568,7 @@ export default function Page() {
               >
                 New topic
               </button>
-              {/* "Unlock unlimited" button hidden during free testing period */}
+              {/* Payment upsells removed during testing phase */}
             </div>
           </div>
 
@@ -715,8 +624,7 @@ export default function Page() {
             ))}
           </div>
 
-          {/* "Limit reached" banner hidden during free testing period */}
-          {/* Original paid upsell banner removed while tool is free */}
+          {/* Limit banner removed - tool is free/unlimited during testing */}
         </div>
       )}
 
