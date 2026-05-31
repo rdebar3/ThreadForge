@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
-import { SYSTEM_PROMPT } from '../lib/prompts'
-import { incrementUserGenerations } from '../lib/clerk'
+import { SYSTEM_PROMPT } from '../../lib/prompts'
+import { incrementUserGenerations } from '../../lib/clerk'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
 
