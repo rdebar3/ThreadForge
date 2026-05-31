@@ -324,22 +324,9 @@ export default function Page() {
               
               <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
                 {isSignedIn ? (
-                  <>
-                    {!isPaid && (
-                      <button 
-                        onClick={() => {
-                          {/* Payment removed during testing */}
-                          setMobileMenuOpen(false)
-                        }}
-                        className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center"
-                      >
-                        Unlock Unlimited
-                      </button>
-                    )}
-                    <div className="flex justify-center">
-                      <UserButton />
-                    </div>
-                  </>
+                  <div className="flex justify-center">
+                    <UserButton />
+                  </div>
                 ) : (
                   <>
                     <SignInButton mode="modal">
@@ -350,15 +337,14 @@ export default function Page() {
                         Sign in
                       </button>
                     </SignInButton>
-                    <button 
-                      onClick={() => {
-                        {/* Payment removed during testing */}
-                        setMobileMenuOpen(false)
-                      }}
-                      className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all"
-                    >
-                      Unlock Unlimited
-                    </button>
+                    <SignUpButton mode="modal">
+                      <button 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center"
+                      >
+                        Get Started Free
+                      </button>
+                    </SignUpButton>
                   </>
                 )}
               </div>
@@ -368,30 +354,28 @@ export default function Page() {
       </nav>
 
       {/* Free Testing Banner */}
-      {!isSignedIn && (
-        <div className="bg-zinc-900 border-b border-zinc-800">
-          <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <span className="text-zinc-300 font-medium">
-              {isSignedIn 
-                ? "Unlimited access (testing phase)" 
-                : `Free — ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} generations left`
-              }
-            </span>
-            
-            <span className="text-white font-medium">
-              Currently free while testing
-            </span>
+      <div className="bg-zinc-900 border-b border-zinc-800">
+        <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <span className="text-zinc-300 font-medium">
+            {isSignedIn 
+              ? "Unlimited access (free testing phase)" 
+              : `Free — ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} generations left`
+            }
+          </span>
+          
+          <span className="text-white font-medium">
+            Currently free while testing
+          </span>
 
-            {!isSignedIn && (
-              <SignInButton mode="modal">
-                <button className="text-zinc-400 hover:text-white underline text-xs transition-colors">
-                  Sign in to save your progress
-                </button>
-              </SignInButton>
-            )}
-          </div>
+          {!isSignedIn && (
+            <SignInButton mode="modal">
+              <button className="text-zinc-400 hover:text-white underline text-xs transition-colors">
+                Sign in for unlimited access
+              </button>
+            </SignInButton>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Hero - Stronger, more premium design */}
       <div className="relative max-w-5xl mx-auto px-6 pt-12 pb-16 text-center">
