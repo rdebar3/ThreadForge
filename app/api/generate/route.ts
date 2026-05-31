@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
-import { SYSTEM_PROMPT, FEW_SHOT_EXAMPLES } from '../lib/prompts'
+import { SYSTEM_PROMPT } from '../lib/prompts'
 import { incrementUserGenerations } from '../lib/clerk'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
@@ -12,81 +12,6 @@ interface Thread {
 }
 
 const MAX_FREE_GENERATIONS = 3
-
-EXAMPLE 1 (Audience growth, personal story + contrarian)
-Topic: Going from 0 to 10k followers
-1/ I didn't actually "grow" my account until I stopped trying to grow it.
-2/ For the first eight months I treated every post like a job application. Polished, safe, slightly boring on purpose.
-3/ The week I hit 10k I had posted three things that made me nervous to hit send. One was me calling out a big account I used to respect.
-4/ The post that actually broke through wasn't strategic. I was annoyed at 1:17am and typed exactly what I thought.
-5/ Turns out people are starving for anyone who sounds like they have a spine.
-6/ Everything before that was just expensive practice.
-
-EXAMPLE 2 (Posting mistakes + what actually works)
-Topic: My biggest posting mistakes in 2025
-1/ My worst mistake was thinking people wanted my "frameworks."
-2/ I spent six months writing numbered lists that sounded smart and performed like shit.
-3/ The stuff that actually spread was messier. Half-formed thoughts. Specific stories about things that pissed me off that week.
-4/ One line I wrote in a reply ended up in more bookmarks than my best 9-tweet thread: "Most creators are just performing curiosity."
-5/ I still don't fully understand why that one stuck. But I've stopped trying to understand and just write like that more.
-
-EXAMPLE 3 (Viral reflection, honest)
-Topic: What I learned from my most viral thread
-1/ The thread that got me 2.3 million views was not the one I spent three days on.
-2/ It was the one I almost didn't post because it felt too personal and too small.
-3/ I wrote it in 11 minutes on my phone while waiting for coffee. It was about the exact moment I realized my old content strategy was dead.
-4/ The polished threads I planned got 4k-12k views. The one that came out of nowhere got the rest.
-5/ Lesson I'm still trying to internalize: the algorithm rewards emotional specificity more than it rewards effort.
-
-EXAMPLE 4 (Unpopular opinion that performed)
-Topic: Unpopular opinions about content that actually performed well
-1/ "Post consistently" is some of the worst advice you can give a new account.
-2/ I watched three people I respect post absolute garbage every single day for months and go nowhere.
-3/ The accounts blowing up right now are the ones that disappeared for two weeks and came back with something that made people stop scrolling.
-4/ Consistency without a point of view is just expensive spam.
-5/ I'd rather post three times in a month that make people uncomfortable than thirty times that make them nod.
-
-EXAMPLE 5 (Behind the scenes of a launch)
-Topic: Behind the scenes of my last product launch
-1/ We made $47k in the first 72 hours. The number everyone saw.
-2/ What nobody saw: I had a panic attack at 4am the day before we opened the waitlist because the checkout page was broken on mobile.
-3/ The thing that actually moved the needle wasn't the landing page copy or the tweet thread. It was one DM I sent to someone who had complained publicly about the exact problem we were solving.
-4/ She ended up posting about it unprompted. That single post drove more qualified buyers than our entire ad spend.
-5/ Most "launch strategies" are cope for people who don't have something people are already desperate for.
-
-EXAMPLE 6 (Contrarian take on tools/AI in 2026)
-Topic: Why I deleted most of my AI writing tools
-1/ I used to have seven different AI tools in my workflow. Now I have one.
-2/ The more tools I added, the more my writing started sounding like everyone else's.
-3/ There's a very specific tone that appears when someone lets the model finish their thoughts. You can feel it in the third paragraph.
-4/ I write worse first drafts now on purpose. They have more teeth. Then I only use the model to cut, never to generate.
-5/ The people whose writing I still respect in 2026 are the ones who are visibly still doing the thinking themselves.
-
-EXAMPLE 7 (Engagement / replies / current X reality)
-Topic: How replies actually work in 2026
-1/ I used to treat every reply like it was content. Long, thoughtful, trying to be helpful.
-2/ Most of them got almost no traction.
-3/ The replies that actually spread were usually shorter, more specific, and a little more opinionated.
-4/ Not mean — just clear. People seem to engage more when they can immediately tell where you stand.
-5/ I've started writing replies like I'm texting someone who already gets the context. It changed how often people quote or save them.
-
-EXAMPLE 8 (Personal brand / faceless angle)
-Topic: Building in public without showing your face
-1/ I have 38k followers and exactly zero people know what I look like.
-2/ Early on I thought that was a disadvantage. Now I think it's the only reason it worked.
-3/ When you're faceless, every post has to stand on its own. You can't rely on personality or parasocial warmth.
-4/ That constraint forced me to get good at hooks and specifics faster than any face-haver I know.
-5/ The downside is real though. No one will ever defend you when you're wrong. You're just the words on the screen.
-6/ I've made peace with that trade-off.
-
-EXAMPLE 9 (Sharp closer example)
-Topic: What actually compounds when posting
-1/ The metric I stopped tracking was impressions.
-2/ Impressions are the participation trophy of this platform. They go up when you post at the right time or say something safe that the algo likes.
-3/ What I track now: how many people quote-tweet me when I'm not in the room.
-4/ That's the only signal that something I wrote actually changed how someone thinks when I'm not there to perform for them.
-5/ Everything else is just the app doing its job.
-`
 
 // Simple in-memory rate limiter: userId -> last generation timestamp
 // Note: This resets on every serverless cold start / deployment.
@@ -209,8 +134,6 @@ export async function POST(req: NextRequest) {
       // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const systemPrompt = SYSTEM_PROMPT
-
       const userPrompt = `Topic: ${topic}
 
 Chosen angles for the four threads (use each once, make them feel like they come from four different people):
@@ -238,7 +161,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
         body: JSON.stringify({
           model: 'grok-3',
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.92,
@@ -326,8 +249,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
   }
 }
 
-// Fallback mock generator — kept simple on purpose. Real generations now go through
-// full few-shot + rewriter pipeline for 9+/10 quality.
+// Fallback mock generator — kept simple on purpose.
 function generateMockThreads(topic: string): Thread[] {
   const cleanTopic = topic.toLowerCase()
 
@@ -375,28 +297,6 @@ function generateMockThreads(topic: string): Thread[] {
         `5/ If it feels easy, you're probably not doing it right yet.`,
         `6/ The people who win embrace the discomfort early.`
       ]
-    },
-    {
-      title: "30-Day Experiment",
-      tweets: [
-        `1/ I ran a 30-day experiment on ${cleanTopic}.`,
-        `2/ The results surprised me.`,
-        `3/ Here's what actually happened day by day:`,
-        `4/ The biggest shift came from something stupidly simple.`,
-        `5/ Most people overcomplicate this.`,
-        `6/ Save this for when you want real results.`
-      ]
-    },
-    {
-      title: "What No One Tells You",
-      tweets: [
-        `1/ Everyone talks about ${cleanTopic}.`,
-        `2/ Almost no one talks about this part.`,
-        `3/ It's the real reason most people fail at it.`,
-        `4/ Once I figured this out, everything got easier.`,
-        `5/ This is the missing piece in almost every thread on the topic.`,
-        `6/ Bookmark this.`
-      ]
     }
   ]
 
@@ -410,10 +310,7 @@ function generateMockThreads(topic: string): Thread[] {
 }
 
 // ============================================
-// POST-GENERATION REWRITER (the quality multiplier)
-// Takes the first-draft 4 threads and makes them significantly sharper,
-// more specific, better rhythm, and stronger closers.
-// This is step 3 of the 1-4 quality plan.
+// POST-GENERATION REWRITER
 // ============================================
 async function rewriteThreadsWithGrok(
   originalThreads: Thread[],
@@ -429,23 +326,17 @@ async function rewriteThreadsWithGrok(
 You will receive 4 threads + the original topic.
 
 For EACH thread independently, apply these strict rules:
-
 - Keep the core angle and intended voice exactly as-is, but make the execution dramatically better.
-- Sharpen the hook until it has real stopping power. It should feel specific and slightly provocative.
-- Improve rhythm and flow. Remove any stiff, safe, generic, or AI-sounding lines. Add texture, contradictions, or honest details where needed.
-- If the thread feels short or underdeveloped (under 6 strong tweets), expand it with more specific texture, observations, or escalation while keeping the voice intact. Do not leave thin threads.
-- The closer is the most important part. Make it significantly stronger, sharper, and more memorable than the original. It should feel like the best line in the thread. Never accept a soft, summary-style, or average closer.
-- Rewrite weak or generic titles. Titles must feel distinctive, intriguing, and native to how real people title posts on X right now.
-- Kill any remaining generic language, "the lesson is", "here's what I learned", frameworks, or content-writer phrasing.
-- Reduce excessive negativity. If a thread feels overly cynical or demotivating, add honest texture and useful insight instead of letting it stay purely negative.
-- Be brutal about quality. If a line feels safe or average, replace it. Your goal is to make every thread feel like something a sharp person would actually post and be proud of.
-- Ensure the thread feels like it was written by one real, slightly opinionated human at 2am who actually believes what they're saying.
-
-You are not polishing. You are elevating. Do not accept mediocre output. Make these threads significantly better than the first draft.
+- Sharpen the hook until it has real stopping power.
+- Improve rhythm and flow. Remove any stiff, safe, generic, or AI-sounding lines.
+- If the thread feels short or underdeveloped, expand it with more specific texture.
+- The closer is the most important part — make it significantly stronger and more memorable.
+- Rewrite weak or generic titles.
+- Kill any remaining generic language or content-writer phrasing.
+- Be brutal about quality.
 
 Return ONLY the improved JSON in exactly the same structure as the input. No commentary.`
 
-  // Serialize the 4 threads for the rewriter
   const threadsForRewriter = originalThreads.map(t => ({
     id: t.id,
     title: t.title,
@@ -454,11 +345,7 @@ Return ONLY the improved JSON in exactly the same structure as the input. No com
 
   const rewriterUser = `Original topic: ${topic}
 
-Here are the 4 first-draft threads. Apply the strict editor rules above and make every single one significantly better. Focus especially on:
-- Making weak or short threads more developed and textured
-- Dramatically improving closers
-- Fixing generic or boring titles
-- Increasing specificity and edge where it's missing
+Here are the 4 first-draft threads. Apply the strict editor rules above and make every single one significantly better.
 
 ${JSON.stringify({ threads: threadsForRewriter }, null, 2)}
 
@@ -494,13 +381,11 @@ Return the improved version as valid JSON with the exact same structure.`
       return originalThreads
     }
 
-    // Robust JSON extraction
     const jsonString = extractJsonFromLlm(content) || content
     const parsed = JSON.parse(jsonString)
     const improved = parsed.threads
 
     if (Array.isArray(improved) && improved.length >= 3) {
-      // Basic validation that we got usable threads back
       return improved.map((t: any, idx: number) => ({
         id: t.id || idx + 1,
         title: t.title || originalThreads[idx]?.title || 'Thread',
