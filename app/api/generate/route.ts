@@ -69,28 +69,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Topic must be at least 3 characters' }, { status: 400 })
     }
 
-    // Testing phase rules (as requested):
-    // - Anonymous users: limited to 3 generations
-    // - Signed-in users: unlimited access (no payment required during testing)
+    // Real free tier enforcement
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
     const metadata = user.publicMetadata as {
       hasPaid?: boolean
       hasPro?: boolean
       freeGenerationsUsed?: number
+      lastFreeGenerationDate?: string
     }
 
     const hasPro = metadata?.hasPro === true || metadata?.hasPaid === true
-    const used = metadata?.freeGenerationsUsed ?? 0
 
-    // For signed-in users during testing phase: unlimited generations
-    // For anonymous users: limited to MAX_FREE_GENERATIONS
-    // (hasPro users will keep unlimited + get priority in future)
-    if (!userId && used >= MAX_FREE_GENERATIONS) {
+    // Daily reset logic for free tier
+    const today = new Date().toISOString().split('T')[0]
+    const lastDate = metadata?.lastFreeGenerationDate
+    let used = metadata?.freeGenerationsUsed ?? 0
+
+    if (!hasPro && lastDate !== today) {
+      // New day — reset free count
+      used = 0
+      await client.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          ...user.publicMetadata,
+          freeGenerationsUsed: 0,
+          lastFreeGenerationDate: today,
+        },
+      })
+    }
+
+    // Free users (no Pro) are limited to MAX_FREE_GENERATIONS per day
+    if (!hasPro && used >= MAX_FREE_GENERATIONS) {
       return NextResponse.json({
-        error: 'Free generation limit reached. Please sign in for unlimited access during testing.',
+        error: 'You have reached your free daily limit (3 generations). Upgrade to Pro for unlimited access.',
         limitReached: true,
-        requireAuth: true
+        requireUpgrade: true
       }, { status: 402 })
     }
 
@@ -242,14 +255,34 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       }
     }
 
-    // Track usage for analytics (lightweight - using Clerk metadata)
+    // Track usage
     if (userId && threads.length > 0) {
       await incrementUserGenerations(userId, 1)
+
+      // For free (non-Pro) users, track daily free generation count with proper date
+      if (!hasPro) {
+        const currentFreeUsed = (metadata?.freeGenerationsUsed as number) || 0
+        const currentDate = new Date().toISOString().split('T')[0]
+
+        await client.users.updateUserMetadata(userId, {
+          publicMetadata: {
+            ...user.publicMetadata,
+            freeGenerationsUsed: currentFreeUsed + 1,
+            lastFreeGenerationDate: currentDate,
+          },
+        })
+      }
     }
+
+    // Calculate remaining for client
+    const remaining = hasPro ? Infinity : Math.max(0, MAX_FREE_GENERATIONS - (used + 1))
 
     return NextResponse.json({ 
       threads, 
-      demoMode 
+      demoMode,
+      freeGenerationsUsed: !hasPro ? (used + 1) : 0,
+      remainingFree: hasPro ? null : remaining,
+      isPro: hasPro
     })
 
   } catch (error) {

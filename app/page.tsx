@@ -26,7 +26,7 @@ export default function Page() {
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
-  const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3')
+  const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3') // Daily free tier limit for non-Pro users
 
   // Large pool of example topics - focused on how people actually post on X in 2026
   const ALL_EXAMPLE_TOPICS = [
@@ -77,16 +77,31 @@ export default function Page() {
     setExampleTopics(getRandomExamples(5))
   }, [])
 
-  // Load free generation status (free testing phase)
+  // Load free generation status (real product mode with daily reset awareness)
   useEffect(() => {
-    const loadStatus = async () => {
-      if (isSignedIn) {
-        // Signed-in users get unlimited access during free testing phase
+    const loadStatus = () => {
+      if (isSignedIn && hasPro) {
+        // Pro users have unlimited generations
         setFreeGenerationsUsed(0)
         return
       }
 
-      // Anonymous users limited to 3 generations via localStorage
+      if (isSignedIn && user?.publicMetadata) {
+        // Signed-in free user: read authoritative count from Clerk
+        const meta = user.publicMetadata as any
+        const serverUsed = meta.freeGenerationsUsed ?? 0
+        const lastDate = meta.lastFreeGenerationDate
+
+        const today = new Date().toISOString().split('T')[0]
+        const effectiveUsed = lastDate === today ? serverUsed : 0
+
+        // Also sync localStorage for consistency
+        localStorage.setItem('threadforge_free_generations', effectiveUsed.toString())
+        setFreeGenerationsUsed(effectiveUsed)
+        return
+      }
+
+      // Anonymous users: use localStorage
       const used = getFreeGenerationsUsed()
       setFreeGenerationsUsed(used)
     }
@@ -98,9 +113,9 @@ export default function Page() {
     if (input) {
       setTimeout(() => input.focus(), 300)
     }
-  }, [isSignedIn, user])
+  }, [isSignedIn, user, hasPro])
 
-  // Load free generation count for anonymous users (free testing phase)
+  // Load free generation count (used for anonymous + fallback for signed-in free users)
   const getFreeGenerationsUsed = () => {
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('threadforge_free_generations') || '0')
@@ -124,12 +139,13 @@ export default function Page() {
 
     setIsGenerating(true)
 
-    // Free testing phase rules:
-    // - Anonymous users: limited to 3 generations
-    // - Signed-in users: unlimited access
+    // Real free tier rules:
+    // - Free users (no Pro): limited to 3 generations per day
+    // - Pro users: unlimited
     const currentUsed = freeGenerationsUsed
 
-    if (!isSignedIn && currentUsed >= MAX_FREE_GENERATIONS) {
+    // Block if user does not have Pro and has used their daily free allowance
+    if (!hasPro && currentUsed >= MAX_FREE_GENERATIONS) {
       setShowAuthPrompt(true)
       setIsGenerating(false)
       return
@@ -174,8 +190,13 @@ export default function Page() {
       // Reshuffle example topics
       setExampleTopics(getRandomExamples(5, previousExamples))
 
-      // Track anonymous usage
-      if (!isSignedIn) {
+      // Sync free usage counter from server (authoritative, handles daily reset)
+      if (!hasPro && typeof data.freeGenerationsUsed === 'number') {
+        const serverCount = data.freeGenerationsUsed
+        localStorage.setItem('threadforge_free_generations', serverCount.toString())
+        setFreeGenerationsUsed(serverCount)
+      } else if (!hasPro) {
+        // Fallback for older responses
         const newCount = currentUsed + 1
         localStorage.setItem('threadforge_free_generations', newCount.toString())
         setFreeGenerationsUsed(newCount)
@@ -260,7 +281,7 @@ export default function Page() {
     }, 2600)
   }
 
-  // handlePayment removed during free testing phase (payments temporarily disabled)
+  // handlePayment removed (now handled via the Pricing section)
 
   // Simple inline copy icon (replaces Font Awesome)
   const CopyIcon = () => (
@@ -391,26 +412,33 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Clear Free Testing Banner */}
-      <div className="bg-violet-500/10 border-b border-violet-500/30">
-        <div className="max-w-5xl mx-auto px-6 py-3 text-center">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-sm">
-            <span className="font-medium text-violet-300">
-              Currently free while testing
-            </span>
-            
-            {isSignedIn ? (
-              <span className="text-violet-200">• You have unlimited generations right now</span>
+      {/* Free Tier Banner - real product mode with live counter */}
+      <div className="bg-zinc-900/80 border-b border-white/10">
+        <div className="max-w-5xl mx-auto px-6 py-2.5 text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+            {isSignedIn && !hasPro ? (
+              <>
+                <span>
+                  Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS}</span> generations left today
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span>Upgrade to Pro for unlimited</span>
+              </>
             ) : (
-              <span className="text-violet-200">
-                • {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} generations left
-              </span>
+              <>
+                <span>
+                  Free tier: <span className="text-white font-medium">3 generations per day</span>
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span>
+                  Pro users get unlimited generations
+                </span>
+              </>
             )}
-
             {!isSignedIn && (
               <SignInButton mode="modal">
-                <button className="ml-1 underline text-violet-300 hover:text-violet-100 transition-colors">
-                  Sign in for unlimited access during testing
+                <button className="ml-1 underline text-violet-400 hover:text-violet-300 transition-colors">
+                  Sign in to track your usage
                 </button>
               </SignInButton>
             )}
@@ -477,6 +505,16 @@ export default function Page() {
               )}
             </button>
           </div>
+
+          {/* Visible free usage counter for signed-in free users */}
+          {isSignedIn && !hasPro && (
+            <div className="mt-3 text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-white/10 px-3 py-1 text-xs text-zinc-400">
+                <span className="text-emerald-400">●</span>
+                {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} free generations left today
+              </span>
+            </div>
+          )}
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
@@ -600,7 +638,7 @@ export default function Page() {
             ))}
           </div>
 
-          {/* Limit banner removed - tool is free/unlimited during testing */}
+          {/* Free usage limit is enforced in handleGenerate */}
         </div>
       )}
 
@@ -743,14 +781,14 @@ export default function Page() {
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations/day (guests)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 4 high-quality thread variants</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
-              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Signed-in: unlimited during testing</li>
+              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade to Pro for unlimited</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
-              The free tier stays generous after launch.
+              No credit card required. Upgrade anytime.
             </div>
           </div>
 
@@ -800,7 +838,7 @@ export default function Page() {
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-violet-400/70">Currently free while testing. Pro activates instantly via Stripe. Real Pro features launching soon.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. Real Pro features (history, one-click to X, etc.) coming soon.</p>
       </div>
 
       {/* Footer */}
@@ -831,7 +869,7 @@ export default function Page() {
         </div>
       )}
 
-      {/* Auth Prompt Modal - simplified during free testing */}
+      {/* Auth Prompt Modal */}
       {showAuthPrompt && (
         <div 
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6"
@@ -841,9 +879,9 @@ export default function Page() {
             className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-semibold mb-2">You've reached the free limit</h3>
+            <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Sign in for free to get unlimited generations while we're in testing.
+              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro for unlimited generations.
             </p>
 
             <SignInButton mode="modal">
@@ -851,7 +889,7 @@ export default function Page() {
                 onClick={() => setShowAuthPrompt(false)}
                 className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
               >
-                Sign in for unlimited access
+                Sign in to continue free
               </button>
             </SignInButton>
 
@@ -864,8 +902,6 @@ export default function Page() {
           </div>
         </div>
       )}
-
-      {/* Paywall Modal hidden during free testing period */}
     </div>
   )
 }
