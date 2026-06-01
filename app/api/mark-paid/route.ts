@@ -14,9 +14,14 @@ export async function POST() {
 
   try {
     const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const existing = (user.publicMetadata || {}) as Record<string, any>
+
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
-        hasPaid: true,
+        ...existing,
+        hasPro: true,
+        hasPaid: true, // legacy compat
         paidAt: new Date().toISOString(),
       },
     })

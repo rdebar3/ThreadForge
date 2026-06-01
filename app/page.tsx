@@ -11,6 +11,7 @@ interface Thread {
 
 export default function Page() {
   const { isSignedIn, user } = useUser()
+  const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
 
   const [topic, setTopic] = useState('')
   const [threads, setThreads] = useState<Thread[]>([])
@@ -19,7 +20,7 @@ export default function Page() {
   const [freeGenerationsUsed, setFreeGenerationsUsed] = useState(0)
   const [copiedThreadId, setCopiedThreadId] = useState<number | null>(null)
   const [copiedTweetKey, setCopiedTweetKey] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -108,7 +109,18 @@ export default function Page() {
   }
 
   const handleGenerate = async () => {
-    if (!topic.trim()) return
+    const cleanTopic = topic.trim()
+
+    if (!cleanTopic) return
+
+    if (cleanTopic.length < 3) {
+      showToast("Please enter at least 3 characters")
+      return
+    }
+    if (cleanTopic.length > 180) {
+      showToast("Topic is too long (max 180 characters)")
+      return
+    }
 
     setIsGenerating(true)
 
@@ -127,7 +139,7 @@ export default function Page() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topic.trim() })
+        body: JSON.stringify({ topic: cleanTopic })
       })
 
       if (res.status === 401) {
@@ -141,16 +153,16 @@ export default function Page() {
 
       if (res.status === 429) {
         const data = await res.json().catch(() => ({}))
-        const waitMessage = data.error || 'Please wait before generating again.'
-        showToast(waitMessage)
+        const waitMessage = data.error || 'Please wait a moment before generating again.'
+        showToast(waitMessage, 'error')
         setIsGenerating(false)
         return
       }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        const message = data.error || 'Something went wrong generating threads. Please try again.'
-        showToast(message)
+        const message = data.error || 'Something went wrong while generating threads. Please try again.'
+        showToast(message, 'error')
         setIsGenerating(false)
         return
       }
@@ -174,7 +186,7 @@ export default function Page() {
       }, 100)
     } catch (error) {
       console.error('Generation failed:', error)
-      showToast('Something went wrong generating threads. Please try again.')
+      showToast('We ran into a problem generating your threads. Please try again in a moment.', 'error')
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 100)
@@ -190,13 +202,40 @@ export default function Page() {
     }
   }
 
+  const handleUpgrade = async () => {
+    if (!isSignedIn) {
+      setShowAuthPrompt(true)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/?canceled=true`,
+        })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        showToast(data.error || 'Unable to start checkout. Please try again.', 'error')
+      }
+    } catch (err) {
+      console.error('Checkout error', err)
+      showToast('Failed to connect to payment system. Please try again in a moment.', 'error')
+    }
+  }
+
   const copyThread = (thread: Thread) => {
     const fullThread = thread.tweets.join('\n\n')
     navigator.clipboard.writeText(fullThread)
 
     // Visual feedback using state
     setCopiedThreadId(thread.id)
-    showToast('Thread copied to clipboard')
+    showToast('Thread copied to clipboard', 'success')
 
     setTimeout(() => {
       setCopiedThreadId(null)
@@ -207,19 +246,18 @@ export default function Page() {
     navigator.clipboard.writeText(tweet)
     const key = `${threadId}-${tweetIndex}`
     setCopiedTweetKey(key)
-    showToast('Tweet copied')
+    showToast('Tweet copied', 'success')
 
     setTimeout(() => {
       setCopiedTweetKey(null)
     }, 1200)
   }
 
-  const showToast = (message: string) => {
-    setToast(message)
-    // Auto dismiss
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type })
     setTimeout(() => {
       setToast(null)
-    }, 2200)
+    }, 2600)
   }
 
   // handlePayment removed during free testing phase (payments temporarily disabled)
@@ -261,7 +299,7 @@ export default function Page() {
           <div className="hidden md:flex items-center gap-4 text-sm">
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
-            {/* <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a> */}
+            <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
@@ -353,27 +391,30 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Free Testing Banner */}
-      <div className="bg-zinc-900 border-b border-zinc-800">
-        <div className="max-w-5xl mx-auto px-6 py-2.5 text-center text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span className="text-zinc-300 font-medium">
-            {isSignedIn 
-              ? "Unlimited access (free testing phase)" 
-              : `Free — ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} generations left`
-            }
-          </span>
-          
-          <span className="text-white font-medium">
-            Currently free while testing
-          </span>
+      {/* Clear Free Testing Banner */}
+      <div className="bg-violet-500/10 border-b border-violet-500/30">
+        <div className="max-w-5xl mx-auto px-6 py-3 text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-sm">
+            <span className="font-medium text-violet-300">
+              Currently free while testing
+            </span>
+            
+            {isSignedIn ? (
+              <span className="text-violet-200">• You have unlimited generations right now</span>
+            ) : (
+              <span className="text-violet-200">
+                • {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} generations left
+              </span>
+            )}
 
-          {!isSignedIn && (
-            <SignInButton mode="modal">
-              <button className="text-zinc-400 hover:text-white underline text-xs transition-colors">
-                Sign in for unlimited access
-              </button>
-            </SignInButton>
-          )}
+            {!isSignedIn && (
+              <SignInButton mode="modal">
+                <button className="ml-1 underline text-violet-300 hover:text-violet-100 transition-colors">
+                  Sign in for unlimited access during testing
+                </button>
+              </SignInButton>
+            )}
+          </div>
         </div>
       </div>
 
@@ -393,7 +434,7 @@ export default function Page() {
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
-          Trusted by 2,400+ creators &amp; founders
+          Built for creators and founders who actually post
         </div>
 
         <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-5 leading-none">
@@ -645,7 +686,7 @@ export default function Page() {
       <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-semibold tracking-tight mb-3">Real people. Real results.</h2>
-          <p className="text-zinc-400">Here's what creators and founders are saying</p>
+          <p className="text-zinc-400">Real feedback from people using ThreadForge</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -682,7 +723,85 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Pricing section hidden during free testing period */}
+      {/* Pricing - Option B: Free vs Pro comparison cards with cancel anytime */}
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-4">PRICING</div>
+          <h2 className="text-4xl font-semibold tracking-tighter mb-3">Free to start.<br className="hidden sm:block" /> Pro when you need it.</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">Generous free tier forever. Pro unlocks unlimited + premium features as we launch them.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-[860px] mx-auto">
+          {/* Free Tier Card */}
+          <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
+            <div className="mb-6">
+              <div className="uppercase text-emerald-400 text-xs tracking-[1.5px] font-medium mb-1">FREE</div>
+              <div className="flex items-end gap-1">
+                <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$0</span>
+              </div>
+              <div className="text-sm text-zinc-500 mt-1">No credit card required</div>
+            </div>
+
+            <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations/day (guests)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 4 high-quality thread variants</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
+              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Signed-in: unlimited during testing</li>
+            </ul>
+
+            <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
+              The free tier stays generous after launch.
+            </div>
+          </div>
+
+          {/* Pro Tier Card - highlighted */}
+          <div className="rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full">MOST POPULAR</div>
+
+            <div className="mb-6">
+              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2">
+                PRO
+                {hasPro && <span className="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-px rounded">ACTIVE</span>}
+              </div>
+              <div className="flex items-end gap-1">
+                <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$9</span>
+                <span className="text-zinc-400 pb-1">/mo</span>
+              </div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Cancel anytime • No long-term contract</div>
+            </div>
+
+            <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Unlimited</strong> generations</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Priority generation speed</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history of past threads</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X (soon)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
+            </ul>
+
+            {hasPro ? (
+              <div className="mt-8">
+                <div className="w-full py-4 bg-emerald-500/10 text-emerald-400 font-semibold rounded-2xl text-center text-lg border border-emerald-500/30">
+                  ✓ You have Pro
+                </div>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage subscription via Stripe (coming soon)</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={handleUpgrade}
+                  className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm"
+                >
+                  Upgrade to Pro — $9/mo
+                </button>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds.</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <p className="text-center mt-8 text-xs text-violet-400/70">Currently free while testing. Pro activates instantly via Stripe. Real Pro features launching soon.</p>
+      </div>
 
       {/* Footer */}
       <footer className="border-t border-zinc-800 py-8 text-sm text-zinc-500 mt-auto">
@@ -696,11 +815,19 @@ export default function Page() {
         </div>
       </footer>
 
-      {/* Toast notification */}
+      {/* Toast notification - improved */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-zinc-900 border border-zinc-700 text-sm text-zinc-200 shadow-xl flex items-center gap-2">
-          <span className="text-emerald-400">✓</span>
-          {toast}
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-2xl text-sm shadow-xl flex items-center gap-2 border ${
+          toast.type === 'error' 
+            ? 'bg-red-500/10 border-red-500/40 text-red-300' 
+            : toast.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+            : 'bg-zinc-900 border-zinc-700 text-zinc-200'
+        }`}>
+          <span>
+            {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✓' : 'ℹ️'}
+          </span>
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -714,9 +841,9 @@ export default function Page() {
             className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-semibold mb-2">Sign in to save your threads</h3>
+            <h3 className="text-2xl font-semibold mb-2">You've reached the free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Create a free account to save your generated threads across devices.
+              Sign in for free to get unlimited generations while we're in testing.
             </p>
 
             <SignInButton mode="modal">
@@ -724,7 +851,7 @@ export default function Page() {
                 onClick={() => setShowAuthPrompt(false)}
                 className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
               >
-                Sign in with Google or Email
+                Sign in for unlimited access
               </button>
             </SignInButton>
 

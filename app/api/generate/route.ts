@@ -62,6 +62,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Topic is required' }, { status: 400 })
     }
 
+    // Basic sanitization and length limits
+    const cleanTopic = topic.trim().slice(0, 200)
+
+    if (cleanTopic.length < 3) {
+      return NextResponse.json({ error: 'Topic must be at least 3 characters' }, { status: 400 })
+    }
+
     // Testing phase rules (as requested):
     // - Anonymous users: limited to 3 generations
     // - Signed-in users: unlimited access (no payment required during testing)
@@ -69,13 +76,16 @@ export async function POST(req: NextRequest) {
     const user = await client.users.getUser(userId)
     const metadata = user.publicMetadata as {
       hasPaid?: boolean
+      hasPro?: boolean
       freeGenerationsUsed?: number
     }
 
-    const hasPaid = metadata?.hasPaid === true
+    const hasPro = metadata?.hasPro === true || metadata?.hasPaid === true
     const used = metadata?.freeGenerationsUsed ?? 0
 
-    // Block only anonymous users who hit the limit
+    // For signed-in users during testing phase: unlimited generations
+    // For anonymous users: limited to MAX_FREE_GENERATIONS
+    // (hasPro users will keep unlimited + get priority in future)
     if (!userId && used >= MAX_FREE_GENERATIONS) {
       return NextResponse.json({
         error: 'Free generation limit reached. Please sign in for unlimited access during testing.',
@@ -86,6 +96,8 @@ export async function POST(req: NextRequest) {
 
     // ============================================
     // RATE LIMITING (prevent abuse)
+    // Current: In-memory (fast but resets on cold starts).
+    // Future improvement: Move to Clerk privateMetadata or Redis for persistence.
     // ============================================
     const now = Date.now()
     const lastTime = lastGenerationTime.get(userId) || 0
@@ -100,7 +112,7 @@ export async function POST(req: NextRequest) {
       }, { status: 429 })
     }
 
-    // Record this generation attempt
+    // Record this generation attempt (in-memory)
     lastGenerationTime.set(userId, now)
 
     // Occasionally clean up old entries
@@ -116,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
       console.warn('⚠️ No valid XAI_API_KEY found — falling back to demo mode')
-      threads = generateMockThreads(topic)
+      threads = generateMockThreads(cleanTopic)
       demoMode = true
     } else {
       // High-signal angles that tend to perform well on X in 2026
@@ -134,7 +146,7 @@ export async function POST(req: NextRequest) {
       // Shuffle and pick 4 different angles every time
       const shuffledAngles = [...allAngles].sort(() => Math.random() - 0.5).slice(0, 4)
 
-      const userPrompt = `Topic: ${topic}
+      const userPrompt = `Topic: ${cleanTopic}
 
 Chosen angles for the four threads (use each once, make them feel like they come from four different people):
 1. ${shuffledAngles[0]}
@@ -225,7 +237,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
         // ============================================
         if (threads.length >= 3) {
           console.log(`Running rewriter pass on ${threads.length} threads for topic: "${topic}"`)
-          threads = await rewriteThreadsWithGrok(threads, topic, apiKey)
+          threads = await rewriteThreadsWithGrok(threads, cleanTopic, apiKey)
         }
       }
     }

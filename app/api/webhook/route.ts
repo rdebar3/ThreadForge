@@ -3,10 +3,11 @@ import Stripe from 'stripe'
 import { clerkClient } from '@clerk/nextjs/server'
 
 /**
- * Stripe Webhook Handler
+ * Stripe Webhook Handler (Phase 1 - Subscriptions)
  * 
- * ⚠️ DISABLED DURING FREE TESTING PHASE
- * This route is kept for when we turn on paid plans.
+ * Handles both legacy one-time payments and new recurring $9/mo subscriptions.
+ * Primary source of truth for hasPro / hasPaid in Clerk publicMetadata.
+ * Idempotent via in-memory + Clerk metadata checks.
  */
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
@@ -48,10 +49,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  // Idempotency check - skip if we've already processed this event
+  // ============================================
+  // IDEMPOTENCY (prevent duplicate processing)
+  // ============================================
+  // Primary check: in-memory (fast, but resets on cold starts)
   if (processedEvents.has(event.id)) {
-    console.log(`⚠️ Duplicate event received, skipping: ${event.id}`)
+    console.log(`⚠️ Duplicate event (in-memory cache): ${event.id}`)
     return NextResponse.json({ received: true })
+  }
+
+  // Secondary check: Clerk metadata (survives deployments)
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    const userId = session.client_reference_id
+
+    if (userId) {
+      try {
+        const client = await clerkClient()
+        const user = await client.users.getUser(userId)
+        const metadata = user.publicMetadata as any
+
+        const alreadyPaid = metadata?.hasPaid === true || metadata?.hasPro === true
+        const alreadyProcessed = metadata?.lastStripeEventId === event.id
+
+        if (alreadyPaid || alreadyProcessed) {
+          console.log(`⚠️ User ${userId} already processed (hasPro/hasPaid or matching event ID). Skipping.`)
+          processedEvents.add(event.id)
+          return NextResponse.json({ received: true })
+        }
+      } catch (err) {
+        console.warn('Could not check Clerk metadata for idempotency (non-fatal):', err)
+      }
+    }
   }
 
   console.log(`📩 Received Stripe event: ${event.type} (ID: ${event.id})`)
@@ -63,6 +92,7 @@ export async function POST(req: NextRequest) {
 
         console.log('✅ checkout.session.completed received', {
           sessionId: session.id,
+          mode: session.mode,
           paymentStatus: session.payment_status,
           userId: session.client_reference_id,
         })
@@ -71,14 +101,31 @@ export async function POST(req: NextRequest) {
 
         if (userId) {
           const client = await clerkClient()
-          await client.users.updateUserMetadata(userId, {
-            publicMetadata: {
-              hasPaid: true,
-              paidAt: new Date().toISOString(),
-              stripeSessionId: session.id,
-            },
-          })
-          console.log(`✅ User ${userId} marked as paid via webhook`)
+          const user = await client.users.getUser(userId)
+          const existing = (user.publicMetadata || {}) as Record<string, any>
+
+          const isSub = session.mode === 'subscription'
+          const subId = typeof session.subscription === 'string' ? session.subscription : (session.subscription as any)?.id
+          const custId = typeof session.customer === 'string' ? session.customer : (session.customer as any)?.id
+
+          const updates: Record<string, any> = {
+            ...existing,
+            hasPro: true,
+            hasPaid: true, // backward compat with older one-time flow
+            paidAt: new Date().toISOString(),
+            stripeSessionId: session.id,
+          }
+
+          if (isSub && subId) {
+            updates.stripeSubscriptionId = subId
+            updates.subscriptionStatus = 'active'
+          }
+          if (custId) {
+            updates.stripeCustomerId = custId
+          }
+
+          await client.users.updateUserMetadata(userId, { publicMetadata: updates })
+          console.log(`✅ User ${userId} marked hasPro via ${isSub ? 'subscription' : 'one-time'} checkout`)
         } else {
           console.warn('⚠️ No client_reference_id found — user may need to be marked paid on success page')
         }
@@ -111,6 +158,58 @@ export async function POST(req: NextRequest) {
           failureMessage: charge.failure_message,
           failureCode: charge.failure_code,
         })
+
+        processedEvents.add(event.id)
+        break
+      }
+
+      // ============================================
+      // SUBSCRIPTION LIFECYCLE (new in Phase 1)
+      // ============================================
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription
+        const clerkUserId = subscription.metadata?.clerkUserId as string | undefined
+
+        if (clerkUserId && clerkUserId !== 'unknown') {
+          const isActive = ['active', 'trialing'].includes(subscription.status)
+          const client = await clerkClient()
+          const user = await client.users.getUser(clerkUserId)
+          const existing = (user.publicMetadata || {}) as Record<string, any>
+
+          await client.users.updateUserMetadata(clerkUserId, {
+            publicMetadata: {
+              ...existing,
+              hasPro: isActive,
+              hasPaid: isActive, // compat
+              stripeSubscriptionId: subscription.id,
+              subscriptionStatus: subscription.status,
+            },
+          })
+          console.log(`✅ Sub updated for ${clerkUserId}: ${subscription.status} (hasPro=${isActive})`)
+        }
+
+        processedEvents.add(event.id)
+        break
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription
+        const clerkUserId = subscription.metadata?.clerkUserId as string | undefined
+
+        if (clerkUserId && clerkUserId !== 'unknown') {
+          const client = await clerkClient()
+          const user = await client.users.getUser(clerkUserId)
+          const existing = (user.publicMetadata || {}) as Record<string, any>
+
+          await client.users.updateUserMetadata(clerkUserId, {
+            publicMetadata: {
+              ...existing,
+              hasPro: false,
+              subscriptionStatus: 'canceled',
+            },
+          })
+          console.log(`✅ Sub canceled for ${clerkUserId}`)
+        }
 
         processedEvents.add(event.id)
         break

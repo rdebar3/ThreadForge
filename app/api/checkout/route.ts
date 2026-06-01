@@ -3,11 +3,11 @@ import Stripe from 'stripe'
 import { auth } from '@clerk/nextjs/server'
 
 /**
- * Stripe Checkout Route
+ * Stripe Checkout Route - Recurring Subscriptions (Phase 1)
  * 
- * ⚠️ DISABLED DURING FREE TESTING PHASE
- * This route is kept for when we enable paid plans.
- * Currently not used in the UI.
+ * Creates a Stripe Checkout Session for the $9/mo Pro plan.
+ * Primary confirmation of Pro status happens via webhook (supports subscriptions).
+ * Fallbacks (verify-session + mark-paid) kept for compatibility.
  */
 
 export async function POST(req: NextRequest) {
@@ -29,9 +29,17 @@ export async function POST(req: NextRequest) {
     const { successUrl, cancelUrl } = await req.json()
     const { userId } = await auth()
 
+    // Basic validation
+    if (successUrl && typeof successUrl !== 'string') {
+      return NextResponse.json({ error: 'Invalid successUrl' }, { status: 400 })
+    }
+    if (cancelUrl && typeof cancelUrl !== 'string') {
+      return NextResponse.json({ error: 'Invalid cancelUrl' }, { status: 400 })
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode: 'payment',
+      mode: 'subscription',
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID || 'price_1TcFakCS6rFBWmntHVjrbe8t',
@@ -42,8 +50,18 @@ export async function POST(req: NextRequest) {
       cancel_url: cancelUrl || `${req.nextUrl.origin}/`,
       client_reference_id: userId || undefined,
       metadata: {
-        product: 'threadforge_unlimited',
+        product: 'threadforge_pro',
+        plan: 'pro_monthly',
       },
+      // Pass userId into the Subscription so subscription.* webhooks can map back to Clerk user
+      subscription_data: userId
+        ? {
+            metadata: {
+              clerkUserId: userId,
+            },
+          }
+        : undefined,
+      // Primary Pro status updates come from webhooks for reliability on recurring subs
     })
 
     return NextResponse.json({ url: session.url })

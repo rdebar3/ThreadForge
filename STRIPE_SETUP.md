@@ -10,12 +10,15 @@
    - Publishable key (starts with `pk_test_`)
    - Secret key (starts with `sk_test_`)
 
-## Step 3: Create a Product
+## Step 3: Create a Product (Recurring Pro Subscription)
 1. Go to Products → + Add product
-2. Name: `ThreadForge - Unlimited Access`
-3. Price: One-time → $9.00
-4. Copy the **Price ID** (starts with `price_`)
-5. Save it
+2. Name: `ThreadForge Pro`
+3. Price: **Recurring** → Monthly → $9.00
+4. (Optional but recommended) Add a $0 "Free" tier product for reference
+5. Copy the **Price ID** for the $9/mo recurring price (starts with `price_`)
+6. Save it
+
+**Important for Phase 1+**: This must be a recurring monthly price. One-time prices will no longer work for the new Pro flow.
 
 ## Step 4: Add to Environment Variables
 Create `.env.local` in the root:
