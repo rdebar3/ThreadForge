@@ -11,7 +11,13 @@ export async function GET(req: NextRequest) {
 
   const OWNER_USER_ID = process.env.THREADFORGE_OWNER_ID || ''
 
+  if (!OWNER_USER_ID) {
+    console.error('THREADFORGE_OWNER_ID is not configured')
+    return NextResponse.json({ error: 'Admin access not configured' }, { status: 500 })
+  }
+
   if (!userId || userId !== OWNER_USER_ID) {
+    console.warn(`Unauthorized admin access attempt by user: ${userId || 'anonymous'}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
