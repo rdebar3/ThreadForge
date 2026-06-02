@@ -39,12 +39,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, postIds })
   } catch (err: any) {
     console.error('Direct X post failed for user', userId, ':', err)
-    if (err.message === 'CreditsDepleted' || err.message.includes('CreditsDepleted')) {
+    const errMsg = err.message || 'Failed to post thread to X'
+    if (errMsg === 'CreditsDepleted' || errMsg.includes('CreditsDepleted')) {
       return NextResponse.json({ 
         error: 'X API credits depleted. Go to your X Developer Console to add credits and try again.', 
         creditsDepleted: true 
       }, { status: 429 })
     }
-    return NextResponse.json({ error: err.message || 'Failed to post thread to X' }, { status: 500 })
+    // Pass through improved X API error messages (including reply_settings validation etc.)
+    return NextResponse.json({ error: errMsg }, { status: 500 })
   }
 }

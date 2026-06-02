@@ -338,8 +338,10 @@ export async function postThreadToX(accessToken: string, tweets: string[]): Prom
 
     const payload: any = { text }
     if (!inReplyTo) {
-      // Set reply settings on the root tweet of the chain
-      payload.reply_settings = 'everyone'
+      // Set reply settings on the root tweet of the chain.
+      // Valid values per X API: following, mentionedUsers, subscribers, verified
+      // "following" is appropriate for public threads (anyone who follows you can reply).
+      payload.reply_settings = 'following'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
@@ -358,7 +360,25 @@ export async function postThreadToX(accessToken: string, tweets: string[]): Prom
       if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
         throw new Error('CreditsDepleted')
       }
-      throw new Error(`X API error ${res.status}: ${errText.substring(0, 180)}`)
+      // Better error handling: try to parse X API JSON error response for clearer messages
+      let friendlyError = `X API error ${res.status}: ${errText.substring(0, 180)}`
+      try {
+        const parsed = JSON.parse(errText)
+        if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+          const firstErr = parsed.errors[0]
+          const msg = firstErr.message || firstErr.detail || JSON.stringify(firstErr)
+          friendlyError = `X API error ${res.status}: ${msg}`
+          // Also surface specific codes like invalid reply_settings etc.
+          if (firstErr.code) {
+            friendlyError += ` (code: ${firstErr.code})`
+          }
+        } else if (parsed.detail) {
+          friendlyError = `X API error ${res.status}: ${parsed.detail}`
+        }
+      } catch (e) {
+        // not JSON, use raw text (already truncated)
+      }
+      throw new Error(friendlyError)
     }
 
     const json = await res.json()
