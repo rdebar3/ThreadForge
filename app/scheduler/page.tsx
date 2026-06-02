@@ -40,11 +40,14 @@ export default function SchedulerPage() {
   const bestTimeSuggestions = getBestTimeSuggestions()
 
   useEffect(() => {
+    if (isSignedIn) {
+      // Always handle redirect params (e.g. ?error=config or ?connected=1) so toasts show even for trial users
+      handleConnectRedirect()
+    }
+
     if (isSignedIn && (isProPlus || !hasUsedProPlusTrial)) {
       fetchSchedules()
       fetchXAccount()
-      // After X connect redirect we may have query params
-      handleConnectRedirect()
     } else {
       setLoading(false)
     }
@@ -111,9 +114,11 @@ export default function SchedulerPage() {
     }
     const err = params.get('error')
     if (err) {
-      const friendly = err === 'config' ? 'X OAuth is not configured (missing env vars).' : 
-                       err === 'invalid_state' ? 'Security check failed. Please try connecting again.' : 
-                       'Failed to connect X account. ' + err
+      const friendly = err === 'config'
+        ? 'X OAuth is not configured (missing X_API_KEY / X_API_SECRET env vars). Check .env.local or your hosting (Vercel) Environment Variables. See .env.example for the X (OAuth 2.0 Client ID + Secret) setup.'
+        : err === 'invalid_state'
+        ? 'Security check failed. Please try connecting again.'
+        : 'Failed to connect X account. ' + err
       showToast(friendly, 'error')
       window.history.replaceState({}, '', '/scheduler')
     }

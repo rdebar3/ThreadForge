@@ -19,11 +19,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/sign-in', req.url))
   }
 
-  const clientId = process.env.X_CLIENT_ID
+  // Support both common naming: X_API_KEY / X_API_SECRET (preferred) or legacy X_CLIENT_ID / X_CLIENT_SECRET
+  const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
   const redirectUri = process.env.X_REDIRECT_URI || `${req.nextUrl.origin}/api/x/callback`
 
   if (!clientId) {
-    console.error('X_CLIENT_ID is not configured')
+    console.error('X OAuth not configured: missing X_API_KEY (or X_CLIENT_ID)')
     return NextResponse.redirect(new URL('/scheduler?error=config', req.url))
   }
 

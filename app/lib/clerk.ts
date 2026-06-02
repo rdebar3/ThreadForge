@@ -198,11 +198,12 @@ const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
  * Refresh an X access token using the stored refresh_token.
  */
 export async function refreshXToken(refreshToken: string): Promise<XTokenRefreshResult | null> {
-  const clientId = process.env.X_CLIENT_ID
-  const clientSecret = process.env.X_CLIENT_SECRET
+  // Support both common naming: X_API_KEY / X_API_SECRET (preferred) or legacy X_CLIENT_ID / X_CLIENT_SECRET
+  const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
+  const clientSecret = process.env.X_API_SECRET || process.env.X_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    console.error('X_CLIENT_ID or X_CLIENT_SECRET missing for token refresh')
+    console.error('X_API_KEY or X_API_SECRET (or X_CLIENT_ID/X_CLIENT_SECRET) missing for token refresh')
     return null
   }
 
