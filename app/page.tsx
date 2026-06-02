@@ -344,7 +344,7 @@ export default function Page() {
   )
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-x-hidden">
+    <div className="min-h-screen text-zinc-100 flex flex-col overflow-x-hidden">
       {/* Global ambient orbs for whole-page premium depth - enhanced with more layers and soft glowing accents for striking modern feel (still very subtle, non-distracting) */}
       <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
         <div className="absolute top-[15%] right-[20%] w-[700px] h-[700px] bg-violet-500/7 rounded-full blur-[190px] animate-[heroBlob_38s_infinite_ease-in-out]"></div>
@@ -556,28 +556,41 @@ export default function Page() {
           {/* Vignette for focus and depth */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.3)_100%)]"></div>
           
-          {/* Subtle glowing orbs - richer, more dynamic for alive premium feel (violet/indigo, varied, slow) */}
-          <div className="absolute top-1/4 left-1/3 w-[520px] h-[520px] bg-violet-500/20 rounded-full blur-[170px] animate-[heroBlob_24s_infinite_ease-in-out]"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-[460px] h-[460px] bg-indigo-500/16 rounded-full blur-[140px] animate-[heroBlob_30s_infinite_ease-in-out_5s]"></div>
-          <div className="absolute top-2/3 left-1/5 w-80 h-80 bg-violet-400/13 rounded-full blur-[110px] animate-[heroBlob_19s_infinite_ease-in-out_9s]"></div>
-          <div className="absolute top-[38%] right-[12%] w-[340px] h-[340px] bg-indigo-400/11 rounded-full blur-[190px] animate-[heroBlob_35s_infinite_ease-in-out_2s]"></div>
-          <div className="absolute bottom-[12%] left-[8%] w-[600px] h-[600px] bg-violet-500/9 rounded-full blur-[210px] animate-[heroBlob_48s_infinite_ease-in-out_14s]"></div>
-          <div className="absolute top-[18%] right-[35%] w-[280px] h-[280px] bg-violet-500/8 rounded-full blur-[150px] animate-[heroBlob_27s_infinite_ease-in-out_7s]"></div>
-          <div className="absolute top-[50%] left-[25%] w-[200px] h-[200px] bg-indigo-500/7 rounded-full blur-[120px] animate-[heroBlob_40s_infinite_ease-in-out_4s]"></div>
+          {/* Rich, modern dark tech background for hero: deep violet/indigo gradients, soft glowing orbs, very subtle geometric grid - applied directly here for the main hero section to ensure it shows (not flat black) */}
+          {/* Deep rich base atmosphere with layered violet/indigo gradients for depth */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/40 to-zinc-950/90"></div>
+          {/* Very subtle geometric grid pattern (lines + dots) for modern tech texture - kept very faint */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(39,39,42,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(39,39,42,0.06)_1px,transparent_1px)] bg-[length:36px_36px]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(#27272a_0.5px,transparent_2px)] bg-[length:6px_6px] opacity-30"></div>
+          {/* Soft gradient mesh for premium atmosphere */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/55 via-transparent to-indigo-950/45"></div>
+          {/* Vignette for focus and depth */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.35)_100%)]"></div>
           
-          {/* Soft glowing accents - more prominent for premium alive hero */}
-          <div className="absolute top-[26%] left-1/2 -translate-x-1/2 w-[980px] h-[320px] bg-violet-500/9 rounded-full blur-[130px] animate-[softGlow_14s_infinite_ease-in-out]"></div>
-          <div className="absolute top-[33%] left-1/2 -translate-x-1/2 w-[760px] h-[240px] bg-indigo-500/8 rounded-full blur-[110px] animate-[softGlow_20s_infinite_ease-in-out_3s]"></div>
-          <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[620px] h-[180px] bg-violet-400/6 rounded-full blur-[90px] animate-[softGlow_16s_infinite_ease-in-out_1s]"></div>
-          <div className="absolute top-[48%] left-1/2 -translate-x-1/2 w-[450px] h-[140px] bg-indigo-400/5 rounded-full blur-[80px] animate-[softGlow_22s_infinite_ease-in-out_6s]"></div>
+          {/* Soft glowing orbs - more numerous, varied for rich, alive premium feel (deep violet/indigo, slow animations, non-distracting) */}
+          <div className="absolute top-1/4 left-1/3 w-[520px] h-[520px] bg-violet-500/22 rounded-full blur-[180px] animate-[heroBlob_26s_infinite_ease-in-out]"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-[460px] h-[460px] bg-indigo-500/18 rounded-full blur-[150px] animate-[heroBlob_32s_infinite_ease-in-out_5s]"></div>
+          <div className="absolute top-2/3 left-1/5 w-80 h-80 bg-violet-400/14 rounded-full blur-[120px] animate-[heroBlob_20s_infinite_ease-in-out_9s]"></div>
+          <div className="absolute top-[38%] right-[12%] w-[340px] h-[340px] bg-indigo-400/12 rounded-full blur-[200px] animate-[heroBlob_38s_infinite_ease-in-out_2s]"></div>
+          <div className="absolute bottom-[12%] left-[8%] w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[220px] animate-[heroBlob_50s_infinite_ease-in-out_14s]"></div>
+          <div className="absolute top-[18%] right-[35%] w-[280px] h-[280px] bg-violet-500/9 rounded-full blur-[160px] animate-[heroBlob_29s_infinite_ease-in-out_7s]"></div>
+          <div className="absolute top-[50%] left-[25%] w-[200px] h-[200px] bg-indigo-500/8 rounded-full blur-[130px] animate-[heroBlob_42s_infinite_ease-in-out_4s]"></div>
+          <div className="absolute top-[62%] right-[22%] w-[380px] h-[380px] bg-violet-500/11 rounded-full blur-[175px] animate-[heroBlob_35s_infinite_ease-in-out_11s]"></div>
+          
+          {/* Soft glowing accents - prominent layered glows for premium alive hero (behind headline and generator) */}
+          <div className="absolute top-[26%] left-1/2 -translate-x-1/2 w-[980px] h-[320px] bg-violet-500/10 rounded-full blur-[140px] animate-[softGlow_15s_infinite_ease-in-out]"></div>
+          <div className="absolute top-[33%] left-1/2 -translate-x-1/2 w-[760px] h-[240px] bg-indigo-500/9 rounded-full blur-[120px] animate-[softGlow_21s_infinite_ease-in-out_3s]"></div>
+          <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[620px] h-[180px] bg-violet-400/7 rounded-full blur-[100px] animate-[softGlow_17s_infinite_ease-in-out_1s]"></div>
+          <div className="absolute top-[48%] left-1/2 -translate-x-1/2 w-[450px] h-[140px] bg-indigo-400/6 rounded-full blur-[85px] animate-[softGlow_24s_infinite_ease-in-out_6s]"></div>
+          <div className="absolute top-[55%] left-1/2 -translate-x-1/2 w-[550px] h-[160px] bg-violet-500/5 rounded-full blur-[95px] animate-[softGlow_19s_infinite_ease-in-out_8s]"></div>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/40 hover:shadow-[0_0_22px_rgba(167,139,250,0.35)] transition-all">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/50 hover:shadow-[0_0_28px_rgba(167,139,250,0.45)] transition-all">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
           Built for creators and founders who actually post
         </div>
 
-        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_10px_rgba(0,0,0,0.4),0_0_20px_rgba(124,58,237,0.15)]">
+        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
           Stop staring at a blank<br />screen. Post on X in seconds.
         </h1>
         
@@ -588,7 +601,7 @@ export default function Page() {
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card bg-zinc-900/60 backdrop-blur-[30px] border border-white/25 rounded-3xl p-7 md:p-9 shadow-[0_25px_35px_-12px_rgb(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.08),0_0_30px_rgba(124,58,237,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] hover:shadow-[0_35px_50px_-15px_rgb(0,0,0,0.5),0_0_0_1px_rgba(167,139,250,0.25),0_0_45px_rgba(124,58,237,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] hover:border-violet-400/30 transition-all">
+          <div className="glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -601,12 +614,12 @@ export default function Page() {
               }}
               placeholder="e.g. building in public, cold email outreach, personal branding..."
               disabled={isGenerating}
-              className="flex-1 bg-zinc-950/60 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.1)] rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 bg-zinc-950/55 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/50 focus:shadow-[0_0_0_4px_rgba(124,58,237,0.15),0_0_15px_rgba(124,58,237,0.2)] rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-[0_4px_15px_-2px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(167,139,250,0.55),0_8px_20px_-3px_rgba(0,0,0,0.25)] hover:shadow-xl"
+              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-[0_4px_15px_-2px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(167,139,250,0.65),0_10px_25px_-4px_rgba(0,0,0,0.3)] hover:shadow-xl"
             >
               {isGenerating ? (
                 <>
@@ -649,7 +662,7 @@ export default function Page() {
                       setTimeout(() => handleGenerate(), 40)
                     }}
                     disabled={isGenerating}
-                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/50 hover:shadow-[0_0_18px_rgba(167,139,250,0.35)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
+                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/60 hover:shadow-[0_0_22px_rgba(167,139,250,0.45)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
                   >
                     {example}
                   </button>

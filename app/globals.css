@@ -11,34 +11,38 @@ body {
   font-feature-settings: "rlig" 1, "kern" 1;
   background-color: #0a0a0c;
   background-image: 
-    /* Rich layered violet/indigo gradients for modern dark tech depth */
-    radial-gradient(circle at 15% 10%, rgba(124, 58, 237, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 85% 90%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 40%, rgba(124, 58, 237, 0.05) 0%, transparent 60%),
-    radial-gradient(circle at 60% 70%, rgba(99, 102, 241, 0.04) 0%, transparent 55%),
-    /* Subtle grid for tech feel (lines + dots) */
-    linear-gradient(rgba(39, 39, 42, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(39, 39, 42, 0.1) 1px, transparent 1px),
-    radial-gradient(#27272a 0.9px, transparent 1.5px),
-    /* Glowing orbs layers for life and depth */
-    radial-gradient(circle at 25% 65%, rgba(124, 58, 237, 0.06) 0%, transparent 35%),
-    radial-gradient(circle at 75% 25%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 40% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 30%),
-    /* Soft wash */
-    linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, transparent 25%, transparent 75%, rgba(99, 102, 241, 0.025) 100%);
+    /* Deep rich base with strong violet/indigo gradients for modern dark tech atmosphere */
+    radial-gradient(circle at 10% 5%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 95%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 30% 60%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 20%, rgba(99, 102, 241, 0.07) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.04) 0%, transparent 65%),
+    /* Very subtle geometric grid pattern (lines for tech structure + dots for depth) */
+    linear-gradient(rgba(39, 39, 42, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(39, 39, 42, 0.07) 1px, transparent 1px),
+    radial-gradient(#27272a 0.6px, transparent 1.8px),
+    /* Soft glowing orbs for life and 3D depth (positioned low opacity violet/indigo) */
+    radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.09) 0%, transparent 30%),
+    radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 35% 80%, rgba(124, 58, 237, 0.05) 0%, transparent 25%),
+    radial-gradient(circle at 65% 15%, rgba(99, 102, 241, 0.06) 0%, transparent 30%),
+    /* Final soft wash for overall richness */
+    linear-gradient(135deg, rgba(124, 58, 237, 0.035) 0%, transparent 20%, transparent 80%, rgba(99, 102, 241, 0.03) 100%);
   background-size: 
     100% 100%,
     100% 100%,
     100% 100%,
     100% 100%,
-    30px 30px,
-    30px 30px,
-    5px 5px,
+    100% 100%,
+    28px 28px,
+    28px 28px,
+    4px 4px,
+    100% 100%,
     100% 100%,
     100% 100%,
     100% 100%,
     100% 100%;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
 }
 
 .thread-card {
