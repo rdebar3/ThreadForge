@@ -327,18 +327,38 @@ export default function Page() {
     }, 1200)
   }
 
-  const copyToX = (thread: Thread) => {
+  const copyToX = async (thread: Thread) => {
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
-    const formatted = tweets.join('\n\n')
-    navigator.clipboard.writeText(formatted)
-    showToast('Copied to clipboard and opened X composer', 'success')
-    // Open X compose with first tweet for convenience
-    const firstTweet = encodeURIComponent(tweets[0] || '')
-    window.open(`https://x.com/compose/tweet?text=${firstTweet}`, '_blank')
+    if (tweets.length === 0) return
 
-    // Track for Pro+ analytics (fire and forget)
-    if (isProPlus) {
-      fetch('/api/track/posted', { method: 'POST' }).catch(() => {})
+    try {
+      const res = await fetch('/api/x/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tweets }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        if (data.requireConnect) {
+          showToast('Connect your X account in the Scheduler page first to enable direct posting.', 'info')
+        } else if (data.requireUpgrade) {
+          showToast('Pro subscription required to post directly to X.', 'info')
+        } else {
+          showToast(data.error || 'Failed to post to X', 'error')
+        }
+        return
+      }
+
+      showToast('Full thread posted successfully!', 'success')
+
+      // Optionally open the first post in X for confirmation
+      if (data.postIds && data.postIds.length > 0) {
+        window.open(`https://x.com/i/web/status/${data.postIds[0]}`, '_blank')
+      }
+    } catch (err) {
+      console.error('Post to X error:', err)
+      showToast('Network error while posting to X. Please try again.', 'error')
     }
   }
 
@@ -1085,7 +1105,7 @@ export default function Page() {
                     {hasPro && (
                       <button
                         onClick={() => copyToX(thread)}
-                        title="Copy the full thread and open X's compose window (Pro)"
+                        title="Post full thread to X as reply chain (Pro)"
                         className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         <XIcon />

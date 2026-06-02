@@ -193,6 +193,7 @@ export interface XTokenRefreshResult {
 }
 
 const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
+const X_TWEETS_URL = 'https://api.x.com/2/tweets'
 
 /**
  * Refresh an X access token using the stored refresh_token.
@@ -320,6 +321,56 @@ export async function getValidXAccessToken(userId: string): Promise<string | nul
   }
 
   return null
+}
+
+/**
+ * Posts a full thread as a connected reply chain on X using the user's access token.
+ * Uses reply_settings on root tweet and in_reply_to_tweet_id for subsequent tweets.
+ * Returns array of created tweet IDs.
+ */
+export async function postThreadToX(accessToken: string, tweets: string[]): Promise<string[]> {
+  const postedIds: string[] = []
+  let inReplyTo: string | null = null
+
+  for (const raw of tweets) {
+    const text = (raw || '').trim().slice(0, 280)
+    if (!text) continue
+
+    const payload: any = { text }
+    if (!inReplyTo) {
+      // Set reply settings on the root tweet of the chain
+      payload.reply_settings = 'everyone'
+    } else {
+      payload.reply = { in_reply_to_tweet_id: inReplyTo }
+    }
+
+    const res = await fetch(X_TWEETS_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const errText = await res.text()
+      throw new Error(`X API error ${res.status}: ${errText.substring(0, 180)}`)
+    }
+
+    const json = await res.json()
+    const id = json?.data?.id
+    if (!id) throw new Error('X returned no tweet id')
+
+    postedIds.push(id)
+    inReplyTo = id
+  }
+
+  if (postedIds.length === 0) {
+    throw new Error('No tweets were posted')
+  }
+
+  return postedIds
 }
 
 // ============================================

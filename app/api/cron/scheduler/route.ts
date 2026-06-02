@@ -6,56 +6,11 @@ import {
   filterDuePending,
   updateScheduledPost,
   isProPlus,
+  postThreadToX,
 } from '../../../lib/clerk'
 import type { ScheduledPost } from '../../../lib/types'
 
-const X_TWEETS_URL = 'https://api.x.com/2/tweets'
-
-/**
- * Posts a thread (or single tweet) as a reply chain on X.
- * Returns array of created tweet IDs.
- */
-async function postThreadToX(accessToken: string, tweets: string[]): Promise<string[]> {
-  const postedIds: string[] = []
-  let inReplyTo: string | null = null
-
-  for (const raw of tweets) {
-    const text = (raw || '').trim().slice(0, 280)
-    if (!text) continue
-
-    const payload: any = { text }
-    if (inReplyTo) {
-      payload.reply = { in_reply_to_tweet_id: inReplyTo }
-    }
-
-    const res = await fetch(X_TWEETS_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`X API error ${res.status}: ${errText.substring(0, 180)}`)
-    }
-
-    const json = await res.json()
-    const id = json?.data?.id
-    if (!id) throw new Error('X returned no tweet id')
-
-    postedIds.push(id)
-    inReplyTo = id
-  }
-
-  if (postedIds.length === 0) {
-    throw new Error('No tweets were posted')
-  }
-
-  return postedIds
-}
+// postThreadToX is now shared from lib/clerk.ts (supports reply_settings + in_reply_to for full chains)
 
 /**
  * Vercel Cron (or manual trigger) endpoint for publishing due scheduled posts.
