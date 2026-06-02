@@ -20,6 +20,8 @@ export default function Page() {
   const [freeGenerationsUsed, setFreeGenerationsUsed] = useState(0)
   const [copiedThreadId, setCopiedThreadId] = useState<number | null>(null)
   const [copiedTweetKey, setCopiedTweetKey] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<Record<string, {emojis: string[], hashtags: string[]}>>({})
+  const [suggestLoading, setSuggestLoading] = useState<Record<string, boolean>>({})
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -170,7 +172,11 @@ export default function Page() {
       if (res.status === 429) {
         const data = await res.json().catch(() => ({}))
         const waitMessage = data.error || 'Please wait a moment before generating again.'
-        showToast(waitMessage, 'error')
+        if (hasPro) {
+          showToast(`Priority: ${waitMessage}`, 'info')
+        } else {
+          showToast(waitMessage, 'error')
+        }
         setIsGenerating(false)
         return
       }
@@ -274,6 +280,38 @@ export default function Page() {
     }, 1200)
   }
 
+  const copyToX = (thread: Thread) => {
+    const formatted = thread.tweets.join('\n\n')
+    navigator.clipboard.writeText(formatted)
+    showToast('Copied for X! Paste into the X composer to post as a thread.', 'success')
+    // Open X compose with first tweet for convenience
+    const firstTweet = encodeURIComponent(thread.tweets[0])
+    window.open(`https://x.com/compose/tweet?text=${firstTweet}`, '_blank')
+  }
+
+  const suggestForTweet = async (threadId: number, tweetIndex: number, tweet: string) => {
+    const key = `${threadId}-${tweetIndex}`
+    setSuggestLoading(prev => ({ ...prev, [key]: true }))
+    try {
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tweet, topic })
+      })
+      const data = await res.json()
+      if (res.ok && data.emojis) {
+        setSuggestions(prev => ({ ...prev, [key]: { emojis: data.emojis, hashtags: data.hashtags } }))
+        showToast('Suggestions added!', 'success')
+      } else {
+        showToast(data.error || 'Failed to get suggestions', 'error')
+      }
+    } catch (e) {
+      showToast('Failed to get suggestions. Please try again.', 'error')
+    } finally {
+      setSuggestLoading(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type })
     setTimeout(() => {
@@ -321,6 +359,9 @@ export default function Page() {
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
+            {isSignedIn && hasPro && (
+              <a href="/history" className="text-zinc-400 hover:text-white transition-colors">History</a>
+            )}
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
@@ -380,6 +421,15 @@ export default function Page() {
               >
                 Pricing
               </a>
+              {isSignedIn && hasPro && (
+                <a 
+                  href="/history" 
+                  className="text-zinc-400 hover:text-white py-1"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  History
+                </a>
+              )}
               
               <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
                 {isSignedIn ? (
@@ -506,15 +556,22 @@ export default function Page() {
             </button>
           </div>
 
-          {/* Visible free usage counter for signed-in free users */}
-          {isSignedIn && !hasPro && (
+          {/* Visible usage counter / priority indicator */}
+          {isSignedIn && hasPro ? (
+            <div className="mt-3 text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300">
+                <span className="text-violet-400">★</span>
+                Pro: unlimited generations • Priority enabled
+              </span>
+            </div>
+          ) : isSignedIn && !hasPro ? (
             <div className="mt-3 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-white/10 px-3 py-1 text-xs text-zinc-400">
                 <span className="text-emerald-400">●</span>
                 {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} free generations left today
               </span>
             </div>
-          )}
+          ) : null}
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
@@ -539,11 +596,13 @@ export default function Page() {
           )}
 
           <p className="text-xs text-zinc-500 mt-3">
-            {isSignedIn ? (
-              "Unlimited generations (free testing phase)"
+            {isSignedIn && hasPro ? (
+              "Pro: unlimited generations"
+            ) : isSignedIn ? (
+              `${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} free generations left today`
             ) : (
               <>
-                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • Free while testing
+                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • Free tier: 3/day
               </>
             )}
           </p>
@@ -582,7 +641,11 @@ export default function Page() {
               >
                 New topic
               </button>
-              {/* Payment upsells removed during testing phase */}
+              {hasPro && (
+                <a href="/history" className="text-sm px-5 py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all">
+                  View History
+                </a>
+              )}
             </div>
           </div>
 
@@ -594,13 +657,23 @@ export default function Page() {
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
                     <div className="font-semibold text-[21px] leading-tight pr-4">{thread.title}</div>
                   </div>
-                  <button
-                    onClick={() => copyThread(thread)}
-                    className="copy-button flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
-                  >
-                    <CopyIcon />
-                    <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy Thread'}</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => copyThread(thread)}
+                      className="copy-button flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                    >
+                      <CopyIcon />
+                      <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy Thread'}</span>
+                    </button>
+                    {hasPro && (
+                      <button
+                        onClick={() => copyToX(thread)}
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        Copy to X
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -630,6 +703,20 @@ export default function Page() {
                             </>
                           )}
                         </button>
+                        {hasPro && (
+                          <button
+                            onClick={() => suggestForTweet(thread.id, i, tweet)}
+                            disabled={suggestLoading[`${thread.id}-${i}`]}
+                            className="opacity-0 group-hover:opacity-100 text-xs px-3 py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
+                          >
+                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨ Suggest'}
+                          </button>
+                        )}
+                        {suggestions[`${thread.id}-${i}`] && (
+                          <div className="text-xs text-violet-300 mt-1 pl-8">
+                            Emojis: {suggestions[`${thread.id}-${i}`].emojis.join(' ')} &nbsp;&nbsp; Hashtags: {suggestions[`${thread.id}-${i}`].hashtags.join(' ')}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -812,7 +899,7 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Unlimited</strong> generations</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Priority generation speed</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history of past threads</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X (soon)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
             </ul>
@@ -822,7 +909,7 @@ export default function Page() {
                 <div className="w-full py-4 bg-emerald-500/10 text-emerald-400 font-semibold rounded-2xl text-center text-lg border border-emerald-500/30">
                   ✓ You have Pro
                 </div>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage subscription via Stripe (coming soon)</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage subscription via Stripe Billing Portal</p>
               </div>
             ) : (
               <>
@@ -838,7 +925,7 @@ export default function Page() {
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. Real Pro features (history, one-click to X, etc.) coming soon.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. History, Copy to X, emoji suggestions, and priority now live for Pro users.</p>
       </div>
 
       {/* Footer */}

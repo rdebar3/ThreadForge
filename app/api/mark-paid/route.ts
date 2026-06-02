@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 
 /**
- * Marks the currently logged-in user as paid.
+ * Marks the currently logged-in user as paid (fallback path).
  * Called from the success page after Stripe session verification.
  */
 export async function POST() {

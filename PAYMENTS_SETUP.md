@@ -1,8 +1,10 @@
-# ThreadForge - Payment Setup Guide
+# ThreadForge - Payment Setup Guide (LEGACY / OUTDATED)
 
-> **Important:** Payments are currently disabled while we test the tool. The entire free + paid flow is temporarily turned off so we can focus on getting real user feedback.
+> **Note:** This document is mostly legacy. The current implementation uses **recurring $9/mo subscriptions** (not one-time). See `STRIPE_SETUP.md` for the up-to-date instructions.
 
-This document explains exactly how to make the $9 one-time payment flow work.
+The free + paid flow is now active with proper Stripe subscription support.
+
+This older document is kept for reference only and describes the previous one-time payment approach.
 
 ## Current Status
 

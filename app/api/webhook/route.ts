@@ -3,11 +3,10 @@ import Stripe from 'stripe'
 import { clerkClient } from '@clerk/nextjs/server'
 
 /**
- * Stripe Webhook Handler (Phase 1 - Subscriptions)
+ * Stripe Webhook Handler
  * 
- * Handles both legacy one-time payments and new recurring $9/mo subscriptions.
- * Primary source of truth for hasPro / hasPaid in Clerk publicMetadata.
- * Idempotent via in-memory + Clerk metadata checks.
+ * Handles recurring $9/mo Pro subscriptions + legacy one-time payments.
+ * Primary source of truth for hasPro in Clerk publicMetadata.
  */
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY

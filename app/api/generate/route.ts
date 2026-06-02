@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { SYSTEM_PROMPT } from '../../lib/prompts'
-import { incrementUserGenerations } from '../../lib/clerk'
+import { incrementUserGenerations, saveGenerationToHistory } from '../../lib/clerk'
+import type { GenerationRecord, Thread } from '../../lib/types'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
-
-interface Thread {
-  id: number
-  title: string
-  tweets: string[]
-}
 
 const MAX_FREE_GENERATIONS = 3
 
@@ -77,6 +72,7 @@ export async function POST(req: NextRequest) {
       hasPro?: boolean
       freeGenerationsUsed?: number
       lastFreeGenerationDate?: string
+      generationHistory?: GenerationRecord[]
     }
 
     const hasPro = metadata?.hasPro === true || metadata?.hasPaid === true
@@ -109,6 +105,7 @@ export async function POST(req: NextRequest) {
 
     // ============================================
     // RATE LIMITING (prevent abuse)
+    // Pro users get priority (much shorter cooldown).
     // Current: In-memory (fast but resets on cold starts).
     // Future improvement: Move to Clerk privateMetadata or Redis for persistence.
     // ============================================
@@ -116,8 +113,10 @@ export async function POST(req: NextRequest) {
     const lastTime = lastGenerationTime.get(userId) || 0
     const timeSinceLast = (now - lastTime) / 1000
 
-    if (timeSinceLast < RATE_LIMIT_SECONDS) {
-      const waitTime = Math.ceil(RATE_LIMIT_SECONDS - timeSinceLast)
+    const rateLimitSeconds = hasPro ? 8 : RATE_LIMIT_SECONDS
+
+    if (timeSinceLast < rateLimitSeconds) {
+      const waitTime = Math.ceil(rateLimitSeconds - timeSinceLast)
       return NextResponse.json({
         error: `Please wait ${waitTime} second${waitTime === 1 ? '' : 's'} before generating again.`,
         rateLimited: true,
@@ -272,6 +271,16 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
           },
         })
       }
+
+      // Save to history for Pro users only
+      if (hasPro) {
+        const record = {
+          topic: cleanTopic,
+          threads,
+          timestamp: new Date().toISOString(),
+        }
+        await saveGenerationToHistory(userId, record)
+      }
     }
 
     // Calculate remaining for client
@@ -282,7 +291,8 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       demoMode,
       freeGenerationsUsed: !hasPro ? (used + 1) : 0,
       remainingFree: hasPro ? null : remaining,
-      isPro: hasPro
+      isPro: hasPro,
+      rateLimitSeconds: rateLimitSeconds
     })
 
   } catch (error) {

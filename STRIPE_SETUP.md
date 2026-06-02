@@ -35,14 +35,22 @@ STRIPE_PRICE_ID=price_...
 npm run dev
 ```
 
-## Testing the Flow
-1. Go to `/generate`
-2. Generate threads until you hit the limit
-3. Click **"Unlock unlimited threads for $9 one-time"**
-4. Use Stripe test card: `4242 4242 4242 4242`
-5. Any future date + any CVC
-6. After payment, you should be redirected to `/success` and then have unlimited access
+## Testing the Flow (Test Mode)
+1. Make sure your `.env.local` has valid **test** keys and `STRIPE_PRICE_ID` pointing to a **recurring** $9/mo price created in Test mode.
+2. Start the dev server: `npm run dev`
+3. (Recommended for webhooks locally) In another terminal: `stripe listen --forward-to http://localhost:3000/api/webhook` (copy the whsec_ to STRIPE_WEBHOOK_SECRET if not already).
+4. Sign in with Clerk.
+5. Go to the Pricing section (or generate until you hit the free limit).
+6. Click **"Upgrade to Pro — $9/mo"**
+7. Use Stripe test card: `4242 4242 4242 4242`
+8. Any future date + any CVC
+9. Complete checkout → you will be redirected to `/success`
+10. After success, you should be redirected back to the app with Pro active (unlimited generations, `hasPro` set in Clerk metadata).
 
 ## Important Notes
-- This is currently using localStorage for "paid" status (good for testing)
-- For production, you should verify the session server-side and store the payment in a database + tie it to a user account (Clerk recommended)
+- Primary Pro status is set via Stripe webhook (most reliable).
+- The success page + `/api/mark-paid` and `/api/verify-session` act as fallbacks.
+- Always use **Test Mode** keys (`sk_test_`, `pk_test_`) and a test recurring Price ID when developing.
+- The code now requires `STRIPE_PRICE_ID` to be set (no more hardcoded fallback).
+- For production: switch to Live keys + update webhook endpoint in Stripe Dashboard.
+- Use Clerk publicMetadata (`hasPro`, `stripeSubscriptionId`) as the source of truth for paid status.

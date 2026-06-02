@@ -3,23 +3,37 @@ import Stripe from 'stripe'
 import { auth } from '@clerk/nextjs/server'
 
 /**
- * Stripe Checkout Route - Recurring Subscriptions (Phase 1)
+ * Stripe Checkout Route - Recurring Subscriptions
  * 
  * Creates a Stripe Checkout Session for the $9/mo Pro plan.
- * Primary confirmation of Pro status happens via webhook (supports subscriptions).
- * Fallbacks (verify-session + mark-paid) kept for compatibility.
+ * Primary confirmation of Pro status happens via webhook.
  */
 
 export async function POST(req: NextRequest) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY
+    const priceId = process.env.STRIPE_PRICE_ID
 
     if (!secretKey) {
       console.error('STRIPE_SECRET_KEY is missing in environment variables')
       return NextResponse.json(
-        { error: 'Payment system not configured' },
+        { error: 'Payment system not configured. Missing STRIPE_SECRET_KEY.' },
         { status: 500 }
       )
+    }
+
+    if (!priceId) {
+      console.error('STRIPE_PRICE_ID is missing in environment variables')
+      return NextResponse.json(
+        { error: 'Payment system not configured. Missing STRIPE_PRICE_ID (must be a recurring price ID from Stripe).' },
+        { status: 500 }
+      )
+    }
+
+    // Basic sanity check: if using test secret, price should look like a test price (price_ IDs are the same in test/live, but this helps catch misconfig)
+    const isTestSecret = secretKey.startsWith('sk_test_')
+    if (isTestSecret && !priceId.startsWith('price_')) {
+      console.warn('Using test secret key but STRIPE_PRICE_ID does not look like a valid price ID')
     }
 
     const stripe = new Stripe(secretKey, {
@@ -42,7 +56,7 @@ export async function POST(req: NextRequest) {
       mode: 'subscription',
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID || 'price_1TcFakCS6rFBWmntHVjrbe8t',
+          price: priceId,
           quantity: 1,
         },
       ],

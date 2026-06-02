@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 /**
- * Verify Stripe Session
+ * Verify Stripe Session (used as fallback after checkout)
  * 
- * ⚠️ DISABLED DURING FREE TESTING PHASE
- * This route is kept for future paid functionality.
+ * Supports both one-time and subscription checkouts.
+ * For subscriptions, we also check the subscription status.
  */
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
@@ -29,18 +29,32 @@ export async function GET(req: NextRequest) {
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
 
-    if (session.payment_status === 'paid') {
-      return NextResponse.json({ 
-        success: true, 
-        paid: true,
-        sessionId: session.id 
-      })
+    let isPaid = false
+
+    if (session.mode === 'subscription') {
+      // For recurring subscriptions, check the subscription status
+      const subId = typeof session.subscription === 'string' 
+        ? session.subscription 
+        : (session.subscription as any)?.id
+
+      if (subId) {
+        const subscription = await stripe.subscriptions.retrieve(subId)
+        isPaid = ['active', 'trialing'].includes(subscription.status)
+      } else if (session.payment_status === 'paid') {
+        // Fallback if sub not attached yet
+        isPaid = true
+      }
     } else {
-      return NextResponse.json({ 
-        success: false, 
-        paid: false 
-      })
+      // Legacy one-time payment
+      isPaid = session.payment_status === 'paid'
     }
+
+    return NextResponse.json({ 
+      success: true, 
+      paid: isPaid,
+      sessionId: session.id,
+      mode: session.mode
+    })
   } catch (error) {
     console.error('Error verifying session:', error)
     return NextResponse.json({ error: 'Failed to verify session' }, { status: 500 })
