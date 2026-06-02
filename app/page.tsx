@@ -837,7 +837,7 @@ export default function Page() {
         </h1>
         
         <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-6 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
-          From one sentence to 4 high-quality threads + matching visuals in under a minute. Built for founders and creators who actually post consistently.
+          From one sentence to 4 high-quality threads + matching visuals in under a minute.
         </p>
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
@@ -982,9 +982,9 @@ export default function Page() {
               <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Images + Scheduler (Pro+ only)</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> 1–4 custom images per thread (xAI Imagine)</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Best-time suggestions + auto X posting</li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
@@ -1597,8 +1597,8 @@ export default function Page() {
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
             </ul>
 
             {isProPlus ? (
