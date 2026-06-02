@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import type { CommunityPost } from '../lib/types';
+
 export default function CommunityPage() {
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [likes, setLikes] = useState({});
+  type FilterType = 'All' | 'Newest' | 'Most Liked' | 'Launch' | 'Lesson' | 'Growth' | 'Story';
+
+  const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+  const [likes, setLikes] = useState<Record<number, number>>({});
 
   // Sample placeholder data for the beautiful grid (ready for real user posts)
-  const sampleThreads = [
+  const sampleThreads: CommunityPost[] = [
     { id: 1, title: "How I 3x'd my MRR in 90 days", snippet: "The exact playbook I used to go from $3k to $10k MRR without paid ads or hiring a content team.", author: "Alex Rivera", avatar: "AR", likes: 142, category: "Launch", imageId: 1015 },
     { id: 2, title: "The mistake that cost me $47k (and what I learned)", snippet: "I ignored my gut on pricing for 6 months. Here's the framework that finally fixed it.", author: "Maya Patel", avatar: "MP", likes: 89, category: "Lesson", imageId: 1025 },
     { id: 3, title: "From 0 to 12k followers in 4 months", snippet: "The posting cadence + thread formulas that actually moved the needle for my solo product.", author: "Jordan Kim", avatar: "JK", likes: 211, category: "Growth", imageId: 1033 },
@@ -20,10 +24,12 @@ export default function CommunityPage() {
   ];
 
   // Simple filtering + sorting logic (client-side for now)
-  const filteredThreads = [...sampleThreads]
+  const filteredThreads: CommunityPost[] = [...sampleThreads]
     .filter(t => {
       if (activeFilter === 'All') return true;
-      if (['Launch', 'Lesson', 'Growth', 'Story'].includes(activeFilter)) return t.category === activeFilter;
+      if (activeFilter === 'Launch' || activeFilter === 'Lesson' || activeFilter === 'Growth' || activeFilter === 'Story') {
+        return t.category === activeFilter;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -36,14 +42,15 @@ export default function CommunityPage() {
       return 0;
     });
 
-  const handleLike = (id) => {
+  const handleLike = (id: number) => {
+    const initialLikes = sampleThreads.find(t => t.id === id)?.likes ?? 0;
     setLikes(prev => ({
       ...prev,
-      [id]: (prev[id] ?? sampleThreads.find(t => t.id === id).likes) + 1
+      [id]: (prev[id] ?? initialLikes) + 1
     }));
   };
 
-  const handleShare = (thread) => {
+  const handleShare = (thread: CommunityPost) => {
     // Demo action
     navigator.clipboard?.writeText(`https://threadforge.example.com/thread/${thread.id}`).catch(() => {});
     // Simple visual feedback
@@ -99,7 +106,7 @@ export default function CommunityPage() {
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="text-xs uppercase tracking-widest text-zinc-500 mr-2">Filter</span>
-            {['All', 'Newest', 'Most Liked', 'Launch', 'Lesson', 'Growth', 'Story'].map((f) => (
+            {(['All', 'Newest', 'Most Liked', 'Launch', 'Lesson', 'Growth', 'Story'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
@@ -113,7 +120,7 @@ export default function CommunityPage() {
 
         {/* Beautiful grid with thread preview cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredThreads.map((thread) => {
+          {filteredThreads.map((thread: CommunityPost) => {
             const currentLikes = likes[thread.id] ?? thread.likes;
             return (
               <div key={thread.id} className="glass-card border border-white/10 rounded-2xl overflow-hidden flex flex-col hover:border-white/20 transition-all group">
