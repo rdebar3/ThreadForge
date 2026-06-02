@@ -1023,7 +1023,7 @@ export default function Page() {
 
       {/* Demo Mode Notice - only visible in development */}
       {demoMode && threads.length > 0 && process.env.NODE_ENV === 'development' && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-4">
+        <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 md:px-6 mb-4">
           <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs px-3 py-1.5 rounded-2xl text-center">
             Demo mode active (no real AI calls).
           </div>
@@ -1032,8 +1032,8 @@ export default function Page() {
 
       {/* Your Generated Threads */}
       {safeThreads.length > 0 && (
-        <div ref={resultsRef} className="max-w-4xl mx-auto px-4 sm:px-6 pb-20">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-y-2 sm:gap-y-3">
+        <div ref={resultsRef} className="max-w-5xl lg:max-w-6xl mx-auto px-4 md:px-6 pb-20">
+          <div className="flex items-center justify-between mb-4 md:mb-6 flex-wrap gap-y-2 sm:gap-y-3">
             <div>
               <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
               <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5">Copy • Post (Pro) • Schedule (Pro+) • Tap to copy</p>
@@ -1054,12 +1054,12 @@ export default function Page() {
                     input?.focus()
                   }, 50)
                 }}
-                className="text-xs sm:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
+                className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
               >
                 New topic
               </button>
               {hasPro && (
-                <a href="/history" className="text-xs sm:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
+                <a href="/history" className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
                   View History
                 </a>
               )}
@@ -1067,17 +1067,17 @@ export default function Page() {
           </div>
 
           <div className="space-y-6">
-            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-y-3">
+            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 md:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-5 gap-y-3">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
                     <div className="font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4 break-words">{thread.title}</div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
                     <button
                       onClick={() => copyThread(thread)}
                       title="Copy the entire thread (all tweets) to your clipboard"
-                      className="copy-button flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      className="copy-button flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                     >
                       <CopyIcon />
                       <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
@@ -1086,7 +1086,7 @@ export default function Page() {
                       <button
                         onClick={() => copyToX(thread)}
                         title="Copy the full thread and open X's compose window (Pro)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         <XIcon />
                         Post to X
@@ -1100,7 +1100,7 @@ export default function Page() {
                           setSelectedImageCount(1)
                         }}
                         title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         ✨ Generate Images
                       </button>
@@ -1112,7 +1112,7 @@ export default function Page() {
                           setSelectedImageCount(1)
                         }}
                         title="Try AI Images once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                       >
                         ✨ Try Pro+ Images (1-time)
                       </button>
@@ -1120,7 +1120,7 @@ export default function Page() {
                       <a
                         href="#pricing"
                         title="Image Generation requires Pro+ (trial used)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Upgrade to Pro+ for AI Images
                       </a>
@@ -1134,7 +1134,7 @@ export default function Page() {
                           setScheduleTime('')
                         }}
                         title="Schedule this full thread to post automatically to X (Pro+)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         📅 Schedule
                       </button>
@@ -1145,7 +1145,7 @@ export default function Page() {
                           setScheduleTime('')
                         }}
                         title="Try Scheduler once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                       >
                         📅 Try Pro+ Scheduler (1-time)
                       </button>
@@ -1153,7 +1153,7 @@ export default function Page() {
                       <a
                         href="#pricing"
                         title="Thread Scheduler requires Pro+ (trial used)"
-                        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Schedule (Pro+)
                       </a>
@@ -1164,7 +1164,7 @@ export default function Page() {
                       <button
                         onClick={() => saveCurrentThreadAsTemplate(thread)}
                         title="Save this thread as a reusable private template"
-                        className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
                       >
                         Save Template
                       </button>
@@ -1175,7 +1175,7 @@ export default function Page() {
                       <button
                         onClick={() => { setShowRewriteFor(thread.id); setRewriteMode('Punchier'); setRewriteCustom('') }}
                         title="Rewrite entire thread with AI (Pro+)"
-                        className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
+                        className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
                       >
                         ✎ Rewrite
                       </button>

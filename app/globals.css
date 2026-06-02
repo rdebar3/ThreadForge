@@ -57,6 +57,16 @@ body {
   border-color: rgb(167 139 250 / 0.35);
 }
 
+/* Desktop improvements for thread results (wider layout, better card presence) */
+@media (min-width: 768px) {
+  .thread-card {
+    box-shadow: 0 16px 28px -6px rgb(0 0 0 / 0.28), 0 8px 12px -4px rgb(0 0 0 / 0.2), 0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 22px rgba(124,58,237,0.06);
+  }
+  .thread-card:hover {
+    box-shadow: 0 20px 32px -8px rgb(0 0 0 / 0.36), 0 10px 16px -4px rgb(0 0 0 / 0.24), 0 0 0 1px rgba(167,139,250,0.25), 0 0 32px rgba(124,58,237,0.12);
+  }
+}
+
 .tweet {
   font-size: 15px;
   line-height: 1.5;
