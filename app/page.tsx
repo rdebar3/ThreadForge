@@ -29,7 +29,11 @@ export default function Page() {
   const [copiedTweetKey, setCopiedTweetKey] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<Record<string, {emojis: string[], hashtags: string[]}>>({})
   const [suggestLoading, setSuggestLoading] = useState<Record<string, boolean>>({})
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [toast, setToast] = useState<{ 
+    message: string; 
+    type: 'success' | 'error' | 'info'; 
+    action?: { label: string; href?: string; onClick?: () => void } 
+  } | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -344,6 +348,12 @@ export default function Page() {
           showToast('Connect your X account in the Scheduler page first to enable direct posting.', 'info')
         } else if (data.requireUpgrade) {
           showToast('Pro subscription required to post directly to X.', 'info')
+        } else if (data.creditsDepleted) {
+          showToast(
+            'X API credits depleted. Go to your X Developer Console to add credits and try again.',
+            'error',
+            { label: 'Add X Credits', href: 'https://developer.x.com/en/portal/dashboard' }
+          )
         } else {
           showToast(data.error || 'Failed to post to X', 'error')
         }
@@ -385,11 +395,16 @@ export default function Page() {
     }
   }
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setToast({ message, type })
+  const showToast = (
+    message: string, 
+    type: 'success' | 'error' | 'info' = 'info', 
+    action?: { label: string; href?: string; onClick?: () => void }
+  ) => {
+    setToast({ message, type, action })
+    // Keep action toasts visible a bit longer
     setTimeout(() => {
       setToast(null)
-    }, 2600)
+    }, action ? 5000 : 2600)
   }
 
   // handlePayment removed (now handled via the Pricing section)
@@ -1644,6 +1659,29 @@ export default function Page() {
             {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✓' : 'ℹ️'}
           </span>
           <span>{toast.message}</span>
+          {toast.action && (
+            toast.action.href ? (
+              <a
+                href={toast.action.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 px-3 py-1 text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors active:scale-95"
+                onClick={() => setToast(null)}
+              >
+                {toast.action.label}
+              </a>
+            ) : (
+              <button
+                onClick={() => {
+                  toast.action?.onClick?.()
+                  setToast(null)
+                }}
+                className="ml-2 px-3 py-1 text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors active:scale-95"
+              >
+                {toast.action.label}
+              </button>
+            )
+          )}
         </div>
       )}
 

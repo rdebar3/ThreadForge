@@ -355,6 +355,9 @@ export async function postThreadToX(accessToken: string, tweets: string[]): Prom
 
     if (!res.ok) {
       const errText = await res.text()
+      if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
+        throw new Error('CreditsDepleted')
+      }
       throw new Error(`X API error ${res.status}: ${errText.substring(0, 180)}`)
     }
 
