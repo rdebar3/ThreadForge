@@ -450,7 +450,7 @@ export default function Page() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to unlock AI images.', 'info')
+          showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -475,7 +475,7 @@ export default function Page() {
   // Pro+ Thread Scheduler handler (full thread)
   async function handleSchedule(thread: Thread) {
     if (!isProPlus && hasUsedProPlusTrial) {
-      showToast('You have used your one-time Pro+ trial for Scheduler. Upgrade to unlock permanently.', 'info')
+      showToast('You have used your one-time Pro+ trial for Scheduler. Subscribe to Pro+ on the homepage to unlock permanently.', 'info')
       return
     }
     if (!scheduleTime) {
@@ -496,7 +496,7 @@ export default function Page() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to schedule threads.', 'info')
+          showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to schedule threads.', 'info')
         } else {
           showToast(data.error || 'Failed to schedule thread.', 'error')
         }
@@ -640,7 +640,7 @@ export default function Page() {
             {isSignedIn && hasPro && (
               <a href="/history" className="text-zinc-400 hover:text-white transition-colors pro-sparkle">History</a>
             )}
-            {isSignedIn && isProPlus && (
+            {isSignedIn && (isProPlus || !hasUsedProPlusTrial) && (
               <a href="/scheduler" className="text-violet-400 hover:text-violet-300 transition-colors">Scheduler</a>
             )}
             {isSignedIn && hasPro && (
@@ -718,15 +718,6 @@ export default function Page() {
                   >
                     History
                   </a>
-                  {isProPlus && (
-                    <a 
-                      href="/scheduler" 
-                      className="text-violet-400 hover:text-violet-300 py-1"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Scheduler
-                    </a>
-                  )}
                   {hasPro && (
                     <a 
                       href="/templates" 
@@ -737,6 +728,15 @@ export default function Page() {
                     </a>
                   )}
                 </>
+              )}
+              {isSignedIn && (isProPlus || !hasUsedProPlusTrial) && (
+                <a 
+                  href="/scheduler" 
+                  className="text-violet-400 hover:text-violet-300 py-1"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Scheduler
+                </a>
               )}
               
               <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
@@ -966,13 +966,13 @@ export default function Page() {
               <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-semibold mb-2">PRO — $9/mo</div>
               <div className="text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations + priority speed</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> One-click Post to X</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Full generation history (save &amp; revisit)</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions (Grok)</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Early access to new AI features</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Post to X</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> History</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart Suggestions</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Priority access</li>
               </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features • No image generation</div>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features • No AI images or Scheduler</div>
             </div>
 
             {/* Pro+ Card - highlighted */}
@@ -987,7 +987,7 @@ export default function Page() {
                 <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Best-time suggestions + auto X posting</li>
               </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals with every thread</div>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
             </div>
           </div>
 
@@ -1165,7 +1165,7 @@ export default function Page() {
                 {/* Image choice panel (shown when Generate Images clicked for this thread) - moved near top */}
                 {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === thread.id && (
                   <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro+ or one-time trial)</div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {IMAGE_STYLES.map((s) => (
                         <button
@@ -1216,7 +1216,7 @@ export default function Page() {
                 {/* Schedule picker (Pro+ only) - appears when Schedule clicked */}
                 {(isProPlus || !hasUsedProPlusTrial) && showScheduleFor === thread.id && (
                   <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+)</div>
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+ or one-time trial)</div>
                     <div className="flex flex-wrap items-center gap-3">
                       <input
                         type="datetime-local"
@@ -1552,12 +1552,11 @@ export default function Page() {
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Unlimited</strong> generations</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Priority generation speed</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history of past threads</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Post to X</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> History</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart Suggestions</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Priority access</li>
             </ul>
 
             {hasPro && !isProPlus ? (
@@ -1600,8 +1599,6 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations + priority</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history, Post to X, emoji suggestions</li>
             </ul>
 
             {isProPlus ? (
@@ -1668,7 +1665,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler (Pro+ only).
+              Free users get 3 generations per day. Sign in to continue with your daily allowance, or subscribe to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler (Pro+ only).
             </p>
 
             <button 

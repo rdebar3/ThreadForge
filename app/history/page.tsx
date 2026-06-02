@@ -116,7 +116,7 @@ export default function HistoryPage() {
 
   async function handleGenerateImages(recordId: string, thread: Thread, recordTopic: string) {
     if (!isProPlus && hasUsedProPlusTrial) {
-      showToast('You have used your one-time Pro+ trial for AI Images. Upgrade to unlock permanently.', 'info')
+      showToast('You have used your one-time Pro+ trial for AI Images. Subscribe to Pro+ on the homepage to unlock permanently.', 'info')
       return
     }
     const key = `${recordId}-${thread.id}`
@@ -137,7 +137,7 @@ export default function HistoryPage() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to unlock AI images.', 'info')
+          showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -396,7 +396,7 @@ export default function HistoryPage() {
                           {/* Image choice panel for history - moved near top */}
                           {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === `${record.id}-${thread.id}` && (
                             <div className="mt-4 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
-                              <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
+                              <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro+ or one-time trial)</div>
                               <div className="flex flex-wrap gap-2 mb-3">
                                 {IMAGE_STYLES.map((s) => (
                                   <button

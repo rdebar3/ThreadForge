@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useUser, useClerk } from '@clerk/nextjs'
 import Link from 'next/link'
-import type { ScheduledPost, XAccount } from '../lib/types'
+import type { ScheduledPost } from '../lib/types'
 
 interface Toast {
   message: string
@@ -174,11 +174,15 @@ export default function SchedulerPage() {
 
   async function scheduleCustom() {
     if (!isProPlus && hasUsedProPlusTrial) {
-      showToast('You have used your one-time Pro+ trial. Upgrade to unlock Scheduler permanently.', 'info')
+      showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ on the homepage to unlock permanently.', 'info')
       return
     }
     if (!scheduleTime) {
       showToast('Please pick a date & time to schedule.', 'error')
+      return
+    }
+    if (!xAccount) {
+      showToast('Please connect your X account first to schedule posts.', 'info')
       return
     }
 
@@ -206,7 +210,7 @@ export default function SchedulerPage() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Upgrade to Pro+ to use the scheduler.', 'info')
+          showToast('Subscribe to Pro+ on the homepage to use the scheduler.', 'info')
         } else {
           showToast(data.error || 'Failed to schedule', 'error')
         }
@@ -251,7 +255,7 @@ export default function SchedulerPage() {
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-6">
         <div className="max-w-md text-center glass-card border border-white/10 rounded-3xl p-10">
           <h1 className="text-3xl font-semibold tracking-tighter mb-4">Thread Scheduler</h1>
-          <p className="text-zinc-400 mb-8">Sign in and upgrade to Pro+ to schedule threads that post automatically to X.</p>
+          <p className="text-zinc-400 mb-8">Sign in to use Thread Scheduler with Pro+ (one-time trial available for eligible users).</p>
           <button
             onClick={() => openSignIn()}
             className="px-8 py-3 rounded-2xl bg-white text-zinc-950 font-semibold hover:bg-zinc-200 transition"
@@ -280,12 +284,10 @@ export default function SchedulerPage() {
             <div className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-4xl">📅</div>
             <h1 className="text-4xl font-semibold tracking-tighter mb-3">Thread Scheduler is Pro+ only</h1>
             <p className="text-zinc-400 max-w-md mx-auto mb-8">
-              You have used your one-time Pro+ trial. Upgrade to unlock Scheduler + AI Images permanently.
+              You have used your one-time Pro+ trial. Subscribe to Pro+ on the homepage to unlock Scheduler + AI Images permanently.
             </p>
-            <a href="#pricing" className="inline-flex px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold rounded-2xl text-lg hover:brightness-110 transition">
-              Upgrade to Pro+ — $15/mo
-            </a>
             <div className="mt-4 text-xs text-zinc-500">Includes AI Images + Scheduler + everything in Pro</div>
+            <Link href="/" className="mt-6 inline-block text-sm text-violet-400 hover:text-violet-300">← Back to homepage</Link>
           </div>
         </div>
       </div>
@@ -305,7 +307,6 @@ export default function SchedulerPage() {
             <Link href="/" className="text-zinc-400 hover:text-white">Generator</Link>
             <Link href="/history" className="text-zinc-400 hover:text-white">History</Link>
             <span className="text-white">Scheduler</span>
-            <a href="#pricing" className="text-violet-400 hover:text-violet-300">Pricing</a>
           </div>
         </div>
       </div>
@@ -315,7 +316,7 @@ export default function SchedulerPage() {
           <div>
             <div className="uppercase tracking-[2px] text-[10px] text-violet-400 mb-1">PRO+</div>
             <h1 className="text-4xl font-semibold tracking-tighter">Thread Scheduler</h1>
-            <p className="text-zinc-400 mt-1">Schedule threads to post automatically to X. Connect once, pick the time, we post it.</p>
+            <p className="text-zinc-400 mt-1">Schedule threads to post automatically to X (Pro+ only, one-time trial available). Connect once, pick the time, we post it.</p>
           </div>
           <Link href="/" className="text-sm px-4 py-2 border border-white/10 hover:bg-white/5 rounded-2xl">← Back to generator</Link>
         </div>
@@ -326,7 +327,7 @@ export default function SchedulerPage() {
             <div>
               <div className="font-semibold mb-1">X Account Connection</div>
               <div className="text-sm text-zinc-400">
-                {xLoading ? 'Checking X connection…' : xAccount ? `Connected as @${xAccount.username}` : 'Connect your X account to enable automatic posting.'}
+                {xLoading ? 'Checking X connection…' : xAccount ? `Connected as @${xAccount.username}` : 'Connect your X account to enable automatic posting (Pro+ or one-time trial).'}
               </div>
             </div>
             <div className="flex gap-3">
@@ -356,6 +357,7 @@ export default function SchedulerPage() {
           <div className="mt-3 text-[11px] text-zinc-500">
             We only request the permissions needed to post threads on your behalf (tweet.write). You can revoke anytime from X settings.
           </div>
+          <div className="mt-1 text-[10px] text-amber-400/80">Clicking Connect will redirect you to X.com for secure OAuth2 authorization.</div>
         </div>
 
         {/* Best time suggestions - dynamic and premium */}
@@ -426,12 +428,12 @@ export default function SchedulerPage() {
 
           <button
             onClick={scheduleCustom}
-            disabled={isScheduling || !scheduleTime || !customTweetsText.trim()}
+            disabled={isScheduling || !scheduleTime || !customTweetsText.trim() || !xAccount}
             className="mt-4 w-full md:w-auto px-8 py-3 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-semibold transition flex items-center justify-center gap-2"
           >
             {isScheduling ? 'Scheduling…' : 'Schedule this thread'}
           </button>
-          <div className="text-xs text-zinc-500 mt-2">Pro+ only. We will post the full thread as a reply chain at the exact time.</div>
+          <div className="text-xs text-zinc-500 mt-2">Pro+ only (one-time trial available for non-Pro+). We will post the full thread as a reply chain at the exact time.</div>
         </div>
 
         {/* Queue */}
@@ -487,7 +489,9 @@ export default function SchedulerPage() {
 
         {/* History / Past activity */}
         <div>
-          <div className="font-semibold tracking-tight mb-3">Past activity ({history.length})</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="font-semibold tracking-tight">Past activity ({history.length})</div>
+          </div>
           {history.length === 0 ? (
             <div className="glass-card rounded-2xl border border-white/10 p-6 text-center">
               <div className="text-lg mb-1">📜 No past activity yet</div>
@@ -496,14 +500,14 @@ export default function SchedulerPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {history.slice(0, 12).map((post) => {
                 const isPosted = post.status === 'posted'
                 const link = isPosted && post.xPostIds?.[0]
                   ? `https://x.com/i/web/status/${post.xPostIds[0]}`
                   : null
                 return (
-                  <div key={post.id} className="text-sm flex items-center justify-between gap-4 border border-white/5 bg-zinc-900/50 rounded-2xl px-4 py-3">
+                  <div key={post.id} className="glass-card rounded-2xl border border-white/10 p-4 text-sm flex items-center justify-between gap-4">
                     <div className="min-w-0 truncate">
                       {post.title || post.tweets[0]?.slice(0, 70)}…
                       <span className="ml-2 text-[10px] text-zinc-500">{new Date(post.scheduledFor).toLocaleDateString()}</span>
