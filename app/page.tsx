@@ -9,6 +9,109 @@ interface Thread {
   tweets: string[]
 }
 
+// Self-contained animated demo for hero - simulates live generation with typewriter + stagger
+function AnimatedDemo() {
+  const [phase, setPhase] = useState<'idle' | 'typing' | 'generating' | 'results'>('idle')
+  const [demoTopic, setDemoTopic] = useState('')
+  const [visibleTweets, setVisibleTweets] = useState<number>(0)
+
+  const sampleTopic = "building in public"
+  const sampleTweets = [
+    "1/ Most founders treat building in public like a marketing channel. It's not.",
+    "2/ The real power is the feedback loop it creates with people who actually care.",
+    "3/ I started posting raw updates when we were at $0 MRR. The first 3 paying customers came from those threads.",
+    "4/ Now we have 47k followers and our best product ideas come from the comments."
+  ]
+
+  const resetDemo = () => {
+    setPhase('idle')
+    setDemoTopic('')
+    setVisibleTweets(0)
+  }
+
+  const runDemo = () => {
+    if (phase !== 'idle') {
+      resetDemo()
+      return
+    }
+    setPhase('typing')
+    setDemoTopic('')
+
+    // Type the topic
+    let i = 0
+    const typeInterval = setInterval(() => {
+      setDemoTopic(sampleTopic.slice(0, i + 1))
+      i++
+      if (i === sampleTopic.length) {
+        clearInterval(typeInterval)
+        setPhase('generating')
+        
+        // Simulate generate
+        setTimeout(() => {
+          setPhase('results')
+          // Stagger tweets
+          let t = 0
+          const showTweet = setInterval(() => {
+            setVisibleTweets(t + 1)
+            t++
+            if (t === sampleTweets.length) {
+              clearInterval(showTweet)
+              // Auto reset after delay for loop feel
+              setTimeout(() => {
+                resetDemo()
+              }, 4200)
+            }
+          }, 420)
+        }, 680)
+      }
+    }, 48)
+  }
+
+  return (
+    <div 
+      onClick={runDemo}
+      className="mx-auto max-w-[620px] cursor-pointer group"
+    >
+      <div className="text-[10px] tracking-[2px] text-zinc-500 mb-1.5 flex items-center justify-center gap-1.5">
+        LIVE PREVIEW <span className="text-violet-400 group-hover:text-violet-300 transition-colors">— click to replay</span>
+      </div>
+      
+      <div className="glass-card bg-zinc-900/80 border border-white/10 rounded-3xl p-5 text-left shadow-xl hover:border-violet-400/30 transition-all">
+        {/* Mock input + button */}
+        <div className="flex gap-2 mb-4">
+          <div className="flex-1 bg-zinc-950/80 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-zinc-300 font-mono min-h-[42px] flex items-center">
+            {phase === 'idle' && <span className="text-zinc-500">e.g. building in public...</span>}
+            {phase !== 'idle' && demoTopic}
+            {phase === 'typing' && <span className="animate-pulse">|</span>}
+          </div>
+          <div className={`px-5 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center transition-all ${phase === 'generating' ? 'bg-violet-500 text-white' : 'bg-white text-zinc-950'}`}>
+            {phase === 'generating' ? 'Generating...' : 'Generate'}
+          </div>
+        </div>
+
+        {/* Results with typewriter stagger */}
+        {phase === 'results' && visibleTweets > 0 && (
+          <div className="space-y-2.5 pt-1">
+            {sampleTweets.slice(0, visibleTweets).map((tweet, idx) => (
+              <div 
+                key={idx} 
+                className="demo-tweet text-[13px] leading-relaxed text-zinc-200 border-l-2 border-violet-400/40 pl-3"
+                style={{ animationDelay: `${idx * 120}ms` }}
+              >
+                {tweet}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {phase === 'idle' && (
+          <div className="text-[10px] text-center text-zinc-500 pt-1 tracking-wider">WATCH A REAL 4-THREAD GENERATION</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const { isSignedIn, user } = useUser()
   const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
@@ -360,7 +463,7 @@ export default function Page() {
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
             {isSignedIn && hasPro && (
-              <a href="/history" className="text-zinc-400 hover:text-white transition-colors">History</a>
+              <a href="/history" className="text-zinc-400 hover:text-white transition-colors pro-sparkle">History</a>
             )}
             
             {isSignedIn ? (
@@ -424,7 +527,7 @@ export default function Page() {
               {isSignedIn && hasPro && (
                 <a 
                   href="/history" 
-                  className="text-zinc-400 hover:text-white py-1"
+                  className="text-zinc-400 hover:text-white py-1 pro-sparkle"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   History
@@ -496,35 +599,36 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Hero - Stronger, more premium design */}
-      <div className="relative max-w-5xl mx-auto px-6 pt-12 pb-16 text-center">
+      {/* Hero - Stronger, more dynamic and premium */}
+      <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
         
-        {/* Rich background treatment for depth and interest */}
-        <div className="absolute inset-0 -z-10">
-          {/* Subtle grid + gradient mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(#1f1f23_1px,transparent_1px)] bg-[length:3px_3px]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-violet-950/30 via-transparent to-transparent"></div>
+        {/* Rich, layered, animated background for bigger visual impact */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          {/* Enhanced subtle grid + energetic gradient mesh */}
+          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-60"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/40 via-transparent to-indigo-950/30"></div>
           
-          {/* Soft glowing orbs for visual interest */}
-          <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-violet-500/20 rounded-full blur-[100px]"></div>
-          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-indigo-500/15 rounded-full blur-[120px]"></div>
+          {/* Dynamic glowing orbs with heroBlob animation - more energetic */}
+          <div className="absolute top-1/4 left-1/3 w-[420px] h-[420px] bg-violet-500/25 rounded-full blur-[140px] animate-[heroBlob_22s_infinite_ease-in-out]"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-[380px] h-[380px] bg-indigo-500/20 rounded-full blur-[120px] animate-[heroBlob_28s_infinite_ease-in-out_4s]"></div>
+          <div className="absolute top-2/3 left-1/5 w-64 h-64 bg-violet-400/15 rounded-full blur-[90px] animate-[heroBlob_18s_infinite_ease-in-out_8s]"></div>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300 animate-[fadeInUp_0.5s_ease-out]">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
           Built for creators and founders who actually post
         </div>
 
-        <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-5 leading-none">
+        <h1 className="text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-4.5px] mb-6 leading-[0.92] animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
           Stop staring at a blank<br />screen. Post on X in seconds.
         </h1>
         
-        <p className="text-xl text-zinc-400 max-w-xl mx-auto mb-10">
-          Turn any idea into 4 high-quality, ready-to-post X threads — instantly.<br />
+        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-10 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
+          Turn any idea into 4 high-quality, ready-to-post X threads — instantly.<br className="hidden md:block" />
           Built for founders, creators, and anyone who wants to post consistently without the headache.
         </p>
 
-        {/* Generator Input */}
+        {/* Generator Input + Demo */}
         <div className="max-w-2xl mx-auto">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -559,7 +663,7 @@ export default function Page() {
           {/* Visible usage counter / priority indicator */}
           {isSignedIn && hasPro ? (
             <div className="mt-3 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300 pro-sparkle">
                 <span className="text-violet-400">★</span>
                 Pro: unlimited generations • Priority enabled
               </span>
@@ -572,6 +676,11 @@ export default function Page() {
               </span>
             </div>
           ) : null}
+
+          {/* Live Animated Demo - energetic visual proof */}
+          <div className="mt-6">
+            <AnimatedDemo />
+          </div>
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
@@ -642,7 +751,7 @@ export default function Page() {
                 New topic
               </button>
               {hasPro && (
-                <a href="/history" className="text-sm px-5 py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all">
+                <a href="/history" className="text-sm px-5 py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
                   View History
                 </a>
               )}
@@ -729,34 +838,46 @@ export default function Page() {
         </div>
       )}
 
-      {/* How it Works */}
+      {/* How it Works - premium icons + hover effects */}
       <div id="how" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3">From idea to posted thread in seconds</h2>
+          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">From idea to posted thread in seconds</h2>
           <p className="text-zinc-400">No more overthinking. No more blank page anxiety.</p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { 
-              step: "1", 
+              icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              ),
               title: "Type one sentence", 
               desc: "Just describe what you want to talk about — a lesson, launch, opinion, or story." 
             },
             { 
-              step: "2", 
+              icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              ),
               title: "Get 4 strong threads", 
               desc: "We generate four different angles: contrarian, personal story, framework, and bold opinion." 
             },
             { 
-              step: "3", 
+              icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              ),
               title: "Copy and post", 
               desc: "Each thread is ready to copy. Post the best one or use all four throughout the week." 
             }
           ].map((item, index) => (
-            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors">
-              <div className="w-9 h-9 rounded-xl bg-violet-500 text-white flex items-center justify-center font-semibold mb-4">
-                {item.step}
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+              <div className="how-icon w-9 h-9 rounded-xl bg-violet-500 text-white flex items-center justify-center font-semibold mb-4">
+                {item.icon}
               </div>
               <div className="font-semibold text-lg mb-2 tracking-tight">{item.title}</div>
               <div className="text-zinc-400 text-[15px] leading-relaxed">{item.desc}</div>
@@ -765,41 +886,50 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Real-World Use Cases */}
+      {/* Real-World Use Cases - icons + premium hover cards */}
       <div id="use-cases" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3">Real situations where people use ThreadForge</h2>
+          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real situations where people use ThreadForge</h2>
           <p className="text-zinc-400 max-w-md mx-auto">Stop overthinking what to post. Here are actual scenarios where this saves people serious time.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           {[
             {
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
               title: "You're launching a product or side project",
               desc: "You finally shipped something. Instead of spending 2 hours crafting a launch thread, you type a short description and get 4 strong angles ready to post."
             },
             {
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17.687a2.25 2.25 0 01-2.25-2.25v-9a2.25 2.25 0 012.25-2.25h4.5a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25H9.663z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21v-3.75" /></svg>,
               title: "You had a valuable lesson or failure",
               desc: "Something went wrong (or surprisingly well) in your business. You want to share the real story without spending an hour structuring it into a thread."
             },
             {
-              title: "You're trying to grow on X consistently",
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+              title: <span className="pro-sparkle">You're trying to grow on X consistently</span>,
               desc: "You know you should post more, but writing good threads takes too much mental energy. You use ThreadForge 3–4 times a week to stay consistent."
             },
             {
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
               title: "You're building in public",
               desc: "You're documenting your journey but hate the blank page. You drop quick notes about what you're working on and turn them into proper threads."
             },
             {
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
               title: "You're a consultant, coach, or expert",
               desc: "You want to demonstrate your thinking and attract better clients, but you don't have time to write long threads every week."
             },
             {
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17.687a2.25 2.25 0 01-2.25-2.25v-9a2.25 2.25 0 012.25-2.25h4.5a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25H9.663z" /></svg>,
               title: "You have one good idea but don't know how to expand it",
               desc: "You have a strong opinion or insight. ThreadForge turns that single idea into multiple high-quality threads from different angles (contrarian, story, framework, etc)."
             }
           ].map((useCase, index) => (
-            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors">
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4">
+                {useCase.icon}
+              </div>
               <div className="font-semibold text-lg mb-2 tracking-tight">{useCase.title}</div>
               <div className="text-zinc-400 text-[15px] leading-relaxed">{useCase.desc}</div>
             </div>
@@ -807,10 +937,10 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Testimonials */}
+      {/* Testimonials - avatars + premium cards */}
       <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3">Real people. Real results.</h2>
+          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real people. Real results.</h2>
           <p className="text-zinc-400">Real feedback from people using ThreadForge</p>
         </div>
 
@@ -819,29 +949,38 @@ export default function Page() {
             {
               quote: "I used to spend 45+ minutes writing one thread. Now I type one sentence and get four strong versions. It’s completely changed how often I post.",
               name: "Maya Patel",
-              role: "Indie hacker, $180k MRR"
+              role: "Indie hacker, $180k MRR",
+              avatar: "MP"
             },
             {
               quote: "The different angles are the best part. One thread performs well, but having the contrarian + story versions means I can post multiple times from one idea.",
               name: "Alex Rivera",
-              role: "Founder, building in public"
+              role: "Founder, building in public",
+              avatar: "AR"
             },
             {
               quote: "I’m not a natural writer. ThreadForge lets me share valuable lessons from my business without it taking half my day. My engagement has gone way up.",
               name: "Jordan Kim",
-              role: "SaaS founder & consultant"
+              role: "SaaS founder & consultant",
+              avatar: "JK"
             },
             {
               quote: "I use this almost every day when I’m documenting my journey. It turns my rough notes into proper threads that actually get traction.",
               name: "Sam Chen",
-              role: "Solo founder, 42k followers"
+              role: "Solo founder, 42k followers",
+              avatar: "SC"
             }
           ].map((testimonial, index) => (
-            <div key={index} className="bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
               <p className="text-zinc-200 mb-6 leading-relaxed">“{testimonial.quote}”</p>
-              <div>
-                <div className="font-medium">{testimonial.name}</div>
-                <div className="text-sm text-zinc-400">{testimonial.role}</div>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 via-indigo-500 to-violet-400 flex items-center justify-center text-[11px] font-bold text-white ring-1 ring-white/10">
+                  {testimonial.avatar}
+                </div>
+                <div>
+                  <div className="font-medium">{testimonial.name}</div>
+                  <div className="text-sm text-zinc-400">{testimonial.role}</div>
+                </div>
               </div>
             </div>
           ))}
@@ -858,7 +997,7 @@ export default function Page() {
 
         <div className="grid md:grid-cols-2 gap-6 max-w-[860px] mx-auto">
           {/* Free Tier Card */}
-          <div className="rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
+          <div className="glass-card rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
             <div className="mb-6">
               <div className="uppercase text-emerald-400 text-xs tracking-[1.5px] font-medium mb-1">FREE</div>
               <div className="flex items-end gap-1">
@@ -880,11 +1019,11 @@ export default function Page() {
           </div>
 
           {/* Pro Tier Card - highlighted */}
-          <div className="rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full">MOST POPULAR</div>
+          <div className="glass-card rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle">MOST POPULAR</div>
 
             <div className="mb-6">
-              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2">
+              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2 pro-sparkle">
                 PRO
                 {hasPro && <span className="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-px rounded">ACTIVE</span>}
               </div>

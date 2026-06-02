@@ -43,3 +43,97 @@ body {
   33% { transform: translate(30px, -40px) scale(1.1); }
   66% { transform: translate(-20px, 30px) scale(0.95); }
 }
+
+/* Enhanced hero entrance and energetic animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.15); }
+  66% { transform: translate(-30px, 40px) scale(0.9); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.4; transform: scale(0.7) rotate(15deg); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes fadeInStagger {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Premium card enhancements (used for use-cases, testimonials, how-it-works) */
+.glass-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.glass-card:hover::before {
+  opacity: 1;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  border-color: rgb(167 139 250 / 0.3);
+}
+
+/* Pro sparkle utility - subtle premium highlight */
+.pro-sparkle {
+  position: relative;
+  display: inline-block;
+}
+
+.pro-sparkle::after {
+  content: '✨';
+  position: absolute;
+  top: -2px;
+  right: -8px;
+  font-size: 0.6em;
+  line-height: 1;
+  animation: sparkle 2.2s infinite ease-in-out;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* How it works icon container */
+.how-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+}
+
+.glass-card:hover .how-icon {
+  transform: scale(1.1) rotate(3deg);
+  color: rgb(167 139 250);
+}
+
+/* Demo animation styles */
+.demo-tweet {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 0.8s steps(40, end) forwards;
+  border-right: 1px solid rgb(167 139 250 / 0.6);
+}
+
+.demo-tweet:nth-child(2) { animation-delay: 0.6s; }
+.demo-tweet:nth-child(3) { animation-delay: 1.1s; }
+.demo-tweet:nth-child(4) { animation-delay: 1.6s; }
