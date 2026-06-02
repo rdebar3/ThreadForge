@@ -140,3 +140,23 @@ Exact format:
     ...
   ]
 }`
+
+// ============================================
+// Pro-only Image Generation (xAI Imagine API)
+// Styles + prompt modifiers used by /api/generate-images
+// and the image UI in page.tsx + history/page.tsx
+// ============================================
+export const IMAGE_STYLES = ['auto', 'minimal', 'cinematic', 'meme', 'illustrative', 'realistic', 'abstract'] as const;
+
+export type ImageStyle = typeof IMAGE_STYLES[number];
+
+export const IMAGE_STYLE_MODIFIERS: Record<string, string> = {
+  auto: '',
+  minimal: 'in a clean, minimalist style, simple composition, elegant, lots of negative space, modern graphic design, high contrast',
+  cinematic: 'in a cinematic style, dramatic lighting, filmic composition, moody atmosphere, high production value, like a movie still',
+  meme: 'in a humorous internet meme style, bold exaggerated, viral meme aesthetic, fun and relatable',
+  illustrative: 'as a beautiful digital illustration, artistic, detailed yet stylized, vibrant colors with sophisticated tone',
+  realistic: 'photorealistic, highly detailed, natural lighting, documentary photography style, lifelike',
+  abstract: 'in an abstract artistic style, symbolic, conceptual, creative non-literal representation, artistic',
+};
+

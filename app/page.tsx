@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
+import { IMAGE_STYLES, type ImageStyle } from './lib/prompts'
 
 interface Thread {
   id: number
@@ -25,6 +26,13 @@ export default function Page() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Image generation states (Pro-only)
+  const [showImageModalFor, setShowImageModalFor] = useState<number | null>(null)
+  const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStyle>('auto')
+  const [selectedImageCount, setSelectedImageCount] = useState(4)
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false)
+  const [threadImages, setThreadImages] = useState<Record<number, Array<{url: string, style: string, revisedPrompt?: string}>>>({})
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
@@ -342,6 +350,77 @@ export default function Page() {
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
     </svg>
   )
+
+  // Image generation helpers (Pro-only)
+  async function downloadImage(url: string, filename: string) {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch (e) {
+      // fallback direct
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+    }
+  }
+
+  async function copyImageToClipboard(url: string) {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
+      showToast('Image copied to clipboard', 'success')
+    } catch (e) {
+      await navigator.clipboard.writeText(url)
+      showToast('Image URL copied (image copy not supported)', 'info')
+    }
+  }
+
+  async function handleGenerateImages(thread: Thread) {
+    if (!hasPro) return
+    setIsGeneratingImages(true)
+    try {
+      const res = await fetch('/api/generate-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          threadId: thread.id,
+          title: thread.title,
+          tweets: thread.tweets,
+          style: selectedImageStyle,
+          count: selectedImageCount
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.requireUpgrade) {
+          showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+        } else if (data.rateLimited) {
+          showToast(data.error || 'Please wait before generating more images.', 'info')
+        } else {
+          showToast(data.error || 'Failed to generate images', 'error')
+        }
+        return
+      }
+      setThreadImages(prev => ({ ...prev, [thread.id]: data.images }))
+      setShowImageModalFor(null)
+      showToast(`Generated ${data.images?.length || 4} images!`, 'success')
+    } catch (e) {
+      showToast('Error generating images. Please try again.', 'error')
+    } finally {
+      setIsGeneratingImages(false)
+    }
+  }
 
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col overflow-x-hidden">
@@ -709,6 +788,8 @@ export default function Page() {
                   setThreads([])
                   setTopic('')
                   setDemoMode(false)
+                  setThreadImages({})
+                  setShowImageModalFor(null)
                   setTimeout(() => {
                     const input = document.querySelector('input[type="text"]') as HTMLInputElement
                     input?.focus()
@@ -751,6 +832,19 @@ export default function Page() {
                       >
                         <XIcon />
                         Post to X
+                      </button>
+                    )}
+                    {hasPro && (
+                      <button
+                        onClick={() => {
+                          setShowImageModalFor(thread.id)
+                          setSelectedImageStyle('auto')
+                          setSelectedImageCount(4)
+                        }}
+                        title="Generate 1-4 relevant AI images for this thread (Pro)"
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        ✨ Generate Images
                       </button>
                     )}
                   </div>
@@ -803,6 +897,92 @@ export default function Page() {
                     )
                   })}
                 </div>
+
+                {/* Image choice panel (shown when Generate Images clicked for this thread) */}
+                {showImageModalFor === thread.id && (
+                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {IMAGE_STYLES.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setSelectedImageStyle(s)}
+                          className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
+                    <div className="flex gap-2 mb-3">
+                      {[1, 2, 3, 4].map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => setSelectedImageCount(n)}
+                          className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleGenerateImages(thread)}
+                        disabled={isGeneratingImages}
+                        className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                      >
+                        {isGeneratingImages ? 'Generating...' : 'Generate Images'}
+                      </button>
+                      <button
+                        onClick={() => setShowImageModalFor(null)}
+                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(4); }}
+                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                      >
+                        Auto (4 images)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Display generated images for this thread */}
+                {hasPro && threadImages[thread.id]?.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id][0]?.style}</div>
+                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(4); }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {threadImages[thread.id].map((img, idx) => (
+                        <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
+                          <img
+                            src={img.url}
+                            alt={`Visual ${idx + 1} for ${thread.title}`}
+                            className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)}
+                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={() => copyImageToClipboard(img.url)}
+                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

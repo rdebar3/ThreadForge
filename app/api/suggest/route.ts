@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'grok-3',
+        model: 'grok-4.3', // Upgraded to Grok 4.3 for better suggestion quality
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: userPrompt }

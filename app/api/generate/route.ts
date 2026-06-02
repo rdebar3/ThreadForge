@@ -183,7 +183,8 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'grok-3',
+          // Upgraded to Grok 4.3 for better thread generation quality (superior reasoning, more human-like, higher quality hooks/closers)
+          model: 'grok-4.3',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: userPrompt }
@@ -246,6 +247,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
         // POST-GENERATION REWRITER (step 3 of quality plan)
         // This is the single biggest lever for making threads feel 9-10/10
         // instead of generic first-draft output.
+        // Using Grok 4.3 for superior reasoning and human-like quality.
         // ============================================
         if (threads.length >= 3) {
           console.log(`Running rewriter pass on ${threads.length} threads for topic: "${topic}"`)
@@ -414,7 +416,8 @@ Return the improved version as valid JSON with the exact same structure.`
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'grok-3',
+        // Upgraded to Grok 4.3 for superior reasoning and human-like quality in the rewriter pass
+        model: 'grok-4.3',
         messages: [
           { role: 'system', content: rewriterSystem },
           { role: 'user', content: rewriterUser }
