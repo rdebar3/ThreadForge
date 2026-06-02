@@ -648,6 +648,7 @@ export default function Page() {
           <div className="hidden md:flex items-center gap-4 text-sm">
             <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
             <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
+            <a href="/community" className="text-zinc-400 hover:text-white transition-colors">Community</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
             {isSignedIn && hasPro && (
               <a href="/history" className="text-zinc-400 hover:text-white transition-colors pro-sparkle">History</a>
@@ -713,6 +714,13 @@ export default function Page() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Use cases
+              </a>
+              <a 
+                href="/community" 
+                className="text-zinc-400 hover:text-white py-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Community
               </a>
               <a 
                 href="#pricing" 
@@ -1471,50 +1479,37 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Testimonials - avatars + premium cards */}
-      <div className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+      {/* Early Creators Trust Section - premium glass cards, subtle icons */}
+      <div id="early-creators" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Real people. Real results.</h2>
+          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Join the growing list of consistent creators on X</h2>
+          <p className="text-zinc-400 max-w-xl mx-auto">ThreadForge is already helping indie hackers, SaaS founders, and builders post with confidence every week.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {[
             {
-              quote: "I used to spend 45+ minutes writing one thread. Now I type one sentence and get four strong versions. It’s completely changed how often I post.",
-              name: "Maya Patel",
-              role: "Indie hacker, $180k MRR",
-              avatar: "MP"
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+              title: "Indie Hackers",
+              desc: "Shipping products and updates consistently without the writing tax."
             },
             {
-              quote: "The different angles are the best part. One thread performs well, but having the contrarian + story versions means I can post multiple times from one idea.",
-              name: "Alex Rivera",
-              role: "Founder, building in public",
-              avatar: "AR"
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+              title: "SaaS Founders",
+              desc: "Turning customer wins and lessons into high-engagement threads weekly."
             },
             {
-              quote: "I’m not a natural writer. ThreadForge lets me share valuable lessons from my business without it taking half my day. My engagement has gone way up.",
-              name: "Jordan Kim",
-              role: "SaaS founder & consultant",
-              avatar: "JK"
-            },
-            {
-              quote: "I use this almost every day when I’m documenting my journey. It turns my rough notes into proper threads that actually get traction.",
-              name: "Sam Chen",
-              role: "Solo founder, 42k followers",
-              avatar: "SC"
+              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+              title: "Builders Documenting",
+              desc: "Turning experiments and progress into audience growth on X."
             }
-          ].map((testimonial, index) => (
-            <div key={index} className="glass-card group bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
-              <p className="text-zinc-200 mb-6 leading-relaxed">“{testimonial.quote}”</p>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 via-indigo-500 to-violet-400 flex items-center justify-center text-[11px] font-bold text-white ring-1 ring-white/10 group-hover:ring-violet-400/40 group-hover:shadow-[0_0_10px_rgba(167,139,250,0.3)] transition-all">
-                  {testimonial.avatar}
-                </div>
-                <div>
-                  <div className="font-medium">{testimonial.name}</div>
-                  <div className="text-sm text-zinc-400">{testimonial.role}</div>
-                </div>
+          ].map((item, index) => (
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4">
+                {item.icon}
               </div>
+              <div className="font-semibold text-lg mb-2 tracking-tight">{item.title}</div>
+              <div className="text-zinc-400 text-[15px] leading-relaxed">{item.desc}</div>
             </div>
           ))}
         </div>
