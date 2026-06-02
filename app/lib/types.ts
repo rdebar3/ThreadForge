@@ -39,14 +39,3 @@ export interface Template {
   category?: string;
   savedAt: string;
 }
-
-export interface CommunityPost {
-  id: number;
-  title: string;
-  snippet: string;
-  author: string;
-  avatar: string;
-  likes: number; // initial likes count
-  category: 'Launch' | 'Lesson' | 'Growth' | 'Story';
-  imageId: number;
-}

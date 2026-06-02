@@ -338,6 +338,15 @@ body {
   color: #e0e7ff;
 }
 
+/* Community Showcase - subtle orbit animation for the early-access glowing icon (premium feel, no fakes) */
+@keyframes communityOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.community-icon-orbit {
+  animation: communityOrbit 18s linear infinite;
+}
+
 /* ============================================
    MOBILE RESPONSIVENESS FOR THREAD GENERATION RESULTS
    Fixes wide expansion, horizontal scroll, off-screen buttons
