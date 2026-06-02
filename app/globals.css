@@ -11,28 +11,34 @@ body {
   font-feature-settings: "rlig" 1, "kern" 1;
   background-color: #0a0a0c;
   background-image: 
-    /* Deep rich base with violet/indigo life */
-    radial-gradient(circle at 20% 15%, rgba(124, 58, 237, 0.09) 0%, transparent 50%),
-    radial-gradient(circle at 80% 85%, rgba(99, 102, 241, 0.07) 0%, transparent 55%),
-    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.03) 0%, transparent 70%),
-    /* Faint geometric grid for modern depth and life */
-    linear-gradient(rgba(39, 39, 42, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(39, 39, 42, 0.08) 1px, transparent 1px),
-    /* Subtle glowing orbs as background layers */
-    radial-gradient(circle at 30% 70%, rgba(124, 58, 237, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 70% 30%, rgba(99, 102, 241, 0.035) 0%, transparent 45%),
-    /* Soft layered wash */
-    linear-gradient(135deg, rgba(124, 58, 237, 0.025) 0%, transparent 30%, transparent 70%, rgba(99, 102, 241, 0.02) 100%);
+    /* Rich layered violet/indigo gradients for modern dark tech depth */
+    radial-gradient(circle at 15% 10%, rgba(124, 58, 237, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 40%, rgba(124, 58, 237, 0.05) 0%, transparent 60%),
+    radial-gradient(circle at 60% 70%, rgba(99, 102, 241, 0.04) 0%, transparent 55%),
+    /* Subtle grid for tech feel (lines + dots) */
+    linear-gradient(rgba(39, 39, 42, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(39, 39, 42, 0.1) 1px, transparent 1px),
+    radial-gradient(#27272a 0.9px, transparent 1.5px),
+    /* Glowing orbs layers for life and depth */
+    radial-gradient(circle at 25% 65%, rgba(124, 58, 237, 0.06) 0%, transparent 35%),
+    radial-gradient(circle at 75% 25%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 40% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 30%),
+    /* Soft wash */
+    linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, transparent 25%, transparent 75%, rgba(99, 102, 241, 0.025) 100%);
   background-size: 
     100% 100%,
     100% 100%,
     100% 100%,
-    28px 28px,
-    28px 28px,
+    100% 100%,
+    30px 30px,
+    30px 30px,
+    5px 5px,
+    100% 100%,
     100% 100%,
     100% 100%,
     100% 100%;
-  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat;
 }
 
 .thread-card {

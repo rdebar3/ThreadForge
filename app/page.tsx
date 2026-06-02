@@ -360,7 +360,7 @@ export default function Page() {
           <div className="flex items-center gap-3">
             {/* Premium ThreadForge Logo - modern violet/indigo with subtle thread/AI motif */}
             <div className="flex items-center gap-3">
-              <svg width="36" height="36" viewBox="0 0 36 36" className="flex-shrink-0" aria-label="ThreadForge logo">
+              <svg width="40" height="40" viewBox="0 0 40 40" className="flex-shrink-0" aria-label="ThreadForge logo">
                 <defs>
                   <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#a78bfa" />
@@ -374,17 +374,19 @@ export default function Page() {
                     <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" />
                   </filter>
                 </defs>
-                {/* Outer glow circle */}
-                <circle cx="18" cy="18" r="17" fill="url(#logoGrad)" opacity="0.25" filter="url(#logoGlow)" />
-                {/* Main circle with gradient */}
-                <circle cx="18" cy="18" r="16" fill="url(#logoGrad)" />
+                {/* New premium logo icon: modern with thread + spark element, violet theme */}
+                <rect x="2" y="2" width="36" height="36" rx="10" fill="url(#logoGrad)" opacity="0.9" />
                 {/* Inner dark for contrast */}
-                <circle cx="18" cy="18" r="13" fill="#0a0a0c" />
-                {/* Subtle thread motif - crossing lines like interwoven threads */}
-                <path d="M7 11 Q12 9 18 12 Q24 9 29 11" stroke="url(#threadGrad)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-                <path d="M7 15 Q12 17 18 15 Q24 17 29 15" stroke="url(#threadGrad)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                <path d="M8 20 Q13 22 18 20 Q23 22 28 20" stroke="url(#threadGrad)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-                {/* AI motif - subtle neural nodes and connections */}
+                <rect x="5" y="5" width="30" height="30" rx="7" fill="#0a0a0c" />
+                {/* Thread element: interwoven lines suggesting threads */}
+                <path d="M10 12 Q15 10 20 13 Q25 10 30 12" stroke="#e0e7ff" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.85" />
+                <path d="M10 18 Q15 20 20 17 Q25 20 30 18" stroke="#e0e7ff" strokeWidth="1.8" fill="none" strokeLinecap="round" opacity="0.75" />
+                <path d="M12 25 Q17 23 22 26 Q27 23 30 25" stroke="#e0e7ff" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.8" />
+                {/* Spark element: modern star/burst with glow, violet theme */}
+                <g filter="url(#logoGlow)">
+                  <polygon points="20,8 22,14 28,14 23,18 25,24 20,20 15,24 17,18 12,14 18,14" fill="#a78bfa" opacity="0.95" />
+                  <circle cx="20" cy="16" r="2.5" fill="#fff" opacity="0.7" />
+                </g>
                 <circle cx="11" cy="10" r="1.8" fill="#a5b4fc" />
                 <circle cx="25" cy="10" r="1.8" fill="#a5b4fc" />
                 <circle cx="18" cy="24" r="2.2" fill="#6366f1" />
@@ -561,11 +563,13 @@ export default function Page() {
           <div className="absolute top-[38%] right-[12%] w-[340px] h-[340px] bg-indigo-400/11 rounded-full blur-[190px] animate-[heroBlob_35s_infinite_ease-in-out_2s]"></div>
           <div className="absolute bottom-[12%] left-[8%] w-[600px] h-[600px] bg-violet-500/9 rounded-full blur-[210px] animate-[heroBlob_48s_infinite_ease-in-out_14s]"></div>
           <div className="absolute top-[18%] right-[35%] w-[280px] h-[280px] bg-violet-500/8 rounded-full blur-[150px] animate-[heroBlob_27s_infinite_ease-in-out_7s]"></div>
+          <div className="absolute top-[50%] left-[25%] w-[200px] h-[200px] bg-indigo-500/7 rounded-full blur-[120px] animate-[heroBlob_40s_infinite_ease-in-out_4s]"></div>
           
           {/* Soft glowing accents - more prominent for premium alive hero */}
           <div className="absolute top-[26%] left-1/2 -translate-x-1/2 w-[980px] h-[320px] bg-violet-500/9 rounded-full blur-[130px] animate-[softGlow_14s_infinite_ease-in-out]"></div>
           <div className="absolute top-[33%] left-1/2 -translate-x-1/2 w-[760px] h-[240px] bg-indigo-500/8 rounded-full blur-[110px] animate-[softGlow_20s_infinite_ease-in-out_3s]"></div>
           <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[620px] h-[180px] bg-violet-400/6 rounded-full blur-[90px] animate-[softGlow_16s_infinite_ease-in-out_1s]"></div>
+          <div className="absolute top-[48%] left-1/2 -translate-x-1/2 w-[450px] h-[140px] bg-indigo-400/5 rounded-full blur-[80px] animate-[softGlow_22s_infinite_ease-in-out_6s]"></div>
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/40 hover:shadow-[0_0_22px_rgba(167,139,250,0.35)] transition-all">
@@ -584,7 +588,7 @@ export default function Page() {
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card bg-zinc-900/65 backdrop-blur-2xl border border-white/20 rounded-3xl p-7 md:p-9 shadow-[0_20px_30px_-10px_rgb(0,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.06),0_0_25px_rgba(124,58,237,0.08)] hover:shadow-[0_28px_40px_-12px_rgb(0,0,0,0.4),0_0_0_1px_rgba(167,139,250,0.2),0_0_35px_rgba(124,58,237,0.15)] transition-all">
+          <div className="glass-card bg-zinc-900/60 backdrop-blur-[30px] border border-white/25 rounded-3xl p-7 md:p-9 shadow-[0_25px_35px_-12px_rgb(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.08),0_0_30px_rgba(124,58,237,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] hover:shadow-[0_35px_50px_-15px_rgb(0,0,0,0.5),0_0_0_1px_rgba(167,139,250,0.25),0_0_45px_rgba(124,58,237,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] hover:border-violet-400/30 transition-all">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
