@@ -55,6 +55,11 @@ export default function Page() {
   const [rewriteCustom, setRewriteCustom] = useState('')
   const [isRewriting, setIsRewriting] = useState(false)
 
+  // Post to X Preview/Edit Modal (Pro)
+  const [showPostPreviewFor, setShowPostPreviewFor] = useState<number | null>(null)
+  const [previewTweets, setPreviewTweets] = useState<string[]>([])
+  const [isPosting, setIsPosting] = useState(false)
+
   const resultsRef = useRef<HTMLDivElement>(null)
 
   const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3') // Daily free tier limit for non-Pro users
@@ -331,15 +336,24 @@ export default function Page() {
     }, 1200)
   }
 
-  const copyToX = async (thread: Thread) => {
+  // Open preview/edit modal instead of immediate post
+  const copyToX = (thread: Thread) => {
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
     if (tweets.length === 0) return
+    setPreviewTweets([...tweets]) // editable copy
+    setShowPostPreviewFor(thread.id)
+  }
 
+  // Actual post logic (used by confirm in preview modal)
+  const performPostToX = async (tweetsToPost: string[]) => {
+    if (tweetsToPost.length === 0) return
+
+    setIsPosting(true)
     try {
       const res = await fetch('/api/x/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweets }),
+        body: JSON.stringify({ tweets: tweetsToPost }),
       })
       const data = await res.json()
 
@@ -366,10 +380,60 @@ export default function Page() {
       if (data.postIds && data.postIds.length > 0) {
         window.open(`https://x.com/i/web/status/${data.postIds[0]}`, '_blank')
       }
+
+      // Close preview on success
+      setShowPostPreviewFor(null)
+      setPreviewTweets([])
     } catch (err) {
       console.error('Post to X error:', err)
       showToast('Network error while posting to X. Please try again.', 'error')
+    } finally {
+      setIsPosting(false)
     }
+  }
+
+  // Modal helpers for post preview/edit
+  const updatePreviewTweet = (index: number, newText: string) => {
+    const updated = [...previewTweets]
+    updated[index] = newText
+    setPreviewTweets(updated)
+  }
+
+  const removePreviewTweet = (index: number) => {
+    if (previewTweets.length <= 1) {
+      showToast('Thread must have at least 1 tweet', 'info')
+      return
+    }
+    const updated = previewTweets.filter((_, i) => i !== index)
+    setPreviewTweets(updated)
+  }
+
+  const movePreviewTweet = (index: number, direction: number) => {
+    const newIndex = index + direction
+    if (newIndex < 0 || newIndex >= previewTweets.length) return
+    const updated = [...previewTweets]
+    const [item] = updated.splice(index, 1)
+    updated.splice(newIndex, 0, item)
+    setPreviewTweets(updated)
+  }
+
+  const addPreviewTweet = () => {
+    setPreviewTweets([...previewTweets, ''])
+  }
+
+  const confirmPostFromPreview = () => {
+    // filter empty
+    const cleaned = previewTweets.map(t => t.trim()).filter(t => t.length > 0)
+    if (cleaned.length === 0) {
+      showToast('No tweets to post', 'error')
+      return
+    }
+    performPostToX(cleaned)
+  }
+
+  const cancelPostPreview = () => {
+    setShowPostPreviewFor(null)
+    setPreviewTweets([])
   }
 
   const suggestForTweet = async (threadId: number, tweetIndex: number, tweet: string) => {
@@ -1716,6 +1780,121 @@ export default function Page() {
           </div>
         </div>
       )}
+
+      {/* Post to X Preview & Edit Modal - premium dark glass style */}
+      {showPostPreviewFor !== null && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
+          onClick={cancelPostPreview}
+        >
+          <div 
+            className="glass-card border border-white/10 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-2xl font-semibold tracking-tight">Preview &amp; Edit Thread</h3>
+                <p className="text-sm text-zinc-400">Edit tweets before posting as a reply chain to X. Changes are for this post only.</p>
+              </div>
+              <button 
+                onClick={cancelPostPreview}
+                className="text-zinc-400 hover:text-white text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              {previewTweets.map((tweet, index) => {
+                const charCount = tweet.length
+                const overLimit = charCount > 280
+                return (
+                  <div key={index} className="bg-zinc-900/70 border border-white/10 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-violet-400 tracking-[1px]">TWEET {index + 1}</span>
+                      <span className={`text-xs tabular-nums ${overLimit ? 'text-red-400 font-semibold' : 'text-zinc-500'}`}>
+                        {charCount}/280
+                      </span>
+                    </div>
+                    <textarea
+                      value={tweet}
+                      onChange={(e) => updatePreviewTweet(index, e.target.value)}
+                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/50' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3 text-sm leading-relaxed min-h-[70px] resize-y outline-none`}
+                      placeholder="Write your tweet..."
+                    />
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => removePreviewTweet(index)}
+                        disabled={previewTweets.length <= 1}
+                        className="text-[10px] px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => movePreviewTweet(index, -1)}
+                        disabled={index === 0}
+                        className="text-[10px] px-2 py-1 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition"
+                      >
+                        ↑ Move up
+                      </button>
+                      <button
+                        onClick={() => movePreviewTweet(index, 1)}
+                        disabled={index === previewTweets.length - 1}
+                        className="text-[10px] px-2 py-1 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition"
+                      >
+                        ↓ Move down
+                      </button>
+                      <button
+                        onClick={addPreviewTweet}
+                        className="ml-auto text-[10px] px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition"
+                      >
+                        + Add tweet
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Actions row */}
+            <div className="flex flex-wrap gap-3 items-center mb-6">
+              <button
+                onClick={() => {
+                  if (showPostPreviewFor !== null) {
+                    const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
+                    if (origThread) handleGenerateImages(origThread)
+                  }
+                }}
+                className="text-sm px-4 py-2 bg-zinc-800 hover:bg-violet-500/20 border border-white/10 rounded-2xl transition flex items-center gap-2"
+              >
+                ✨ Generate Images
+              </button>
+              <div className="text-[10px] text-zinc-500">Images will appear in the thread view below (text-only is posted to X).</div>
+            </div>
+
+            {/* Big confirm */}
+            <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={confirmPostFromPreview}
+                disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
+                className="flex-1 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow"
+              >
+                {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
+              </button>
+              <button
+                onClick={cancelPostPreview}
+                disabled={isPosting}
+                className="px-8 py-3.5 border border-white/10 text-sm font-medium rounded-2xl hover:bg-white/5 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="text-center text-[10px] text-zinc-500 mt-3 tracking-[0.5px]">This posts as a reply chain using your connected X account. Edits are preview-only.</p>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
