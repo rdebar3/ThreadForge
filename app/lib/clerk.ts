@@ -436,6 +436,7 @@ export async function removeScheduledPost(userId: string, postId: string): Promi
 
 /**
  * Helper used by cron: get due pending scheduled posts across a user.
+ * (Cron itself is daily on Hobby; see vercel.json)
  */
 export function filterDuePending(posts: ScheduledPost[]): ScheduledPost[] {
   const now = new Date()

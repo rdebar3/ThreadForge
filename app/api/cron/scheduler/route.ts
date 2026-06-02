@@ -60,6 +60,10 @@ async function postThreadToX(accessToken: string, tweets: string[]): Promise<str
 /**
  * Vercel Cron (or manual trigger) endpoint for publishing due scheduled posts.
  * 
+ * Schedule note: Currently set to daily (0 12 * * *) in vercel.json for Vercel Hobby plan
+ * compatibility (Hobby has strict limits on cron frequency). The logic only acts on due posts.
+ * Upgrade to Vercel Pro to change to more frequent (e.g. every 5 minutes) in vercel.json.
+ * 
  * Protection:
  * - In production: requires x-vercel-cron: 1 header OR Authorization: Bearer $CRON_SECRET
  * - Set CRON_SECRET in env for manual/testing triggers.

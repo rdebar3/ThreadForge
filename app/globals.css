@@ -180,4 +180,181 @@ body {
   background-color: rgba(167,139,250,0.15);
 }
 
+/* ============================================
+   FUTURISTIC AI PREMIUM PRICING SECTION
+   Dark tech / AI aesthetic: deep purple, indigo, violet, cyan
+   Strong glassmorphism, glowing borders, depth, subtle particles
+   ============================================ */
+
+@keyframes aiPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes proPlusGlow {
+  0%, 100% { 
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.35), 
+                0 0 0 1px rgba(167,139,250,0.25) inset, 0 0 50px rgba(124,58,237,0.25), 0 0 90px rgba(103,232,249,0.12); 
+  }
+  50% { 
+    box-shadow: 0 25px 30px -8px rgb(0 0 0 / 0.4), 0 10px 12px -6px rgb(0 0 0 / 0.4), 
+                0 0 0 1px rgba(167,139,250,0.4) inset, 0 0 70px rgba(124,58,237,0.4), 0 0 130px rgba(103,232,249,0.22); 
+  }
+}
+
+@keyframes aiNode {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+
+.premium-pricing-card {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(32px);
+  border-radius: 24px;
+}
+
+.premium-pricing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 22%, transparent 58%),
+    radial-gradient(circle at 25% 18%, rgba(103,232,249,0.06) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.premium-pricing-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(167,139,250,0.45), rgba(103,232,249,0.35), rgba(167,139,250,0.45));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.65;
+}
+
+.premium-pricing-card:hover::before {
+  opacity: 1;
+}
+
+.premium-pro-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(150deg, rgba(24,24,27,0.72) 0%, rgba(9,9,11,0.82) 100%);
+  box-shadow: 0 12px 18px -4px rgb(0 0 0 / 0.28), 0 6px 8px -3px rgb(0 0 0 / 0.2), 
+              0 0 0 1px rgba(255,255,255,0.05) inset;
+}
+
+.premium-pro-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 35px -8px rgb(0 0 0 / 0.35), 0 10px 14px -4px rgb(0 0 0 / 0.25), 
+              0 0 0 1px rgba(167,139,250,0.18) inset, 0 0 35px rgba(124,58,237,0.12);
+  border-color: rgba(167,139,250,0.25);
+}
+
+.premium-pro-plus-card {
+  border: 1px solid rgba(167,139,250,0.35);
+  background: linear-gradient(155deg, rgba(63,66,243,0.1) 0%, rgba(24,24,27,0.75) 28%, rgba(9,9,11,0.9) 100%);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.35), 
+              0 0 0 1px rgba(167,139,250,0.25) inset, 0 0 50px rgba(124,58,237,0.25), 0 0 90px rgba(103,232,249,0.12);
+  animation: proPlusGlow 4.5s ease-in-out infinite;
+}
+
+.premium-pro-plus-card::before {
+  background: 
+    linear-gradient(145deg, rgba(255,255,255,0.16) 0%, rgba(103,232,249,0.07) 18%, transparent 55%),
+    radial-gradient(circle at 65% 25%, rgba(103,232,249,0.12) 0%, transparent 50%);
+}
+
+.premium-pro-plus-card:hover {
+  transform: translateY(-8px) scale(1.005);
+  box-shadow: 0 30px 40px -8px rgb(0 0 0 / 0.42), 0 14px 18px -6px rgb(0 0 0 / 0.32), 
+              0 0 0 1px rgba(167,139,250,0.4) inset, 0 0 70px rgba(124,58,237,0.4), 0 0 140px rgba(103,232,249,0.22);
+  border-color: rgba(167,139,250,0.5);
+}
+
+.premium-badge {
+  background: linear-gradient(90deg, #a78bfa, #67e8f9);
+  color: #0a0a0c;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  box-shadow: 0 0 12px rgba(167,139,250,0.7), 0 0 26px rgba(103,232,249,0.35);
+  animation: aiPulse 2.8s ease-in-out infinite;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.ai-subtle {
+  position: relative;
+}
+
+.ai-subtle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(103,232,249,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103,232,249,0.06) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: 0.35;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.ai-node {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #67e8f9;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #67e8f9, 0 0 12px rgba(103,232,249,0.5);
+  animation: aiNode 2.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.scheduler-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.scheduler-modern::before {
+  content: '📅';
+  font-size: 0.95em;
+  filter: drop-shadow(0 0 3px rgba(103,232,249,0.7));
+  opacity: 0.95;
+}
+
+.premium-pro-plus-card .scheduler-modern::before {
+  filter: drop-shadow(0 0 5px rgba(103,232,249,0.9));
+}
+
+/* Enhanced typography hierarchy for pricing */
+.premium-tier-title {
+  letter-spacing: -0.02em;
+}
+
+.premium-feature {
+  transition: all 0.2s ease;
+}
+
+.premium-pro-plus-card .premium-feature {
+  position: relative;
+}
+
+.premium-pro-plus-card .premium-feature:hover {
+  transform: translateX(2px);
+  color: #e0e7ff;
+}
+
 

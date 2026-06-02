@@ -257,6 +257,20 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       }
     }
 
+    // Sanitize threads defensively: ensure always proper {id, title, tweets: string[]} shape
+    // even if LLM returns malformed data (prevents frontend "Cannot read '0' of undefined" etc.)
+    threads = Array.isArray(threads)
+      ? threads
+          .map((t: any, i: number) => ({
+            id: typeof t?.id === 'number' ? t.id : i + 1,
+            title: (typeof t?.title === 'string' && t.title.trim()) ? t.title.trim() : `Thread ${i + 1}`,
+            tweets: Array.isArray(t?.tweets)
+              ? t.tweets.map((tw: any) => String(tw || '').trim()).filter((s: string) => s.length > 0)
+              : [],
+          }))
+          .filter((t: Thread) => t.tweets.length > 0)
+      : [];
+
     // Track usage
     if (userId && threads.length > 0) {
       await incrementUserGenerations(userId, 1)

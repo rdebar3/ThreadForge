@@ -303,7 +303,8 @@ export default function Page() {
   }
 
   const copyThread = (thread: Thread) => {
-    const fullThread = thread.tweets.join('\n\n')
+    const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
+    const fullThread = tweets.join('\n\n')
     navigator.clipboard.writeText(fullThread)
 
     // Visual feedback using state
@@ -327,11 +328,12 @@ export default function Page() {
   }
 
   const copyToX = (thread: Thread) => {
-    const formatted = thread.tweets.join('\n\n')
+    const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
+    const formatted = tweets.join('\n\n')
     navigator.clipboard.writeText(formatted)
     showToast('Copied to clipboard and opened X composer', 'success')
     // Open X compose with first tweet for convenience
-    const firstTweet = encodeURIComponent(thread.tweets[0])
+    const firstTweet = encodeURIComponent(tweets[0] || '')
     window.open(`https://x.com/compose/tweet?text=${firstTweet}`, '_blank')
 
     // Track for Pro+ analytics (fire and forget)
@@ -576,6 +578,16 @@ export default function Page() {
       setIsRewriting(false)
     }
   }
+
+  // Defensive safe threads for rendering - normalizes data from API to always have tweets array etc.
+  // Prevents "Cannot read '0' of undefined" and similar on generation results.
+  const safeThreads: Thread[] = Array.isArray(threads)
+    ? threads.map((raw: any) => ({
+        id: typeof raw?.id === 'number' ? raw.id : 0,
+        title: typeof raw?.title === 'string' ? raw.title : 'Untitled thread',
+        tweets: Array.isArray(raw?.tweets) ? raw.tweets : [],
+      }))
+    : [];
 
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col overflow-x-hidden">
@@ -956,41 +968,52 @@ export default function Page() {
           <div className="text-center mb-8">
             <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. Pro+ adds AI images + scheduler (Pro+ only).</p>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. <span className="text-cyan-400">Pro+ adds AI images + scheduler + analytics (Pro+ only)</span>.</p>
           </div>
 
           {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Pro Card */}
-            <div className="glass-card bg-zinc-900/60 border border-white/10 rounded-3xl p-8 flex flex-col">
+            {/* Pro Card - clean, solid foundation */}
+            <div className="premium-pricing-card premium-pro-card glass-card bg-zinc-900/60 border border-white/10 rounded-3xl p-8 flex flex-col">
               <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-semibold mb-2">PRO — $9/mo</div>
-              <div className="text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
+              <div className="premium-tier-title text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Post to X</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> History</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart Suggestions</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Priority access</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Post to X</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> History</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart Suggestions</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Priority access</li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features • No AI images or Scheduler</div>
             </div>
 
-            {/* Pro+ Card - highlighted */}
-            <div className="glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
-              <div className="absolute -top-3 right-6 px-3 py-px text-[10px] font-mono tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_10px_rgba(167,139,250,0.5)]">MOST POPULAR</div>
-              <div className="uppercase text-amber-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">IMAGES + SCHEDULER</span></div>
-              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Images + Scheduler (Pro+ only)</div>
-              <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
+            {/* Pro+ Card - high-impact AI premium pop */}
+            <div className="premium-pricing-card premium-pro-plus-card glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative ai-subtle">
+              {/* Subtle AI neural grid + nodes for tech depth (non-clutter) */}
+              <div className="ai-neural" aria-hidden="true"></div>
+              <span className="ai-node" style={{top: '12%', left: '10%'}}></span>
+              <span className="ai-node" style={{top: '28%', right: '14%', animationDelay: '0.8s'}}></span>
+              <span className="ai-node" style={{bottom: '18%', left: '16%', animationDelay: '1.6s'}}></span>
+              <span className="ai-node" style={{bottom: '32%', right: '11%', animationDelay: '2.4s'}}></span>
+
+              <div className="premium-badge absolute -top-3 right-6 px-4 py-px text-[10px] font-mono tracking-[1.5px] rounded-full shadow-[0_0_16px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
+              
+              <div className="uppercase text-cyan-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">IMAGES + SCHEDULER + ANALYTICS</span></div>
+              
+              <div className="premium-tier-title text-2xl font-semibold tracking-[-0.5px] mb-4 text-white">Pro + AI Images + Scheduler + Analytics (Pro+ only)</div>
+              
+              <ul className="space-y-3.5 text-[14px] text-zinc-200 mb-auto">
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><span className="scheduler-modern">📅 Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong>📊 Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
             </div>
           </div>
 
           <div className="text-center mt-8">
-            <a href="#pricing" className="text-sm font-medium inline-flex items-center gap-1.5 text-violet-400 hover:text-violet-300 transition-colors pro-sparkle">
+            <a href="#pricing" className="text-sm font-medium inline-flex items-center gap-1.5 text-violet-400 hover:text-cyan-400 transition-all pro-sparkle">
               See full Pro / Pro+ pricing &amp; upgrade <span aria-hidden>→</span>
             </a>
           </div>
@@ -1007,7 +1030,7 @@ export default function Page() {
       )}
 
       {/* Your Generated Threads */}
-      {threads.length > 0 && (
+      {safeThreads.length > 0 && (
         <div ref={resultsRef} className="max-w-4xl mx-auto px-6 pb-20">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-y-3">
             <div>
@@ -1043,8 +1066,7 @@ export default function Page() {
           </div>
 
           <div className="space-y-6">
-            {threads.map((thread) => (
-              <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl">
+            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl">
                 <div className="flex items-center justify-between mb-5">
                   <div>
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
@@ -1261,14 +1283,15 @@ export default function Page() {
                 )}
 
                 {/* Display generated images for this thread - moved to top (right below title/buttons) */}
-                {(isProPlus || threadImages[thread.id]?.length > 0) && (
+                {/* Only show when images actually generated (removed isProPlus from condition to avoid accessing [0] of undefined for Pro+ users before generating images) */}
+                {threadImages[thread.id]?.length > 0 && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id][0]?.style}</div>
+                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id]?.[0]?.style || ''}</div>
                       <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {threadImages[thread.id].map((img, idx) => (
+                      {(threadImages[thread.id] || []).map((img, idx) => (
                         <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
                           <img
                             src={img.url}
@@ -1590,13 +1613,14 @@ export default function Page() {
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$15</span>
                 <span className="text-zinc-400 pb-1">/mo</span>
               </div>
-              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Scheduler (Pro+ only) • Cancel anytime</div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Scheduler + Analytics (Pro+ only) • Cancel anytime</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
             </ul>
 
             {isProPlus ? (
@@ -1620,7 +1644,7 @@ export default function Page() {
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler (Pro+ only). Existing Pro users are grandfathered into Pro+.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler + Analytics (Pro+ only). Existing Pro users are grandfathered into Pro+.</p>
       </div>
 
       {/* Footer */}
