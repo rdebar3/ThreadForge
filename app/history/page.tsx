@@ -110,7 +110,10 @@ export default function HistoryPage() {
   }
 
   async function handleGenerateImages(recordId: string, thread: Thread, recordTopic: string) {
-    if (!hasPro) return
+    if (!hasPro) {
+      showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+      return
+    }
     const key = `${recordId}-${thread.id}`
     setIsGeneratingImages(true)
     try {
@@ -409,7 +412,7 @@ export default function HistoryPage() {
                           </div>
 
                           {/* Image choice panel for history */}
-                          {showImageModalFor === `${record.id}-${thread.id}` && (
+                          {hasPro && showImageModalFor === `${record.id}-${thread.id}` && (
                             <div className="mt-4 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
                               <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
                               <div className="flex flex-wrap gap-2 mb-3">

@@ -386,7 +386,10 @@ export default function Page() {
   }
 
   async function handleGenerateImages(thread: Thread) {
-    if (!hasPro) return
+    if (!hasPro) {
+      showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+      return
+    }
     setIsGeneratingImages(true)
     try {
       const res = await fetch('/api/generate-images', {
@@ -899,7 +902,7 @@ export default function Page() {
                 </div>
 
                 {/* Image choice panel (shown when Generate Images clicked for this thread) */}
-                {showImageModalFor === thread.id && (
+                {hasPro && showImageModalFor === thread.id && (
                   <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
                     <div className="flex flex-wrap gap-2 mb-3">
