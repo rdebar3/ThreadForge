@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { IMAGE_STYLE_MODIFIERS, IMAGE_STYLES } from '../../lib/prompts'
-import { canUseImageGen } from '../../lib/clerk'
+import { canUseImageGen, canUseProPlusFeature, markProPlusTrialUsed } from '../../lib/clerk'
 
 // Pro-only endpoint: generates 1-4 relevant images for a generated thread using xAI Imagine API.
 // - Strict hasPro check (returns 402 + requireUpgrade for free users)
@@ -43,23 +43,17 @@ export async function POST(req: NextRequest) {
       cleanStyle = 'auto'
     }
 
-    // Pro+ check (image gen is Pro+ exclusive)
-    const canGenerateImages = await canUseImageGen(userId)
-
-    if (!canGenerateImages) {
-      // Check if they have basic Pro (to give better message)
-      const { getUserPlan } = await import('../../lib/clerk')
-      const plan = await getUserPlan(userId)
-      const isBasicPro = plan === 'pro'
-
+    // Pro+ check with one-time trial support
+    const featureCheck = await canUseProPlusFeature(userId)
+    if (!featureCheck.allowed) {
       return NextResponse.json({
-        error: isBasicPro 
-          ? 'Image Generation is a Pro+ feature. Upgrade your plan to unlock AI images.'
-          : 'Image generation is a Pro+ feature. Please upgrade.',
+        error: 'Image Generation is a Pro+ feature. You have used your one-time trial.',
         requireUpgrade: true,
         upgradeTo: 'pro-plus'
       }, { status: 402 })
     }
+
+    const isTrialUse = featureCheck.isTrial
 
     console.log(`[generate-images] Pro user ${userId} requesting style=${style} count=${count} topicLen=${(topic||'').length}`)
 
@@ -209,9 +203,17 @@ Create a beautiful, eye-catching image that captures the emotion and core idea o
 
     console.log(`[generate-images] Success for ${userId}: returning ${images.length} images`)
     const displayStyle = (cleanStyle === 'auto' ? 'auto (randomized to ' + (images[0]?.style || 'default') + ')' : cleanStyle)
+
+    // If this was a trial use, mark it consumed now (after successful generation)
+    if (isTrialUse) {
+      await markProPlusTrialUsed(userId)
+      console.log(`[generate-images] Marked one-time Pro+ trial as used for ${userId}`)
+    }
+
     return NextResponse.json({ 
       images, 
-      style: displayStyle
+      style: displayStyle,
+      wasTrial: isTrialUse
     })
 
   } catch (error) {

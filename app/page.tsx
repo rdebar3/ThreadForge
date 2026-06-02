@@ -17,6 +17,8 @@ export default function Page() {
   const userPlan = (user?.publicMetadata?.plan as 'pro' | 'pro-plus' | null) || (legacyHasPro ? 'pro-plus' : null)
   const hasPro = userPlan === 'pro' || userPlan === 'pro-plus'  // Pro or Pro+
   const isProPlus = userPlan === 'pro-plus'  // Image Gen exclusive
+  const hasUsedProPlusTrial = !!(user?.publicMetadata?.hasUsedProPlusTrial)
+  const [showProPlusTrialBanner, setShowProPlusTrialBanner] = useState(false)
 
   const [topic, setTopic] = useState('')
   const [threads, setThreads] = useState<Thread[]>([])
@@ -427,8 +429,8 @@ export default function Page() {
   }
 
   async function handleGenerateImages(thread: Thread) {
-    if (!isProPlus) {
-      showToast('Image generation is a Pro+ feature. Upgrade to unlock AI images.', 'info')
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('You have used your one-time Pro+ trial for AI Images. Upgrade to unlock permanently.', 'info')
       return
     }
     setIsGeneratingImages(true)
@@ -448,7 +450,7 @@ export default function Page() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Image generation is a Pro+ feature. Upgrade to Pro+ to unlock AI images.', 'info')
+          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -459,6 +461,10 @@ export default function Page() {
       setThreadImages(prev => ({ ...prev, [thread.id]: data.images }))
       setShowImageModalFor(null)
       showToast(`Generated ${data.images?.length || 4} images!`, 'success')
+      if (data.wasTrial) {
+        showToast('Pro+ Trial used! This was your one free use of AI Images.', 'info')
+        setShowProPlusTrialBanner(true)
+      }
     } catch (e) {
       showToast('Error generating images. Please try again.', 'error')
     } finally {
@@ -468,8 +474,8 @@ export default function Page() {
 
   // Pro+ Thread Scheduler handler (full thread)
   async function handleSchedule(thread: Thread) {
-    if (!isProPlus) {
-      showToast('Thread Scheduler is a Pro+ feature.', 'info')
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('You have used your one-time Pro+ trial for Scheduler. Upgrade to unlock permanently.', 'info')
       return
     }
     if (!scheduleTime) {
@@ -490,13 +496,17 @@ export default function Page() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Upgrade to Pro+ to schedule threads.', 'info')
+          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to schedule threads.', 'info')
         } else {
           showToast(data.error || 'Failed to schedule thread.', 'error')
         }
         return
       }
       showToast('Thread scheduled! View it in Scheduler.', 'success')
+      if (!isProPlus) {
+        showToast('Pro+ Trial used! This was your one free use of Scheduler.', 'info')
+        setShowProPlusTrialBanner(true)
+      }
       setShowScheduleFor(null)
       setScheduleTime('')
       // Optional: could navigate but keep user here
@@ -758,37 +768,16 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Free Tier Banner - real product mode with live counter */}
+      {/* Free Tier Banner */}
       <div className="bg-zinc-900/70 border-b border-white/10 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-6 py-2.5 text-center">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-sm text-zinc-400">
+        <div className="max-w-5xl mx-auto px-6 py-2 text-center">
+          <div className="text-sm text-zinc-400">
             {isSignedIn && !hasPro ? (
-              <>
-                <span>
-                  Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS}</span> generations left today
-                </span>
-                <span className="hidden sm:inline">•</span>
-                <span>Upgrade to Pro / Pro+ for unlimited</span>
-              </>
+              <>Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> left today • Upgrade for unlimited</>
             ) : (
-              <>
-                <span>
-                  Free tier: <span className="text-white font-medium">3 generations per day</span>
-                </span>
-                <span className="hidden sm:inline">•</span>
-                <span>
-                  Pro / Pro+ get unlimited generations + more
-                </span>
-              </>
+              <>Free: 3/day • Pro: unlimited • Pro+: + AI images + scheduler</>
             )}
-            {!isSignedIn && (
-              <button 
-                onClick={() => openSignIn()}
-                className="ml-1 underline text-violet-400 hover:text-violet-300 transition-colors"
-              >
-                Sign in to track your usage
-              </button>
-            )}
+            {!isSignedIn && <button onClick={() => openSignIn()} className="ml-2 underline text-violet-400 hover:text-violet-300">Sign in</button>}
           </div>
         </div>
       </div>
@@ -843,13 +832,12 @@ export default function Page() {
           Built for creators and founders who actually post
         </div>
 
-        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
-          Stop staring at a blank<br />screen. Post on X in seconds.
+        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-6 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
+          Turn any idea into ready-to-post X threads with AI images — instantly.
         </h1>
         
-        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-12 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
-          Turn any idea into 4 high-quality, ready-to-post X threads — instantly.<br className="hidden md:block" />
-          Built for founders, creators, and anyone who wants to post consistently without the headache.
+        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-6 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
+          From one sentence to 4 high-quality threads + matching visuals in under a minute. Built for founders and creators who actually post consistently.
         </p>
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
@@ -872,7 +860,7 @@ export default function Page() {
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-[0_4px_15px_-2px_rgba(0,0,0,0.3)] hover:shadow-[0_0_40px_rgba(167,139,250,0.65),0_10px_25px_-4px_rgba(0,0,0,0.3)] hover:shadow-xl"
+              className="group px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 min-w-[220px] text-[15px] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30"
             >
               {isGenerating ? (
                 <>
@@ -880,27 +868,47 @@ export default function Page() {
                   <span>Generating...</span>
                 </>
               ) : (
-                'Create 4 Threads Now'
+                <>Create 4 Threads Now <span className="group-hover:translate-x-1 transition text-lg">→</span></>
               )}
             </button>
           </div>
 
-          {/* Visible usage counter / priority indicator */}
+          {/* Visible usage counter / priority indicator - bigger, more prominent Pro+ badge */}
           {isSignedIn && hasPro ? (
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300 pro-sparkle">
-                <span className="text-violet-400">★</span>
-                {isProPlus ? 'Pro+: unlimited generations + AI Images • Priority' : 'Pro: unlimited generations • Priority enabled'}
+            <div className="mt-5 text-center">
+              <span className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all ${isProPlus 
+                ? 'bg-gradient-to-r from-violet-500/25 via-indigo-500/20 to-violet-500/25 border-2 border-violet-400/70 text-violet-100 shadow-[0_0_20px_rgba(167,139,250,0.3)] pro-sparkle' 
+                : 'bg-violet-500/10 border border-violet-500/40 text-violet-300'}`}>
+                <span className="text-base">★</span>
+                {isProPlus ? 'Pro+ Active: Unlimited + AI Images + Scheduler + Priority' : 'Pro Active: Unlimited generations • Priority enabled'}
               </span>
             </div>
           ) : isSignedIn && !hasPro ? (
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-white/10 px-3 py-1 text-xs text-zinc-400">
+            <div className="mt-5 text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-zinc-900 border border-white/10 px-4 py-1.5 text-sm text-zinc-300">
                 <span className="text-emerald-400">●</span>
                 {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} free generations left today
               </span>
             </div>
           ) : null}
+
+          {/* One-time Pro+ Trial banner for non-Pro+ users */}
+          {!isProPlus && !hasUsedProPlusTrial && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/40 px-4 py-1.5 text-xs font-medium text-amber-300">
+                ✨ Pro+ Trial Available — Use AI Images or Scheduler once for free (one-time only)
+              </div>
+            </div>
+          )}
+
+          {/* Pro+ Trial Activated banner (shown after using in this session) */}
+          {showProPlusTrialBanner && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 px-4 py-1.5 text-xs font-medium text-emerald-300">
+                ✓ Pro+ Trial Activated — This was your one free use. Upgrade for unlimited.
+              </div>
+            </div>
+          )}
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
@@ -926,26 +934,29 @@ export default function Page() {
 
           <p className="text-xs text-zinc-500 mt-4">
             {isSignedIn && hasPro ? (
-              isProPlus ? "Pro+: unlimited + AI Images + Scheduler" : "Pro: unlimited generations"
+              isProPlus ? "Pro+: unlimited + AI images + scheduler" : "Pro: unlimited generations"
             ) : isSignedIn ? (
               `${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} free generations left today`
             ) : (
-              <>
-                Press <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-zinc-900 rounded text-[10px] font-mono">⌘+Enter</kbd> • Free tier: 3/day
-              </>
+              <>Press Enter • Free: 3/day</>
             )}
           </p>
           </div>
         </div>
+
+        {/* Trust line below the generator */}
+        <p className="text-sm text-zinc-500 mt-6 mb-4 animate-[fadeInUp_0.6s_ease-out_0.35s_both]">
+          Used daily by indie hackers, SaaS founders, and creators growing on X.
+        </p>
       </div>
 
       {/* Pro vs Pro+ Features Showcase - split cards, only visible before generating (clear tier value prop) */}
       {!threads.length && (
-        <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-          <div className="text-center mb-10">
+        <div className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+          <div className="text-center mb-8">
             <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
-            <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+ — Choose Your Level</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited power. Pro+ adds AI Images + auto Thread Scheduler for your X posts.</p>
+            <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+</h2>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. Pro+ adds AI images + scheduler (Pro+ only).</p>
           </div>
 
           {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
@@ -968,7 +979,7 @@ export default function Page() {
             <div className="glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
               <div className="absolute -top-3 right-6 px-3 py-px text-[10px] font-mono tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_10px_rgba(167,139,250,0.5)]">MOST POPULAR</div>
               <div className="uppercase text-amber-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">IMAGES + SCHEDULER</span></div>
-              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Images + Scheduler</div>
+              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Images + Scheduler (Pro+ only)</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
@@ -1003,7 +1014,7 @@ export default function Page() {
           <div className="flex items-center justify-between mb-6 flex-wrap gap-y-3">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Copy All = full thread to clipboard. Post to X (Pro). 📅 Schedule = auto-post later (Pro+). Hover tweets for Copy Tweet or ✨ Emojis & hashtags.</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Copy • Post (Pro) • Schedule (Pro+) • Hover for emojis</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -1072,10 +1083,22 @@ export default function Page() {
                       >
                         ✨ Generate Images
                       </button>
+                    ) : !hasUsedProPlusTrial ? (
+                      <button
+                        onClick={() => {
+                          setShowImageModalFor(thread.id)
+                          setSelectedImageStyle('auto')
+                          setSelectedImageCount(1)
+                        }}
+                        title="Try AI Images once for free (one-time Pro+ trial)"
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        ✨ Try Pro+ Images (1-time)
+                      </button>
                     ) : hasPro ? (
                       <a
                         href="#pricing"
-                        title="Image Generation requires Pro+"
+                        title="Image Generation requires Pro+ (trial used)"
                         className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Upgrade to Pro+ for AI Images
@@ -1094,10 +1117,21 @@ export default function Page() {
                       >
                         📅 Schedule
                       </button>
+                    ) : !hasUsedProPlusTrial ? (
+                      <button
+                        onClick={() => {
+                          setShowScheduleFor(thread.id)
+                          setScheduleTime('')
+                        }}
+                        title="Try Scheduler once for free (one-time Pro+ trial)"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        📅 Try Pro+ Scheduler (1-time)
+                      </button>
                     ) : hasPro ? (
                       <a
                         href="#pricing"
-                        title="Thread Scheduler requires Pro+"
+                        title="Thread Scheduler requires Pro+ (trial used)"
                         className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Schedule (Pro+)
@@ -1129,7 +1163,7 @@ export default function Page() {
                 </div>
 
                 {/* Image choice panel (shown when Generate Images clicked for this thread) - moved near top */}
-                {isProPlus && showImageModalFor === thread.id && (
+                {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === thread.id && (
                   <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -1180,7 +1214,7 @@ export default function Page() {
                 )}
 
                 {/* Schedule picker (Pro+ only) - appears when Schedule clicked */}
-                {isProPlus && showScheduleFor === thread.id && (
+                {(isProPlus || !hasUsedProPlusTrial) && showScheduleFor === thread.id && (
                   <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+)</div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -1229,7 +1263,7 @@ export default function Page() {
                 )}
 
                 {/* Display generated images for this thread - moved to top (right below title/buttons) */}
-                {isProPlus && threadImages[thread.id]?.length > 0 && (
+                {(isProPlus || threadImages[thread.id]?.length > 0) && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id][0]?.style}</div>
@@ -1319,11 +1353,11 @@ export default function Page() {
         </div>
       )}
 
-      {/* How it Works - upgraded to 6 clear, beginner-friendly numbered steps */}
-      <div id="how" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">How ThreadForge Works</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">From blank page to posted (or saved) in under a minute. Simple, visual, and powerful.</p>
+      {/* How it Works - 5 clear steps */}
+      <div id="how" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">How ThreadForge Works</h2>
+          <p className="text-zinc-400">Idea to ready-to-post threads in seconds.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1331,40 +1365,33 @@ export default function Page() {
             { 
               num: "01",
               title: "Enter your idea", 
-              desc: "Type any topic, lesson, launch story, opinion, or experience into the box. One sentence is plenty.",
+              desc: "Type any topic or lesson. One sentence is enough.",
               pro: false
             },
             { 
               num: "02",
               title: "Generate 4 high-quality threads", 
-              desc: "Grok 4.3 creates four distinct threads with strong hooks, texture, and memorable closers — each from a different angle.",
+              desc: "Grok 4.3 creates four distinct threads with strong hooks and closers.",
               pro: false
             },
             { 
               num: "03",
-              title: "Use “Post to X” for instant posting", 
-              desc: "One click copies the full thread and opens X’s composer pre-filled. Ready to send in seconds. (Pro)",
+              title: "Post to X (Pro) or schedule (Pro+)", 
+              desc: "One click post now (Pro). Schedule auto-post (Pro+ only).",
               pro: true,
               tier: 'pro'
             },
             { 
               num: "04",
-              title: "Generate relevant AI images", 
-              desc: "Click ✨ Generate Images to create 1–4 matching visuals using xAI Imagine. Choose a style or let it auto-decide. (Pro+ exclusive)",
+              title: "Add AI images", 
+              desc: "Generate 1–4 matching visuals instantly (Pro+ exclusive).",
               pro: true,
               tier: 'pro-plus'
             },
             { 
               num: "05",
-              title: "Schedule to X or save to History", 
-              desc: "Pro: save full history. Pro+: schedule the thread to auto-post to X at perfect time with one click (or use custom scheduler).",
-              pro: true,
-              tier: 'pro-plus'
-            },
-            { 
-              num: "06",
-              title: "Get smart emoji & hashtag suggestions", 
-              desc: "Hover any tweet for three perfect, non-spammy emojis + hashtags. Makes posts look more engaging instantly. (Pro)",
+              title: "Save + get smart suggestions", 
+              desc: "Auto-save history. Hover tweets for emoji & hashtag ideas (Pro).",
               pro: true,
               tier: 'pro'
             }
@@ -1390,43 +1417,33 @@ export default function Page() {
       </div>
 
       {/* Real-World Use Cases - icons + premium hover cards */}
-      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real situations where people use ThreadForge</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">Stop overthinking what to post. Here are actual scenarios where this saves people serious time.</p>
+      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Real ways people use ThreadForge</h2>
+          <p className="text-zinc-400">Scenarios where it saves serious time.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {[
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-              title: "You're launching a product or side project",
-              desc: "You finally shipped something. Instead of spending 2 hours crafting a launch thread, you type a short description and get 4 strong angles ready to post."
+              title: "Launching a product or side project",
+              desc: "Shipped something? Type one sentence. Get 4 strong launch threads instantly."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17.687a2.25 2.25 0 01-2.25-2.25v-9a2.25 2.25 0 012.25-2.25h4.5a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25H9.663z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21v-3.75" /></svg>,
-              title: "You had a valuable lesson or failure",
-              desc: "Something went wrong (or surprisingly well) in your business. You want to share the real story without spending an hour structuring it into a thread."
+              title: "Sharing a lesson or failure",
+              desc: "Turn a real story or win into polished threads without hours of structuring."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
-              title: <span className="pro-sparkle">You're trying to grow on X consistently</span>,
-              desc: "You know you should post more, but writing good threads takes too much mental energy. You use ThreadForge 3–4 times a week to stay consistent."
+              title: "Growing on X consistently",
+              desc: "Post 3-4x a week without the mental load. Perfect for busy creators."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-              title: "You're building in public",
-              desc: "You're documenting your journey but hate the blank page. You drop quick notes about what you're working on and turn them into proper threads."
-            },
-            {
-              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
-              title: "You're a consultant, coach, or expert",
-              desc: "You want to demonstrate your thinking and attract better clients, but you don't have time to write long threads every week."
-            },
-            {
-              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17.687a2.25 2.25 0 01-2.25-2.25v-9a2.25 2.25 0 012.25-2.25h4.5a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25H9.663z" /></svg>,
-              title: "You have one good idea but don't know how to expand it",
-              desc: "You have a strong opinion or insight. ThreadForge turns that single idea into multiple high-quality threads from different angles (contrarian, story, framework, etc)."
+              title: "Building in public",
+              desc: "Turn quick notes into professional threads that document your journey."
             }
           ].map((useCase, index) => (
             <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
@@ -1441,10 +1458,9 @@ export default function Page() {
       </div>
 
       {/* Testimonials - avatars + premium cards */}
-      <div className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real people. Real results.</h2>
-          <p className="text-zinc-400">Real feedback from people using ThreadForge</p>
+      <div className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Real people. Real results.</h2>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -1491,11 +1507,11 @@ export default function Page() {
       </div>
 
       {/* Pricing - 3-Tier: Free / Pro ($9) / Pro+ ($15) with Image Gen Pro+ only */}
-      <div id="pricing" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-4">PRICING</div>
-          <h2 className="text-4xl font-semibold tracking-tighter mb-3">Free to start.<br className="hidden sm:block" /> Scale as you grow.</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">Generous free tier. Pro for power users. Pro+ for AI-powered visuals.</p>
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-3">PRICING</div>
+          <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Scale as you grow.</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">Free tier. Pro for power. Pro+ for images + scheduler (Pro+ only).</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
@@ -1513,7 +1529,7 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 4 high-quality thread variants</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
-              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade for unlimited &amp; Pro / Pro+ features</li>
+              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade for unlimited + Pro / Pro+ features</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
@@ -1542,7 +1558,6 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
-              <li className="flex items-start gap-3 text-amber-400"><span className="mt-1.5">•</span> AI Images + Thread Scheduler (Pro+ only)</li>
             </ul>
 
             {hasPro && !isProPlus ? (
@@ -1578,13 +1593,13 @@ export default function Page() {
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$15</span>
                 <span className="text-zinc-400 pb-1">/mo</span>
               </div>
-              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Thread Scheduler • Cancel anytime</div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Scheduler (Pro+ only) • Cancel anytime</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread)</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations + priority</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history, Post to X, emoji suggestions</li>
             </ul>
@@ -1604,13 +1619,13 @@ export default function Page() {
                 >
                   Upgrade to Pro+ — $15/mo
                 </button>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler.</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler (Pro+ only).</p>
               </>
             )}
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler (auto X posting). Existing Pro users are grandfathered into Pro+.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler (Pro+ only). Existing Pro users are grandfathered into Pro+.</p>
       </div>
 
       {/* Footer */}
@@ -1653,7 +1668,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler.
+              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler (Pro+ only).
             </p>
 
             <button 

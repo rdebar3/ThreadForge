@@ -168,7 +168,8 @@ export async function isProPlus(userId: string): Promise<boolean> {
  * Check if user can use image generation (Pro+ only).
  */
 export async function canUseImageGen(userId: string): Promise<boolean> {
-  return await isProPlus(userId)
+  const result = await canUseProPlusFeature(userId)
+  return result.allowed
 }
 
 /**
@@ -528,4 +529,56 @@ export async function incrementPostedCount(userId: string, by: number = 1) {
   } catch (e) {
     // non fatal
   }
+}
+
+// ============================================
+// One-time Pro+ Trial (strict one use per signed-in non-Pro+ user)
+// For AI Images + Scheduler
+// ============================================
+
+/**
+ * Check if user has used their one-time Pro+ trial.
+ */
+export async function hasUsedProPlusTrial(userId: string): Promise<boolean> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    return !!(user.publicMetadata?.hasUsedProPlusTrial)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Mark that the user has used their one-time Pro+ trial.
+ */
+export async function markProPlusTrialUsed(userId: string): Promise<void> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        hasUsedProPlusTrial: true,
+      },
+    })
+  } catch (e) {
+    console.error('Failed to mark Pro+ trial as used:', e)
+  }
+}
+
+/**
+ * Check if user can use a Pro+ only feature (Images or Scheduler).
+ * Returns { allowed, isTrial } — if isTrial, this use will consume the one-time trial.
+ */
+export async function canUseProPlusFeature(userId: string): Promise<{ allowed: boolean; isTrial: boolean }> {
+  const plan = await getUserPlan(userId)
+  if (plan === 'pro-plus') {
+    return { allowed: true, isTrial: false }
+  }
+  const usedTrial = await hasUsedProPlusTrial(userId)
+  if (usedTrial) {
+    return { allowed: false, isTrial: false }
+  }
+  return { allowed: true, isTrial: true }
 }

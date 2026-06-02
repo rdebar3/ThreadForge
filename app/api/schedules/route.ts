@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { isProPlus, getScheduledPosts, addScheduledPost, removeScheduledPost } from '../../lib/clerk'
+import { getScheduledPosts, addScheduledPost, removeScheduledPost, canUseProPlusFeature, markProPlusTrialUsed } from '../../lib/clerk'
 import type { ScheduledPost } from '../../lib/types'
 
 const MAX_TWEETS = 10
@@ -30,14 +30,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const canSchedule = await isProPlus(userId)
-  if (!canSchedule) {
+  const featureCheck = await canUseProPlusFeature(userId)
+  if (!featureCheck.allowed) {
     return NextResponse.json({
-      error: 'Thread Scheduler is a Pro+ feature.',
+      error: 'Thread Scheduler is a Pro+ feature. You have used your one-time trial.',
       requireUpgrade: true,
       upgradeTo: 'pro-plus'
     }, { status: 402 })
   }
+
+  const isTrialUse = featureCheck.isTrial
 
   try {
     const body = await req.json()
@@ -78,7 +80,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to save schedule' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, scheduledPost: created })
+    // Mark trial consumed on successful schedule
+    if (isTrialUse) {
+      await markProPlusTrialUsed(userId)
+      console.log(`[schedules] Marked one-time Pro+ trial as used for ${userId}`)
+    }
+
+    return NextResponse.json({ success: true, scheduledPost: created, wasTrial: isTrialUse })
   } catch (e: any) {
     console.error('Schedule POST error:', e)
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })

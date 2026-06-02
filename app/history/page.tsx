@@ -17,6 +17,7 @@ export default function HistoryPage() {
   const userPlan = (user?.publicMetadata?.plan as 'pro' | 'pro-plus' | null) || (legacyHasPro ? 'pro-plus' : null)
   const hasPro = userPlan === 'pro' || userPlan === 'pro-plus'  // Pro or Pro+
   const isProPlus = userPlan === 'pro-plus'  // Image Gen exclusive
+  const hasUsedProPlusTrial = !!(user?.publicMetadata?.hasUsedProPlusTrial)
 
   const [history, setHistory] = useState<GenerationRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,8 +115,8 @@ export default function HistoryPage() {
   }
 
   async function handleGenerateImages(recordId: string, thread: Thread, recordTopic: string) {
-    if (!isProPlus) {
-      showToast('Image generation is a Pro+ feature. Upgrade to unlock AI images.', 'info')
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('You have used your one-time Pro+ trial for AI Images. Upgrade to unlock permanently.', 'info')
       return
     }
     const key = `${recordId}-${thread.id}`
@@ -136,7 +137,7 @@ export default function HistoryPage() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Image generation is a Pro+ feature. Upgrade to Pro+ to unlock AI images.', 'info')
+          showToast('You have used your one-time Pro+ trial. Upgrade to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -147,6 +148,9 @@ export default function HistoryPage() {
       setThreadImages(prev => ({ ...prev, [key]: data.images }))
       setShowImageModalFor(null)
       showToast(`Generated ${data.images?.length || 4} images!`, 'success')
+      if (data.wasTrial) {
+        showToast('Pro+ Trial used! This was your one free use of AI Images.', 'info')
+      }
     } catch (e) {
       showToast('Error generating images. Please try again.', 'error')
     } finally {
@@ -364,10 +368,23 @@ export default function HistoryPage() {
                                 >
                                   ✨ Generate Images
                                 </button>
+                              ) : !hasUsedProPlusTrial ? (
+                                <button
+                                  onClick={() => {
+                                    const key = `${record.id}-${thread.id}`
+                                    setShowImageModalFor(key)
+                                    setSelectedImageStyle('auto')
+                                    setSelectedImageCount(1)
+                                  }}
+                                  title="Try AI Images once for free (one-time Pro+ trial)"
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                                >
+                                  ✨ Try Pro+ Images (1-time)
+                                </button>
                               ) : hasPro ? (
                                 <a
                                   href="#pricing"
-                                  title="AI Images require Pro+"
+                                  title="AI Images require Pro+ (trial used)"
                                   className="flex items-center gap-1 px-3 py-2 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                                 >
                                   Upgrade to Pro+ for AI Images
@@ -377,7 +394,7 @@ export default function HistoryPage() {
                           </div>
 
                           {/* Image choice panel for history - moved near top */}
-                          {isProPlus && showImageModalFor === `${record.id}-${thread.id}` && (
+                          {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === `${record.id}-${thread.id}` && (
                             <div className="mt-4 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
                               <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
                               <div className="flex flex-wrap gap-2 mb-3">
@@ -428,7 +445,7 @@ export default function HistoryPage() {
                           )}
 
                           {/* Display generated images in history - moved to top (right below title / Post to X buttons) */}
-                          {isProPlus && threadImages[`${record.id}-${thread.id}`]?.length > 0 && (
+                          {(isProPlus || threadImages[`${record.id}-${thread.id}`]?.length > 0) && (
                             <div className="mt-4">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES — {threadImages[`${record.id}-${thread.id}`][0]?.style}</div>

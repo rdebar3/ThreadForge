@@ -19,9 +19,10 @@ export default function SchedulerPage() {
   const userPlan = (user?.publicMetadata?.plan as 'pro' | 'pro-plus' | null) || (legacyHasPro ? 'pro-plus' : null)
   const hasPro = userPlan === 'pro' || userPlan === 'pro-plus'
   const isProPlus = userPlan === 'pro-plus'
+  const hasUsedProPlusTrial = !!(user?.publicMetadata?.hasUsedProPlusTrial)
 
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([])
-  const [xAccount, setXAccount] = useState<XAccount | null>(null)
+  const [xAccount, setXAccount] = useState<{ username: string; xUserId?: string; connectedAt?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<Toast | null>(null)
@@ -33,20 +34,22 @@ export default function SchedulerPage() {
 
   const [isScheduling, setIsScheduling] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [xLoading, setXLoading] = useState(false)
 
   // Best time suggestions (client-side, local time)
   const bestTimeSuggestions = getBestTimeSuggestions()
 
   useEffect(() => {
-    if (isSignedIn && isProPlus) {
+    if (isSignedIn && (isProPlus || !hasUsedProPlusTrial)) {
       fetchSchedules()
+      fetchXAccount()
       // After X connect redirect we may have query params
       handleConnectRedirect()
     } else {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSignedIn, isProPlus])
+  }, [isSignedIn, isProPlus, hasUsedProPlusTrial])
 
   function showToast(message: string, type: Toast['type'] = 'info') {
     setToast({ message, type })
@@ -77,6 +80,22 @@ export default function SchedulerPage() {
     }
   }
 
+  async function fetchXAccount() {
+    setXLoading(true)
+    try {
+      const res = await fetch('/api/x/account')
+      if (res.ok) {
+        const data = await res.json()
+        setXAccount(data.account || null)
+      }
+    } catch (e) {
+      // non-fatal, just won't show connected state
+      console.warn('Failed to fetch X account status')
+    } finally {
+      setXLoading(false)
+    }
+  }
+
   function handleConnectRedirect() {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
@@ -84,8 +103,11 @@ export default function SchedulerPage() {
       showToast('X account connected successfully! You can now schedule posts.', 'success')
       // Clean URL
       window.history.replaceState({}, '', '/scheduler')
-      // Re-fetch in case
-      setTimeout(fetchSchedules, 600)
+      // Re-fetch schedules and X account to show connected username
+      setTimeout(() => {
+        fetchSchedules()
+        fetchXAccount()
+      }, 600)
     }
     const err = params.get('error')
     if (err) {
@@ -98,8 +120,8 @@ export default function SchedulerPage() {
   }
 
   async function connectX() {
-    if (!isProPlus) {
-      showToast('Scheduler requires Pro+.', 'info')
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('Scheduler requires Pro+. You have used your one-time trial.', 'info')
       return
     }
     setIsConnecting(true)
@@ -151,8 +173,8 @@ export default function SchedulerPage() {
   }
 
   async function scheduleCustom() {
-    if (!isProPlus) {
-      showToast('Thread Scheduler is a Pro+ only feature.', 'info')
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('You have used your one-time Pro+ trial. Upgrade to unlock Scheduler permanently.', 'info')
       return
     }
     if (!scheduleTime) {
@@ -191,6 +213,9 @@ export default function SchedulerPage() {
         return
       }
       showToast('Thread scheduled successfully!', 'success')
+      if (data.wasTrial) {
+        showToast('Pro+ Trial used! This was your one free use of Scheduler.', 'info')
+      }
       setCustomTitle('')
       setCustomTweetsText('')
       // keep the time or clear
@@ -241,7 +266,7 @@ export default function SchedulerPage() {
     )
   }
 
-  if (!isProPlus) {
+  if (!isProPlus && hasUsedProPlusTrial) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <div className="max-w-3xl mx-auto px-6 pt-16 pb-24">
@@ -255,7 +280,7 @@ export default function SchedulerPage() {
             <div className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-4xl">📅</div>
             <h1 className="text-4xl font-semibold tracking-tighter mb-3">Thread Scheduler is Pro+ only</h1>
             <p className="text-zinc-400 max-w-md mx-auto mb-8">
-              Automatically post your threads at the perfect time. Connect your X account, pick a time (or use our best-time suggestions), and we handle the rest.
+              You have used your one-time Pro+ trial. Upgrade to unlock Scheduler + AI Images permanently.
             </p>
             <a href="#pricing" className="inline-flex px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold rounded-2xl text-lg hover:brightness-110 transition">
               Upgrade to Pro+ — $15/mo
@@ -301,7 +326,7 @@ export default function SchedulerPage() {
             <div>
               <div className="font-semibold mb-1">X Account Connection</div>
               <div className="text-sm text-zinc-400">
-                {xAccount ? `Connected as @${xAccount.username}` : 'Connect your X account to enable automatic posting.'}
+                {xLoading ? 'Checking X connection…' : xAccount ? `Connected as @${xAccount.username}` : 'Connect your X account to enable automatic posting.'}
               </div>
             </div>
             <div className="flex gap-3">
@@ -333,17 +358,19 @@ export default function SchedulerPage() {
           </div>
         </div>
 
-        {/* Best time suggestions */}
+        {/* Best time suggestions - dynamic and premium */}
         <div className="mb-8">
-          <div className="text-xs uppercase tracking-[1.5px] text-violet-400 mb-2">BEST TIME TO POST SUGGESTIONS</div>
+          <div className="text-xs uppercase tracking-[1.5px] text-violet-400 mb-2 flex items-center gap-2">
+            BEST TIME TO POST SUGGESTIONS <span className="text-[10px] normal-case text-zinc-500">(based on typical X engagement)</span>
+          </div>
           <div className="flex flex-wrap gap-2">
             {bestTimeSuggestions.map((sug, idx) => (
               <button
                 key={idx}
                 onClick={() => applySuggestion(sug.value)}
-                className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 transition active:scale-[0.985]"
+                className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 hover:text-violet-200 transition active:scale-[0.985] flex items-center gap-1.5"
               >
-                {sug.label}
+                <span>🕒</span> {sug.label}
               </button>
             ))}
             <button
@@ -351,15 +378,16 @@ export default function SchedulerPage() {
                 const d = new Date(Date.now() + 2 * 60 * 60 * 1000)
                 setScheduleTime(d.toISOString().slice(0, 16))
               }}
-              className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5"
+              className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 hover:text-violet-200 transition active:scale-[0.985] flex items-center gap-1.5"
             >
-              +2 hours
+              <span>⏱️</span> +2 hours
             </button>
           </div>
+          <div className="text-[10px] text-zinc-500 mt-1.5">Times are in your local timezone. Actual performance varies.</div>
         </div>
 
         {/* Manual / Custom Schedule Form */}
-        <div className="glass-card rounded-3xl border border-white/10 p-6 mb-10">
+        <div id="custom-schedule" className="glass-card rounded-3xl border border-white/10 p-6 mb-10">
           <div className="font-semibold tracking-tight mb-4 text-lg">Quick custom schedule</div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -414,10 +442,19 @@ export default function SchedulerPage() {
           </div>
 
           {loading ? (
-            <div className="text-sm text-zinc-400 py-8">Loading your queue…</div>
+            <div className="glass-card rounded-2xl border border-white/10 p-8 text-center">
+              <div className="animate-pulse text-sm text-zinc-400">Loading your scheduled posts…</div>
+            </div>
           ) : pending.length === 0 ? (
-            <div className="glass-card rounded-2xl border border-white/10 p-8 text-center text-sm text-zinc-400">
-              No upcoming scheduled threads. Use the generator or the custom form above.
+            <div className="glass-card rounded-2xl border border-white/10 p-8 text-center">
+              <div className="text-lg mb-2">📭 No upcoming posts</div>
+              <p className="text-sm text-zinc-400 mb-4">
+                Schedule your first thread to see it here. Connect X above, pick a time, and let us post automatically.
+              </p>
+              <div className="flex justify-center gap-3">
+                <Link href="/" className="text-sm px-4 py-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10">Go to Generator</Link>
+                <button onClick={() => document.getElementById('custom-schedule')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:bg-zinc-900">Use Quick Form</button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -452,7 +489,12 @@ export default function SchedulerPage() {
         <div>
           <div className="font-semibold tracking-tight mb-3">Past activity ({history.length})</div>
           {history.length === 0 ? (
-            <div className="text-sm text-zinc-500">Nothing posted or canceled yet.</div>
+            <div className="glass-card rounded-2xl border border-white/10 p-6 text-center">
+              <div className="text-lg mb-1">📜 No past activity yet</div>
+              <p className="text-sm text-zinc-400">
+                Once you schedule and posts go live (or you cancel), they'll appear here with status and links to X.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               {history.slice(0, 12).map((post) => {
@@ -484,8 +526,10 @@ export default function SchedulerPage() {
           )}
         </div>
 
-        <div className="mt-12 text-center text-xs text-zinc-500">
-          Posts are attempted within ~5 minutes of the scheduled time via our secure background job. Make sure your X connection stays valid.
+        <div className="mt-12 text-center text-xs text-zinc-500 max-w-md mx-auto">
+          <strong>Disclaimer:</strong> Scheduled posts are attempted within ~5 minutes of the selected time using our secure background job (Vercel Cron). 
+          Success depends on your X connection remaining valid, rate limits, and X API availability. 
+          We recommend testing with the manual "Post to X" first. You can cancel anytime before the scheduled time.
         </div>
       </div>
 
