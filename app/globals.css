@@ -202,11 +202,6 @@ body {
   }
 }
 
-@keyframes aiNode {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.4); }
-}
-
 .premium-pricing-card {
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
@@ -289,36 +284,6 @@ body {
   box-shadow: 0 0 12px rgba(167,139,250,0.7), 0 0 26px rgba(103,232,249,0.35);
   animation: aiPulse 2.8s ease-in-out infinite;
   border: 1px solid rgba(255,255,255,0.3);
-}
-
-.ai-subtle {
-  position: relative;
-}
-
-.ai-subtle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(103,232,249,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(103,232,249,0.06) 1px, transparent 1px);
-  background-size: 18px 18px;
-  opacity: 0.35;
-  pointer-events: none;
-  border-radius: inherit;
-  z-index: 1;
-}
-
-.ai-node {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: #67e8f9;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #67e8f9, 0 0 12px rgba(103,232,249,0.5);
-  animation: aiNode 2.8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 3;
 }
 
 .scheduler-modern {

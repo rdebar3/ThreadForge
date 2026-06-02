@@ -988,14 +988,7 @@ export default function Page() {
             </div>
 
             {/* Pro+ Card - high-impact AI premium pop */}
-            <div className="premium-pricing-card premium-pro-plus-card glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative ai-subtle">
-              {/* Subtle AI neural grid + nodes for tech depth (non-clutter) */}
-              <div className="ai-neural" aria-hidden="true"></div>
-              <span className="ai-node" style={{top: '12%', left: '10%'}}></span>
-              <span className="ai-node" style={{top: '28%', right: '14%', animationDelay: '0.8s'}}></span>
-              <span className="ai-node" style={{bottom: '18%', left: '16%', animationDelay: '1.6s'}}></span>
-              <span className="ai-node" style={{bottom: '32%', right: '11%', animationDelay: '2.4s'}}></span>
-
+            <div className="premium-pricing-card premium-pro-plus-card glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
               <div className="premium-badge absolute -top-3 right-6 px-4 py-px text-[10px] font-mono tracking-[1.5px] rounded-full shadow-[0_0_16px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
               
               <div className="uppercase text-cyan-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">IMAGES + SCHEDULER + ANALYTICS</span></div>
