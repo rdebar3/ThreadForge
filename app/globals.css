@@ -11,17 +11,30 @@ body {
   font-feature-settings: "rlig" 1, "kern" 1;
   background-color: #0a0a0c;
   background-image: 
-    radial-gradient(circle at 25% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
+    radial-gradient(circle at 25% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 55%),
+    radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.045) 0%, transparent 55%),
+    /* very faint geometric dot pattern for modern subtle texture */
+    radial-gradient(#27272a 0.6px, transparent 1px),
+    /* soft layered wash for visual depth across the page */
+    linear-gradient(135deg, rgba(124, 58, 237, 0.022) 0%, transparent 28%, transparent 72%, rgba(99, 102, 241, 0.018) 100%);
+  background-size: 
+    100% 100%,
+    100% 100%,
+    5px 5px,
+    100% 100%;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
 }
 
 .thread-card {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.18), 0 4px 6px -4px rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(16px);
 }
 
 .thread-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.25), 0 8px 10px -6px rgb(0 0 0 / 0.15);
+  border-color: rgb(167 139 250 / 0.25);
 }
 
 .tweet {
@@ -61,29 +74,26 @@ body {
   50% { opacity: 0.4; transform: scale(0.7) rotate(15deg); }
 }
 
-@keyframes typewriter {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
 @keyframes fadeInStagger {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Premium card enhancements (used for use-cases, testimonials, how-it-works) */
+/* Premium card enhancements - stronger glassmorphism + visual depth for modern dark premium feel */
 .glass-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 .glass-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
-  opacity: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 25%, transparent 55%);
+  opacity: 0.7;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
@@ -93,9 +103,9 @@ body {
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  border-color: rgb(167 139 250 / 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 25px 30px -8px rgb(0 0 0 / 0.22), 0 10px 12px -6px rgb(0 0 0 / 0.15);
+  border-color: rgb(167 139 250 / 0.35);
 }
 
 /* Pro sparkle utility - subtle premium highlight */
@@ -126,14 +136,4 @@ body {
   color: rgb(167 139 250);
 }
 
-/* Demo animation styles */
-.demo-tweet {
-  overflow: hidden;
-  white-space: nowrap;
-  animation: typewriter 0.8s steps(40, end) forwards;
-  border-right: 1px solid rgb(167 139 250 / 0.6);
-}
 
-.demo-tweet:nth-child(2) { animation-delay: 0.6s; }
-.demo-tweet:nth-child(3) { animation-delay: 1.1s; }
-.demo-tweet:nth-child(4) { animation-delay: 1.6s; }

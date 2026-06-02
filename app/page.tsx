@@ -9,109 +9,6 @@ interface Thread {
   tweets: string[]
 }
 
-// Self-contained animated demo for hero - simulates live generation with typewriter + stagger
-function AnimatedDemo() {
-  const [phase, setPhase] = useState<'idle' | 'typing' | 'generating' | 'results'>('idle')
-  const [demoTopic, setDemoTopic] = useState('')
-  const [visibleTweets, setVisibleTweets] = useState<number>(0)
-
-  const sampleTopic = "building in public"
-  const sampleTweets = [
-    "1/ Most founders treat building in public like a marketing channel. It's not.",
-    "2/ The real power is the feedback loop it creates with people who actually care.",
-    "3/ I started posting raw updates when we were at $0 MRR. The first 3 paying customers came from those threads.",
-    "4/ Now we have 47k followers and our best product ideas come from the comments."
-  ]
-
-  const resetDemo = () => {
-    setPhase('idle')
-    setDemoTopic('')
-    setVisibleTweets(0)
-  }
-
-  const runDemo = () => {
-    if (phase !== 'idle') {
-      resetDemo()
-      return
-    }
-    setPhase('typing')
-    setDemoTopic('')
-
-    // Type the topic
-    let i = 0
-    const typeInterval = setInterval(() => {
-      setDemoTopic(sampleTopic.slice(0, i + 1))
-      i++
-      if (i === sampleTopic.length) {
-        clearInterval(typeInterval)
-        setPhase('generating')
-        
-        // Simulate generate
-        setTimeout(() => {
-          setPhase('results')
-          // Stagger tweets
-          let t = 0
-          const showTweet = setInterval(() => {
-            setVisibleTweets(t + 1)
-            t++
-            if (t === sampleTweets.length) {
-              clearInterval(showTweet)
-              // Auto reset after delay for loop feel
-              setTimeout(() => {
-                resetDemo()
-              }, 4200)
-            }
-          }, 420)
-        }, 680)
-      }
-    }, 48)
-  }
-
-  return (
-    <div 
-      onClick={runDemo}
-      className="mx-auto max-w-[620px] cursor-pointer group"
-    >
-      <div className="text-[10px] tracking-[2px] text-zinc-500 mb-1.5 flex items-center justify-center gap-1.5">
-        LIVE PREVIEW <span className="text-violet-400 group-hover:text-violet-300 transition-colors">— click to replay</span>
-      </div>
-      
-      <div className="glass-card bg-zinc-900/80 border border-white/10 rounded-3xl p-5 text-left shadow-xl hover:border-violet-400/30 transition-all">
-        {/* Mock input + button */}
-        <div className="flex gap-2 mb-4">
-          <div className="flex-1 bg-zinc-950/80 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-zinc-300 font-mono min-h-[42px] flex items-center">
-            {phase === 'idle' && <span className="text-zinc-500">e.g. building in public...</span>}
-            {phase !== 'idle' && demoTopic}
-            {phase === 'typing' && <span className="animate-pulse">|</span>}
-          </div>
-          <div className={`px-5 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center transition-all ${phase === 'generating' ? 'bg-violet-500 text-white' : 'bg-white text-zinc-950'}`}>
-            {phase === 'generating' ? 'Generating...' : 'Generate'}
-          </div>
-        </div>
-
-        {/* Results with typewriter stagger */}
-        {phase === 'results' && visibleTweets > 0 && (
-          <div className="space-y-2.5 pt-1">
-            {sampleTweets.slice(0, visibleTweets).map((tweet, idx) => (
-              <div 
-                key={idx} 
-                className="demo-tweet text-[13px] leading-relaxed text-zinc-200 border-l-2 border-violet-400/40 pl-3"
-                style={{ animationDelay: `${idx * 120}ms` }}
-              >
-                {tweet}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {phase === 'idle' && (
-          <div className="text-[10px] text-center text-zinc-500 pt-1 tracking-wider">WATCH A REAL 4-THREAD GENERATION</div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function Page() {
   const { isSignedIn, user } = useUser()
   const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
@@ -448,8 +345,14 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-x-hidden">
-      {/* Navbar - Slightly more premium */}
-      <nav className="border-b border-white/10 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-50">
+      {/* Subtle global ambient orbs for whole-page premium depth - very faint (5-8% effective), slow animations, non-distracting */}
+      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
+        <div className="absolute top-[15%] right-[20%] w-[650px] h-[650px] bg-violet-500/6 rounded-full blur-[180px] animate-[heroBlob_38s_infinite_ease-in-out]"></div>
+        <div className="absolute bottom-[25%] left-[15%] w-[520px] h-[520px] bg-indigo-500/5 rounded-full blur-[150px] animate-[heroBlob_45s_infinite_ease-in-out_12s]"></div>
+      </div>
+
+      {/* Navbar - Slightly more premium with enhanced glass */}
+      <nav className="border-b border-white/10 bg-zinc-950/85 backdrop-blur-2xl sticky top-0 z-50 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Custom Logo - Modern & Distinctive */}
@@ -509,7 +412,7 @@ export default function Page() {
 
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-white/10 bg-zinc-950 px-6 py-4 flex flex-col gap-3 text-sm">
+            <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl px-6 py-4 flex flex-col gap-3 text-sm">
               <a 
                 href="#how" 
                 className="text-zinc-400 hover:text-white py-1"
@@ -573,7 +476,7 @@ export default function Page() {
       </nav>
 
       {/* Free Tier Banner - real product mode with live counter */}
-      <div className="bg-zinc-900/80 border-b border-white/10">
+      <div className="bg-zinc-900/70 border-b border-white/10 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-2.5 text-center">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1 text-sm text-zinc-400">
             {isSignedIn && !hasPro ? (
@@ -609,13 +512,14 @@ export default function Page() {
       {/* Hero - Stronger, more dynamic and premium */}
       <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
         
-        {/* Rich, layered, animated background for bigger visual impact */}
+        {/* Rich, layered, animated background for bigger visual impact - subtle modern dark with depth */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          {/* Enhanced subtle grid + energetic gradient mesh */}
-          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-60"></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/40 via-transparent to-indigo-950/30"></div>
+          {/* Faint geometric grid (complements global body pattern) */}
+          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-35"></div>
+          {/* Soft gradient mesh for premium atmosphere */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/35 via-transparent to-indigo-950/25"></div>
           
-          {/* Dynamic glowing orbs with heroBlob animation - more energetic */}
+          {/* Dynamic glowing orbs with heroBlob animation - energetic but non-distracting */}
           <div className="absolute top-1/4 left-1/3 w-[420px] h-[420px] bg-violet-500/25 rounded-full blur-[140px] animate-[heroBlob_22s_infinite_ease-in-out]"></div>
           <div className="absolute bottom-1/3 right-1/4 w-[380px] h-[380px] bg-indigo-500/20 rounded-full blur-[120px] animate-[heroBlob_28s_infinite_ease-in-out_4s]"></div>
           <div className="absolute top-2/3 left-1/5 w-64 h-64 bg-violet-400/15 rounded-full blur-[90px] animate-[heroBlob_18s_infinite_ease-in-out_8s]"></div>
@@ -635,8 +539,9 @@ export default function Page() {
           Built for founders, creators, and anyone who wants to post consistently without the headache.
         </p>
 
-        {/* Generator Input + Demo */}
+        {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
+          <div className="glass-card bg-zinc-900/70 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 md:p-8 shadow-2xl">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -649,7 +554,7 @@ export default function Page() {
               }}
               placeholder="e.g. building in public, cold email outreach, personal branding..."
               disabled={isGenerating}
-              className="flex-1 bg-zinc-900/80 border border-white/10 focus:border-violet-400 rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 bg-zinc-950/70 border border-white/10 focus:border-violet-400 rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleGenerate}
@@ -684,14 +589,9 @@ export default function Page() {
             </div>
           ) : null}
 
-          {/* Live Animated Demo - energetic visual proof */}
-          <div className="mt-6">
-            <AnimatedDemo />
-          </div>
-
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
-            <div className="mt-5">
+            <div className="mt-4">
               <div className="text-xs text-zinc-500 mb-2 tracking-wider">TRY AN EXAMPLE</div>
               <div className="flex flex-wrap justify-center gap-2">
                 {exampleTopics.map((example, i) => (
@@ -722,6 +622,7 @@ export default function Page() {
               </>
             )}
           </p>
+          </div>
         </div>
       </div>
 
