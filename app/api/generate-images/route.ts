@@ -8,6 +8,7 @@ import { IMAGE_STYLE_MODIFIERS, IMAGE_STYLES } from '../../lib/prompts'
 // - Supports style selection (or auto) via IMAGE_STYLE_MODIFIERS
 // - Graceful demo fallback using picsum if no/invalid XAI_API_KEY
 // - Used by the "✨ Generate Images" button in main generator and /history for Pro users.
+// - xAI images API params: prompt, n (count), resolution (e.g. "1k"), aspect_ratio (e.g. "1:1"). No "size" param (causes 400).
 
 const XAI_IMAGE_URL = 'https://api.x.ai/v1/images/generations'
 
@@ -54,27 +55,30 @@ export async function POST(req: NextRequest) {
       }, { status: 402 })
     }
 
-    // Rate limit
-    const now = Date.now()
+    console.log(`[generate-images] Pro user ${userId} requesting style=${style} count=${count} topicLen=${(topic||'').length}`)
+
+    // Rate limit (check only; only consume on successful generation to respect limits without penalizing transient failures)
     const lastTime = lastImageGenerationTime.get(userId) || 0
-    const timeSinceLast = (now - lastTime) / 1000
+    const timeSinceLast = (Date.now() - lastTime) / 1000
 
     if (timeSinceLast < IMAGE_RATE_LIMIT_SECONDS) {
       const waitTime = Math.ceil(IMAGE_RATE_LIMIT_SECONDS - timeSinceLast)
+      console.log(`[generate-images] Rate limited for user ${userId}: ${waitTime}s wait`)
       return NextResponse.json({
         error: `Please wait ${waitTime} second${waitTime === 1 ? '' : 's'} before generating more images.`,
         rateLimited: true,
         waitSeconds: waitTime,
       }, { status: 429 })
     }
-    lastImageGenerationTime.set(userId, now)
+
+    console.log(`[generate-images] Rate limit passed for ${userId}, proceeding with generation`)
 
     const apiKey = process.env.XAI_API_KEY?.trim()
 
     let images: Array<{ url: string; style: string; revisedPrompt?: string }> = []
 
     if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
-      console.warn('⚠️ No valid XAI_API_KEY — returning demo images')
+      console.warn(`[generate-images] No valid XAI_API_KEY (len=${(apiKey||'').length}) — returning demo images for ${userId}`)
       // Demo placeholders (relevant-ish using picsum with seed)
       let demoStyle = cleanStyle
       if (demoStyle === 'auto' || !IMAGE_STYLE_MODIFIERS[demoStyle]) {
@@ -87,7 +91,10 @@ export async function POST(req: NextRequest) {
         style: demoStyle,
         revisedPrompt: 'Demo placeholder image (Pro feature requires valid XAI_API_KEY)'
       }))
+      // Consume rate limit only on success (demo always succeeds here)
+      lastImageGenerationTime.set(userId, Date.now())
     } else {
+      console.log(`[generate-images] Using real xAI for user ${userId}`)
       // Resolve style (auto picks one at random for this generation)
       let resolvedStyle = cleanStyle
       if (resolvedStyle === 'auto' || !IMAGE_STYLE_MODIFIERS[resolvedStyle]) {
@@ -105,33 +112,87 @@ The image should be engaging, relevant to the thread's tone, and suitable as a h
 
       const fullPrompt = basePrompt + (modifier ? ` ${modifier}.` : ' High detail, excellent composition, eye-catching for social media.')
 
-      const imageRes = await fetch(XAI_IMAGE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          n: cleanCount,
-          size: '1024x1024',
-        }),
-      })
+      // xAI images request body (no "size" - causes 400; use "resolution" + optional "aspect_ratio")
+      const xaiRequestBody = {
+        prompt: fullPrompt,
+        n: cleanCount,
+        resolution: '1k', // 1k resolution (xAI equivalent to ~1024x1024)
+        aspect_ratio: '1:1', // square default; can be made configurable later
+      }
+
+      // Defensive fetch with timeout and key re-check
+      if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
+        console.warn(`[generate-images] Key became invalid before real call for ${userId}`)
+        return NextResponse.json({ error: 'Invalid XAI API key configuration.', canRetry: false }, { status: 500 })
+      }
+
+      let imageRes;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(new Error('xAI request timeout')), 30000); // 30s timeout to prevent hangs/502
+
+        imageRes = await fetch(XAI_IMAGE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(xaiRequestBody),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        console.error(`[generate-images] Fetch error to xAI for ${userId}:`, fetchError?.message || fetchError, 'requestBody:', JSON.stringify(xaiRequestBody));
+        // Do not set rate limit on network/timeout error
+        return NextResponse.json({
+          error: 'Failed to reach image generation service. Please try again.',
+          canRetry: true
+        }, { status: 500 });
+      }
 
       if (!imageRes.ok) {
         const errorText = await imageRes.text()
-        console.error('xAI Imagine API error:', imageRes.status, errorText)
-        return NextResponse.json({ error: 'Image generation failed. Please try again.' }, { status: 502 })
+        console.error(`[generate-images] xAI Imagine API error for ${userId}: status=${imageRes.status} body=${errorText.substring(0,300)} requestBodySent=${JSON.stringify(xaiRequestBody)}`)
+        // Do not consume rate limit on provider failure. Return proper error (avoid 502 where possible for client UX)
+        const isRateLimited = imageRes.status === 429
+        return NextResponse.json({
+          error: isRateLimited ? 'Image provider is rate limited. Please try again shortly.' : 'Image generation failed. Please try again.',
+          canRetry: true,
+          rateLimited: isRateLimited
+        }, { status: isRateLimited ? 429 : 500 })
       }
 
-      const imageData = await imageRes.json()
+      let imageData;
+      try {
+        imageData = await imageRes.json();
+      } catch (parseError: any) {
+        console.error(`[generate-images] JSON parse error from xAI for ${userId}:`, parseError?.message);
+        return NextResponse.json({ error: 'Invalid response from image service.', canRetry: true }, { status: 500 });
+      }
+
       images = (imageData.data || []).slice(0, cleanCount).map((item: any) => ({
         url: item.url,
         revisedPrompt: item.revised_prompt,
         style: resolvedStyle,
       }))
+
+      if (images.length === 0) {
+        console.error(`[generate-images] xAI returned empty images for ${userId}`)
+        return NextResponse.json({ error: 'No images generated by provider. Please try again.', canRetry: true }, { status: 500 })
+      }
+
+      // Consume rate limit ONLY on successful real generation
+      lastImageGenerationTime.set(userId, Date.now())
+      console.log(`[generate-images] xAI success for ${userId}: ${images.length} images, style=${resolvedStyle}`)
     }
 
+    if (images.length === 0) {
+      console.error(`[generate-images] No images after processing for ${userId}`)
+      return NextResponse.json({ error: 'Failed to prepare images. Please try again.', canRetry: true }, { status: 500 })
+    }
+
+    console.log(`[generate-images] Success for ${userId}: returning ${images.length} images`)
     const displayStyle = (cleanStyle === 'auto' ? 'auto (randomized to ' + (images[0]?.style || 'default') + ')' : cleanStyle)
     return NextResponse.json({ 
       images, 
@@ -139,7 +200,7 @@ The image should be engaging, relevant to the thread's tone, and suitable as a h
     })
 
   } catch (error) {
-    console.error('Image generation error:', error)
+    console.error('[generate-images] Uncaught error:', error)
     return NextResponse.json({
       error: "Something went wrong while generating images. Please try again.",
       canRetry: true

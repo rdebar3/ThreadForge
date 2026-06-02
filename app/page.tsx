@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useUser, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
+import { useUser, SignUpButton, UserButton, useClerk } from '@clerk/nextjs'
 import { IMAGE_STYLES, type ImageStyle } from './lib/prompts'
 
 interface Thread {
@@ -12,6 +12,7 @@ interface Thread {
 
 export default function Page() {
   const { isSignedIn, user } = useUser()
+  const { openSignIn } = useClerk()
   const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
 
   const [topic, setTopic] = useState('')
@@ -501,11 +502,12 @@ export default function Page() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">
-                    Sign in
-                  </button>
-                </SignInButton>
+                <button 
+                  onClick={() => openSignIn()}
+                  className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                >
+                  Sign in
+                </button>
               </div>
             )}
           </div>
@@ -564,14 +566,12 @@ export default function Page() {
                   </div>
                 ) : (
                   <>
-                    <SignInButton mode="modal">
-                      <button 
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="text-zinc-400 hover:text-white py-1 text-left"
-                      >
-                        Sign in
-                      </button>
-                    </SignInButton>
+                    <button 
+                      onClick={() => { openSignIn(); setMobileMenuOpen(false); }}
+                      className="text-zinc-400 hover:text-white py-1 text-left"
+                    >
+                      Sign in
+                    </button>
                     <SignUpButton mode="modal">
                       <button 
                         onClick={() => setMobileMenuOpen(false)}
@@ -612,11 +612,12 @@ export default function Page() {
               </>
             )}
             {!isSignedIn && (
-              <SignInButton mode="modal">
-                <button className="ml-1 underline text-violet-400 hover:text-violet-300 transition-colors">
-                  Sign in to track your usage
-                </button>
-              </SignInButton>
+              <button 
+                onClick={() => openSignIn()}
+                className="ml-1 underline text-violet-400 hover:text-violet-300 transition-colors"
+              >
+                Sign in to track your usage
+              </button>
             )}
           </div>
         </div>
@@ -1357,14 +1358,12 @@ export default function Page() {
               Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro for unlimited generations.
             </p>
 
-            <SignInButton mode="modal">
-              <button 
-                onClick={() => setShowAuthPrompt(false)}
-                className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
-              >
-                Sign in to continue free
-              </button>
-            </SignInButton>
+            <button 
+              onClick={() => { openSignIn(); setShowAuthPrompt(false); }}
+              className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
+            >
+              Sign in to continue free
+            </button>
 
             <button 
               onClick={() => setShowAuthPrompt(false)}

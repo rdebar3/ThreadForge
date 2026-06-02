@@ -22,7 +22,7 @@ export default function RootLayout({
   const isProdClerkKey = !!publishableKey && publishableKey.startsWith('pk_live_')
 
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider>
       <html lang="en" className="dark">
         <body className="bg-zinc-950 text-zinc-100 antialiased" suppressHydrationWarning>
           {isDev && isProdClerkKey && (

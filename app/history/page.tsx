@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useUser, SignInButton } from '@clerk/nextjs'
+import { useUser, useClerk } from '@clerk/nextjs'
 import type { Thread, GenerationRecord } from '../lib/types'
 import { IMAGE_STYLES, type ImageStyle } from '../lib/prompts'
 
@@ -12,6 +12,7 @@ interface Suggestion {
 
 export default function HistoryPage() {
   const { isSignedIn, user } = useUser()
+  const { openSignIn } = useClerk()
   const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
 
   const [history, setHistory] = useState<GenerationRecord[]>([])
@@ -225,11 +226,12 @@ export default function HistoryPage() {
         <div className="max-w-md text-center">
           <h1 className="text-3xl font-semibold tracking-tight mb-4">Generation History</h1>
           <p className="text-zinc-400 mb-6">Sign in to view your Pro generation history.</p>
-          <SignInButton mode="modal">
-            <button className="px-6 py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors">
-              Sign in
-            </button>
-          </SignInButton>
+          <button 
+            onClick={() => openSignIn()}
+            className="px-6 py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors"
+          >
+            Sign in
+          </button>
         </div>
       </div>
     )
