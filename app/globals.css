@@ -11,30 +11,33 @@ body {
   font-feature-settings: "rlig" 1, "kern" 1;
   background-color: #0a0a0c;
   background-image: 
-    radial-gradient(circle at 25% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 55%),
-    radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.045) 0%, transparent 55%),
-    /* very faint geometric dot pattern for modern subtle texture */
-    radial-gradient(#27272a 0.6px, transparent 1px),
-    /* soft layered wash for visual depth across the page */
-    linear-gradient(135deg, rgba(124, 58, 237, 0.022) 0%, transparent 28%, transparent 72%, rgba(99, 102, 241, 0.018) 100%);
+    radial-gradient(circle at 25% 20%, rgba(124, 58, 237, 0.07) 0%, transparent 55%),
+    radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 55%),
+    /* very faint geometric dot pattern for modern subtle texture - slightly stronger for premium depth */
+    radial-gradient(#27272a 0.7px, transparent 1px),
+    /* soft layered wash for visual depth across the page - deeper */
+    linear-gradient(135deg, rgba(124, 58, 237, 0.028) 0%, transparent 25%, transparent 75%, rgba(99, 102, 241, 0.022) 100%),
+    /* additional subtle conic for high-end AI polish */
+    conic-gradient(from 180deg at 50% 50%, rgba(124,58,237,0.012) 0%, transparent 30%, transparent 70%, rgba(99,102,241,0.01) 100%);
   background-size: 
     100% 100%,
     100% 100%,
-    5px 5px,
+    4px 4px,
+    100% 100%,
     100% 100%;
-  background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+  background-repeat: no-repeat, no-repeat, repeat, no-repeat, no-repeat;
 }
 
 .thread-card {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.18), 0 4px 6px -4px rgb(0 0 0 / 0.12);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 20px -4px rgb(0 0 0 / 0.22), 0 6px 8px -3px rgb(0 0 0 / 0.15), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  backdrop-filter: blur(20px);
 }
 
 .thread-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.25), 0 8px 10px -6px rgb(0 0 0 / 0.15);
-  border-color: rgb(167 139 250 / 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 25px 35px -8px rgb(0 0 0 / 0.3), 0 10px 12px -4px rgb(0 0 0 / 0.2), 0 0 0 1px rgba(167,139,250,0.2);
+  border-color: rgb(167 139 250 / 0.3);
 }
 
 .tweet {
@@ -69,6 +72,12 @@ body {
   66% { transform: translate(-30px, 40px) scale(0.9); }
 }
 
+/* Soft glowing accent for premium AI depth - slow pulse, very subtle */
+@keyframes softGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.08); }
+}
+
 @keyframes sparkle {
   0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
   50% { opacity: 0.4; transform: scale(0.7) rotate(15deg); }
@@ -79,22 +88,30 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Premium card enhancements - stronger glassmorphism + visual depth for modern dark premium feel */
+/* Premium card enhancements - even stronger glassmorphism + rich shadows for high-end AI product polish (Cursor/Perplexity level) */
 .glass-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.15), 0 0 0 1px rgba(255,255,255,0.03) inset;
 }
 
 .glass-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 25%, transparent 55%);
-  opacity: 0.7;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 20%, transparent 50%);
+  opacity: 0.8;
   transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.12), transparent);
   pointer-events: none;
 }
 
@@ -103,9 +120,9 @@ body {
 }
 
 .glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 25px 30px -8px rgb(0 0 0 / 0.22), 0 10px 12px -6px rgb(0 0 0 / 0.15);
-  border-color: rgb(167 139 250 / 0.35);
+  transform: translateY(-6px);
+  box-shadow: 0 30px 40px -10px rgb(0 0 0 / 0.28), 0 12px 15px -6px rgb(0 0 0 / 0.2), 0 0 0 1px rgba(167,139,250,0.15);
+  border-color: rgb(167 139 250 / 0.4);
 }
 
 /* Pro sparkle utility - subtle premium highlight */
@@ -128,12 +145,20 @@ body {
 
 /* How it works icon container */
 .how-icon {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
 }
 
 .glass-card:hover .how-icon {
   transform: scale(1.1) rotate(3deg);
   color: rgb(167 139 250);
+  box-shadow: 0 0 15px rgba(167,139,250,0.4);
+}
+
+/* Subtle glow on use-case icons for energetic accents */
+.glass-card:hover .w-8.h-8.rounded-lg.bg-violet-500\/10 {
+  box-shadow: 0 0 12px rgba(167,139,250,0.3);
+  background-color: rgba(167,139,250,0.15);
 }
 
 

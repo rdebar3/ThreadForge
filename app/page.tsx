@@ -345,10 +345,13 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-x-hidden">
-      {/* Subtle global ambient orbs for whole-page premium depth - very faint (5-8% effective), slow animations, non-distracting */}
+      {/* Global ambient orbs for whole-page premium depth - enhanced with more layers and soft glowing accents for striking modern feel (still very subtle, non-distracting) */}
       <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
-        <div className="absolute top-[15%] right-[20%] w-[650px] h-[650px] bg-violet-500/6 rounded-full blur-[180px] animate-[heroBlob_38s_infinite_ease-in-out]"></div>
-        <div className="absolute bottom-[25%] left-[15%] w-[520px] h-[520px] bg-indigo-500/5 rounded-full blur-[150px] animate-[heroBlob_45s_infinite_ease-in-out_12s]"></div>
+        <div className="absolute top-[15%] right-[20%] w-[700px] h-[700px] bg-violet-500/7 rounded-full blur-[190px] animate-[heroBlob_38s_infinite_ease-in-out]"></div>
+        <div className="absolute bottom-[25%] left-[15%] w-[580px] h-[580px] bg-indigo-500/6 rounded-full blur-[160px] animate-[heroBlob_45s_infinite_ease-in-out_12s]"></div>
+        <div className="absolute top-[55%] right-[30%] w-[400px] h-[400px] bg-violet-400/5 rounded-full blur-[220px] animate-[heroBlob_52s_infinite_ease-in-out_8s]"></div>
+        {/* Soft global glowing accent for extra premium depth */}
+        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-[1100px] h-[400px] bg-violet-500/4 rounded-full blur-[250px] animate-[softGlow_20s_infinite_ease-in-out]"></div>
       </div>
 
       {/* Navbar - Slightly more premium with enhanced glass */}
@@ -462,7 +465,7 @@ export default function Page() {
                     <SignUpButton mode="modal">
                       <button 
                         onClick={() => setMobileMenuOpen(false)}
-                        className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center"
+                        className="px-5 py-2 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white rounded-full font-semibold text-sm transition-all text-center hover:shadow-[0_0_15px_rgba(167,139,250,0.4)]"
                       >
                         Get Started Free
                       </button>
@@ -510,38 +513,48 @@ export default function Page() {
       </div>
 
       {/* Hero - Stronger, more dynamic and premium */}
-      <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
+      <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
         
-        {/* Rich, layered, animated background for bigger visual impact - subtle modern dark with depth */}
+        {/* Rich, layered, animated background for bigger visual impact - deeper modern dark with premium depth (Cursor/Perplexity level) */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          {/* Faint geometric grid (complements global body pattern) */}
-          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-35"></div>
-          {/* Soft gradient mesh for premium atmosphere */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/35 via-transparent to-indigo-950/25"></div>
+          {/* Deeper base gradient for rich atmosphere */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/40 to-zinc-950/90"></div>
+          {/* Faint geometric grid (complements global body pattern) - slightly stronger for modern texture */}
+          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-45"></div>
+          {/* Soft gradient mesh for premium atmosphere - deeper layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/45 via-transparent to-indigo-950/35"></div>
+          {/* Subtle vignette for depth at edges */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.25)_100%)]"></div>
           
-          {/* Dynamic glowing orbs with heroBlob animation - energetic but non-distracting */}
-          <div className="absolute top-1/4 left-1/3 w-[420px] h-[420px] bg-violet-500/25 rounded-full blur-[140px] animate-[heroBlob_22s_infinite_ease-in-out]"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-[380px] h-[380px] bg-indigo-500/20 rounded-full blur-[120px] animate-[heroBlob_28s_infinite_ease-in-out_4s]"></div>
-          <div className="absolute top-2/3 left-1/5 w-64 h-64 bg-violet-400/15 rounded-full blur-[90px] animate-[heroBlob_18s_infinite_ease-in-out_8s]"></div>
+          {/* Dynamic glowing orbs with heroBlob animation - more layers, varied sizes/speeds for striking yet non-distracting depth */}
+          <div className="absolute top-1/4 left-1/3 w-[480px] h-[480px] bg-violet-500/22 rounded-full blur-[160px] animate-[heroBlob_22s_infinite_ease-in-out]"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-[420px] h-[420px] bg-indigo-500/18 rounded-full blur-[130px] animate-[heroBlob_28s_infinite_ease-in-out_4s]"></div>
+          <div className="absolute top-2/3 left-1/5 w-72 h-72 bg-violet-400/14 rounded-full blur-[100px] animate-[heroBlob_18s_infinite_ease-in-out_8s]"></div>
+          <div className="absolute top-[40%] right-[15%] w-[300px] h-[300px] bg-indigo-400/12 rounded-full blur-[180px] animate-[heroBlob_32s_infinite_ease-in-out_3s]"></div>
+          <div className="absolute bottom-[15%] left-[10%] w-[550px] h-[550px] bg-violet-500/10 rounded-full blur-[200px] animate-[heroBlob_45s_infinite_ease-in-out_15s]"></div>
+          
+          {/* Soft glowing accents - very low opacity violet/indigo glows for high-end AI polish (behind headline area) */}
+          <div className="absolute top-[28%] left-1/2 -translate-x-1/2 w-[900px] h-[300px] bg-violet-500/8 rounded-full blur-[120px] animate-[softGlow_12s_infinite_ease-in-out]"></div>
+          <div className="absolute top-[35%] left-1/2 -translate-x-1/2 w-[700px] h-[220px] bg-indigo-500/7 rounded-full blur-[100px] animate-[softGlow_18s_infinite_ease-in-out_2s]"></div>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-6 text-zinc-300 animate-[fadeInUp_0.5s_ease-out]">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/30 hover:shadow-[0_0_15px_rgba(167,139,250,0.2)] transition-all">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
           Built for creators and founders who actually post
         </div>
 
-        <h1 className="text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-4.5px] mb-6 leading-[0.92] animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
+        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
           Stop staring at a blank<br />screen. Post on X in seconds.
         </h1>
         
-        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-10 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
+        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-12 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
           Turn any idea into 4 high-quality, ready-to-post X threads — instantly.<br className="hidden md:block" />
           Built for founders, creators, and anyone who wants to post consistently without the headache.
         </p>
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card bg-zinc-900/70 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 md:p-8 shadow-2xl">
+          <div className="glass-card bg-zinc-900/70 backdrop-blur-2xl border border-white/15 rounded-3xl p-7 md:p-9 shadow-2xl">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -554,12 +567,12 @@ export default function Page() {
               }}
               placeholder="e.g. building in public, cold email outreach, personal branding..."
               disabled={isGenerating}
-              className="flex-1 bg-zinc-950/70 border border-white/10 focus:border-violet-400 rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 bg-zinc-950/70 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30 rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-lg hover:shadow-xl"
+              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-lg hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] hover:shadow-xl"
             >
               {isGenerating ? (
                 <>
@@ -574,14 +587,14 @@ export default function Page() {
 
           {/* Visible usage counter / priority indicator */}
           {isSignedIn && hasPro ? (
-            <div className="mt-3 text-center">
+            <div className="mt-4 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300 pro-sparkle">
                 <span className="text-violet-400">★</span>
                 Pro: unlimited generations • Priority enabled
               </span>
             </div>
           ) : isSignedIn && !hasPro ? (
-            <div className="mt-3 text-center">
+            <div className="mt-4 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 border border-white/10 px-3 py-1 text-xs text-zinc-400">
                 <span className="text-emerald-400">●</span>
                 {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} free generations left today
@@ -591,7 +604,7 @@ export default function Page() {
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
-            <div className="mt-4">
+            <div className="mt-5">
               <div className="text-xs text-zinc-500 mb-2 tracking-wider">TRY AN EXAMPLE</div>
               <div className="flex flex-wrap justify-center gap-2">
                 {exampleTopics.map((example, i) => (
@@ -602,7 +615,7 @@ export default function Page() {
                       setTimeout(() => handleGenerate(), 40)
                     }}
                     disabled={isGenerating}
-                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
+                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/40 hover:shadow-[0_0_12px_rgba(167,139,250,0.25)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
                   >
                     {example}
                   </button>
@@ -611,7 +624,7 @@ export default function Page() {
             </div>
           )}
 
-          <p className="text-xs text-zinc-500 mt-3">
+          <p className="text-xs text-zinc-500 mt-4">
             {isSignedIn && hasPro ? (
               "Pro: unlimited generations"
             ) : isSignedIn ? (
@@ -752,13 +765,13 @@ export default function Page() {
       )}
 
       {/* How it Works - premium icons + hover effects */}
-      <div id="how" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <div className="text-center mb-12">
+      <div id="how" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-14">
           <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">From idea to posted thread in seconds</h2>
           <p className="text-zinc-400">No more overthinking. No more blank page anxiety.</p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {[
             { 
               icon: (
@@ -800,13 +813,13 @@ export default function Page() {
       </div>
 
       {/* Real-World Use Cases - icons + premium hover cards */}
-      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <div className="text-center mb-12">
+      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-14">
           <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real situations where people use ThreadForge</h2>
           <p className="text-zinc-400 max-w-md mx-auto">Stop overthinking what to post. Here are actual scenarios where this saves people serious time.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-6">
           {[
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
@@ -851,13 +864,13 @@ export default function Page() {
       </div>
 
       {/* Testimonials - avatars + premium cards */}
-      <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <div className="text-center mb-12">
+      <div className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-14">
           <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Real people. Real results.</h2>
           <p className="text-zinc-400">Real feedback from people using ThreadForge</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {[
             {
               quote: "I used to spend 45+ minutes writing one thread. Now I type one sentence and get four strong versions. It’s completely changed how often I post.",
@@ -884,10 +897,10 @@ export default function Page() {
               avatar: "SC"
             }
           ].map((testimonial, index) => (
-            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+            <div key={index} className="glass-card group bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
               <p className="text-zinc-200 mb-6 leading-relaxed">“{testimonial.quote}”</p>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 via-indigo-500 to-violet-400 flex items-center justify-center text-[11px] font-bold text-white ring-1 ring-white/10">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 via-indigo-500 to-violet-400 flex items-center justify-center text-[11px] font-bold text-white ring-1 ring-white/10 group-hover:ring-violet-400/40 group-hover:shadow-[0_0_10px_rgba(167,139,250,0.3)] transition-all">
                   {testimonial.avatar}
                 </div>
                 <div>
@@ -901,14 +914,14 @@ export default function Page() {
       </div>
 
       {/* Pricing - Option B: Free vs Pro comparison cards with cancel anytime */}
-      <div id="pricing" className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
-        <div className="text-center mb-10">
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-4">PRICING</div>
           <h2 className="text-4xl font-semibold tracking-tighter mb-3">Free to start.<br className="hidden sm:block" /> Pro when you need it.</h2>
           <p className="text-zinc-400 max-w-md mx-auto">Generous free tier forever. Pro unlocks unlimited + premium features as we launch them.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-[860px] mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-[860px] mx-auto">
           {/* Free Tier Card */}
           <div className="glass-card rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
             <div className="mb-6">
@@ -933,7 +946,7 @@ export default function Page() {
 
           {/* Pro Tier Card - highlighted */}
           <div className="glass-card rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle">MOST POPULAR</div>
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle shadow-[0_0_12px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
 
             <div className="mb-6">
               <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2 pro-sparkle">
@@ -967,7 +980,7 @@ export default function Page() {
               <>
                 <button
                   onClick={handleUpgrade}
-                  className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm"
+                  className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]"
                 >
                   Upgrade to Pro — $9/mo
                 </button>
