@@ -829,7 +829,7 @@ export default function Page() {
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/50 hover:shadow-[0_0_28px_rgba(167,139,250,0.45)] transition-all">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
-          Built for creators and founders who actually post
+          Instant AI threads + images for serious X creators
         </div>
 
         <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-6 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
@@ -983,9 +983,7 @@ export default function Page() {
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> 1–4 custom images per thread (xAI Imagine)</li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Best-time suggestions + auto X posting</li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
             </div>
