@@ -338,4 +338,91 @@ body {
   color: #e0e7ff;
 }
 
+/* ============================================
+   MOBILE RESPONSIVENESS FOR THREAD GENERATION RESULTS
+   Fixes wide expansion, horizontal scroll, off-screen buttons
+   Stacks vertically, tighter padding/spacing/fonts on small screens
+   Preserves premium dark glassmorphism aesthetic (shadows, violets, blurs)
+   Supports portrait + landscape on phones
+   ============================================ */
+
+@media (max-width: 640px) {
+  .thread-card {
+    padding: 14px;
+    border-radius: 1.25rem;
+    /* Slightly reduced shadow on mobile for visual fit + performance */
+    box-shadow: 0 10px 16px -4px rgb(0 0 0 / 0.26), 0 4px 6px -2px rgb(0 0 0 / 0.18), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 12px rgba(124,58,237,0.05);
+  }
+
+  .thread-card:hover {
+    transform: none; /* prevent lift causing layout shift/scroll on touch */
+    box-shadow: 0 14px 20px -4px rgb(0 0 0 / 0.3), 0 0 0 1px rgba(167,139,250,0.15);
+    border-color: rgb(167 139 250 / 0.25);
+  }
+
+  /* Reinforce viewport containment for results (pairs with max-w-4xl + px-4 in JSX) */
+  .thread-card,
+  .max-w-4xl {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Compact .tweet base (used or fallback) */
+  .tweet {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  /* Ensure all buttons in thread results are accessible (min tap target) without forcing width */
+  .thread-card button {
+    min-height: 34px;
+    white-space: nowrap;
+  }
+
+  /* Tighter panels inside results (image choice, schedule, rewrite) */
+  .thread-card > div.mt-3,
+  .thread-card > div.mt-4 {
+    margin-top: 10px !important;
+  }
+}
+
+/* Very small portrait phones (e.g. 320-360px) */
+@media (max-width: 380px) {
+  .thread-card {
+    padding: 10px;
+    border-radius: 1rem;
+  }
+
+  /* Title size override if arbitrary classes don't catch all */
+  .thread-card [class*="text-[17px]"],
+  .thread-card [class*="text-[21px]"] {
+    font-size: 15px !important;
+    line-height: 1.2;
+  }
+
+  .thread-card button {
+    min-height: 32px;
+    font-size: 11px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* Landscape on small/mobile screens (wider viewport but still careful with buttons) */
+@media (min-width: 481px) and (max-width: 768px) and (orientation: landscape) {
+  .thread-card {
+    padding: 16px;
+  }
+
+  .thread-card button {
+    min-height: 36px;
+  }
+}
+
+/* General results section safety: prevent any child from causing body scroll */
+.results-container,
+.thread-card {
+  contain: layout style;
+}
+
 

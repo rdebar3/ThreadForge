@@ -1023,7 +1023,7 @@ export default function Page() {
 
       {/* Demo Mode Notice - only visible in development */}
       {demoMode && threads.length > 0 && process.env.NODE_ENV === 'development' && (
-        <div className="max-w-4xl mx-auto px-6 mb-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-4">
           <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs px-3 py-1.5 rounded-2xl text-center">
             Demo mode active (no real AI calls).
           </div>
@@ -1032,11 +1032,11 @@ export default function Page() {
 
       {/* Your Generated Threads */}
       {safeThreads.length > 0 && (
-        <div ref={resultsRef} className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-y-3">
+        <div ref={resultsRef} className="max-w-4xl mx-auto px-4 sm:px-6 pb-20">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-y-2 sm:gap-y-3">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Copy • Post (Pro) • Schedule (Pro+) • Hover for emojis</p>
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
+              <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5">Copy • Post (Pro) • Schedule (Pro+) • Tap to copy</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -1054,12 +1054,12 @@ export default function Page() {
                     input?.focus()
                   }, 50)
                 }}
-                className="text-sm px-5 py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
+                className="text-xs sm:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
               >
                 New topic
               </button>
               {hasPro && (
-                <a href="/history" className="text-sm px-5 py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
+                <a href="/history" className="text-xs sm:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
                   View History
                 </a>
               )}
@@ -1067,17 +1067,17 @@ export default function Page() {
           </div>
 
           <div className="space-y-6">
-            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl">
-                <div className="flex items-center justify-between mb-5">
-                  <div>
+            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-y-3">
+                  <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
-                    <div className="font-semibold text-[21px] leading-tight pr-4">{thread.title}</div>
+                    <div className="font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4 break-words">{thread.title}</div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     <button
                       onClick={() => copyThread(thread)}
                       title="Copy the entire thread (all tweets) to your clipboard"
-                      className="copy-button flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      className="copy-button flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                     >
                       <CopyIcon />
                       <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
@@ -1086,7 +1086,7 @@ export default function Page() {
                       <button
                         onClick={() => copyToX(thread)}
                         title="Copy the full thread and open X's compose window (Pro)"
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         <XIcon />
                         Post to X
@@ -1100,7 +1100,7 @@ export default function Page() {
                           setSelectedImageCount(1)
                         }}
                         title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         ✨ Generate Images
                       </button>
@@ -1112,7 +1112,7 @@ export default function Page() {
                           setSelectedImageCount(1)
                         }}
                         title="Try AI Images once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                       >
                         ✨ Try Pro+ Images (1-time)
                       </button>
@@ -1120,7 +1120,7 @@ export default function Page() {
                       <a
                         href="#pricing"
                         title="Image Generation requires Pro+ (trial used)"
-                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Upgrade to Pro+ for AI Images
                       </a>
@@ -1134,7 +1134,7 @@ export default function Page() {
                           setScheduleTime('')
                         }}
                         title="Schedule this full thread to post automatically to X (Pro+)"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         📅 Schedule
                       </button>
@@ -1145,7 +1145,7 @@ export default function Page() {
                           setScheduleTime('')
                         }}
                         title="Try Scheduler once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                       >
                         📅 Try Pro+ Scheduler (1-time)
                       </button>
@@ -1153,7 +1153,7 @@ export default function Page() {
                       <a
                         href="#pricing"
                         title="Thread Scheduler requires Pro+ (trial used)"
-                        className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                       >
                         Schedule (Pro+)
                       </a>
@@ -1164,7 +1164,7 @@ export default function Page() {
                       <button
                         onClick={() => saveCurrentThreadAsTemplate(thread)}
                         title="Save this thread as a reusable private template"
-                        className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
+                        className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
                       >
                         Save Template
                       </button>
@@ -1175,7 +1175,7 @@ export default function Page() {
                       <button
                         onClick={() => { setShowRewriteFor(thread.id); setRewriteMode('Punchier'); setRewriteCustom('') }}
                         title="Rewrite entire thread with AI (Pro+)"
-                        className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
+                        className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
                       >
                         ✎ Rewrite
                       </button>
@@ -1185,48 +1185,48 @@ export default function Page() {
 
                 {/* Image choice panel (shown when Generate Images clicked for this thread) - moved near top */}
                 {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === thread.id && (
-                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro+ or one-time trial)</div>
-                    <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro+ or one-time trial)</div>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       {IMAGE_STYLES.map((s) => (
                         <button
                           key={s}
                           onClick={() => setSelectedImageStyle(s)}
-                          className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                          className={`text-[10px] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
                         >
                           {s}
                         </button>
                       ))}
                     </div>
-                    <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
-                    <div className="flex gap-2 mb-3">
+                    <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
+                    <div className="flex gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       {[1, 2, 3, 4].map((n) => (
                         <button
                           key={n}
                           onClick={() => setSelectedImageCount(n)}
-                          className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
+                          className={`text-[10px] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
                         >
                           {n}
                         </button>
                       ))}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       <button
                         onClick={() => handleGenerateImages(thread)}
                         disabled={isGeneratingImages}
-                        className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
                       >
                         {isGeneratingImages ? 'Generating...' : 'Generate Images'}
                       </button>
                       <button
                         onClick={() => setShowImageModalFor(null)}
-                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(1); }}
-                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
                       >
                         Auto (1 image)
                       </button>
@@ -1236,31 +1236,31 @@ export default function Page() {
 
                 {/* Schedule picker (Pro+ only) - appears when Schedule clicked */}
                 {(isProPlus || !hasUsedProPlusTrial) && showScheduleFor === thread.id && (
-                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+ or one-time trial)</div>
-                    <div className="flex flex-wrap items-center gap-3">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+ or one-time trial)</div>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <input
                         type="datetime-local"
                         value={scheduleTime}
                         onChange={(e) => setScheduleTime(e.target.value)}
                         min={new Date(Date.now() + 2 * 60 * 1000).toISOString().slice(0, 16)}
-                        className="bg-zinc-950 border border-white/10 focus:border-violet-500/60 rounded-2xl px-3 py-2 text-sm outline-none"
+                        className="bg-zinc-950 border border-white/10 focus:border-violet-500/60 rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none min-w-[160px]"
                       />
                       <button
                         onClick={() => handleSchedule(thread)}
                         disabled={!scheduleTime || isScheduling}
-                        className="px-5 py-2 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-sm font-semibold text-white transition"
+                        className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-xs sm:text-sm font-semibold text-white transition"
                       >
                         {isScheduling ? 'Scheduling...' : 'Confirm Schedule'}
                       </button>
                       <button
                         onClick={() => { setShowScheduleFor(null); setScheduleTime('') }}
-                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition"
                       >
                         Cancel
                       </button>
                     </div>
-                    <div className="mt-2 text-[10px] text-zinc-500">
+                    <div className="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] text-zinc-500">
                       Full thread will be posted as a reply chain at the selected time. <a href="/scheduler" className="text-violet-400 hover:text-violet-300">Open full Scheduler →</a>
                     </div>
                   </div>
@@ -1268,17 +1268,17 @@ export default function Page() {
 
                 {/* AI Rewriter panel (Pro+ only) */}
                 {isProPlus && showRewriteFor === thread.id && (
-                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">AI REWRITE THREAD (Grok 4.3) — Pro+</div>
-                    <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">AI REWRITE THREAD (Grok 4.3) — Pro+</div>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       {REWRITE_OPTIONS.map(opt => (
-                        <button key={opt} onClick={() => setRewriteMode(opt)} className={`text-xs px-3 py-1 rounded-full border ${rewriteMode === opt ? 'bg-violet-500 border-violet-500 text-white' : 'border-white/10 hover:border-violet-400/50'}`}>{opt}</button>
+                        <button key={opt} onClick={() => setRewriteMode(opt)} className={`text-[10px] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border ${rewriteMode === opt ? 'bg-violet-500 border-violet-500 text-white' : 'border-white/10 hover:border-violet-400/50'}`}>{opt}</button>
                       ))}
                     </div>
-                    <input value={rewriteCustom} onChange={e=>setRewriteCustom(e.target.value)} placeholder="Or custom instructions (e.g. more storytelling, add data)" className="w-full mb-3 bg-zinc-950 border border-white/10 rounded-2xl px-3 py-2 text-sm" />
-                    <div className="flex gap-2">
-                      <button onClick={() => handleRewriteThread(thread)} disabled={isRewriting} className="px-5 py-2 bg-violet-500 rounded-2xl text-sm font-semibold disabled:opacity-60">{isRewriting ? 'Rewriting...' : 'Apply Rewrite'}</button>
-                      <button onClick={() => setShowRewriteFor(null)} className="px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Cancel</button>
+                    <input value={rewriteCustom} onChange={e=>setRewriteCustom(e.target.value)} placeholder="Or custom instructions (e.g. more storytelling, add data)" className="w-full mb-2 sm:mb-3 bg-zinc-950 border border-white/10 rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm" />
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <button onClick={() => handleRewriteThread(thread)} disabled={isRewriting} className="px-3 sm:px-5 py-1.5 sm:py-2 bg-violet-500 rounded-2xl text-xs sm:text-sm font-semibold disabled:opacity-60">{isRewriting ? 'Rewriting...' : 'Apply Rewrite'}</button>
+                      <button onClick={() => setShowRewriteFor(null)} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 rounded-2xl text-xs sm:text-sm">Cancel</button>
                     </div>
                   </div>
                 )}
@@ -1286,12 +1286,12 @@ export default function Page() {
                 {/* Display generated images for this thread - moved to top (right below title/buttons) */}
                 {/* Only show when images actually generated (removed isProPlus from condition to avoid accessing [0] of undefined for Pro+ users before generating images) */}
                 {threadImages[thread.id]?.length > 0 && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id]?.[0]?.style || ''}</div>
-                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                  <div className="mt-3 sm:mt-4">
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <div className="text-[10px] sm:text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id]?.[0]?.style || ''}</div>
+                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-[10px] sm:text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                       {(threadImages[thread.id] || []).map((img, idx) => (
                         <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
                           <img
@@ -1299,16 +1299,16 @@ export default function Page() {
                             alt={`Visual ${idx + 1} for ${thread.title}`}
                             className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform"
                           />
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 sm:p-2 flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all">
                             <button
                               onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)}
-                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                              className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
                             >
                               Download
                             </button>
                             <button
                               onClick={() => copyImageToClipboard(img.url)}
-                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                              className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
                             >
                               Copy
                             </button>
@@ -1319,29 +1319,29 @@ export default function Page() {
                   </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {thread.tweets.map((tweet, i) => {
                     const key = `${thread.id}-${i}`
                     const isCopied = copiedTweetKey === key
                     return (
-                      <div key={i} className="group flex gap-3 rounded-xl hover:bg-zinc-950/60 px-3 py-2 -mx-3 transition-colors">
-                        <div className="text-zinc-500 font-mono text-sm w-8 flex-shrink-0 pt-0.5 select-none">
+                      <div key={i} className="group flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 rounded-xl hover:bg-zinc-950/60 px-2 sm:px-3 py-1.5 sm:py-2 -mx-2 sm:-mx-3 transition-colors">
+                        <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
                           {i + 1}/
                         </div>
-                        <div className="flex-1 text-[15px] leading-relaxed text-zinc-100">
+                        <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0">
                           {tweet}
                         </div>
                         <button
                           onClick={() => copyTweet(thread.id, i, tweet)}
                           title="Copy just this single tweet"
-                          className="opacity-0 group-hover:opacity-100 text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1.5"
+                          className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1"
                         >
                           {isCopied ? (
                             <span className="text-emerald-400 font-medium">Copied!</span>
                           ) : (
                             <>
-                              <span>Copy Tweet</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <span>Copy</span>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16v-4m4 4v4m4-8v8m4-4v-4m-16 8h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
                               </svg>
                             </>
@@ -1352,13 +1352,13 @@ export default function Page() {
                             onClick={() => suggestForTweet(thread.id, i, tweet)}
                             disabled={suggestLoading[`${thread.id}-${i}`]}
                             title="Get Emojis & Hashtags for this tweet (Pro)"
-                            className="opacity-0 group-hover:opacity-100 text-xs px-3 py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
+                            className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
                           >
-                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨ Emojis'}
+                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨'}
                           </button>
                         )}
                         {suggestions[`${thread.id}-${i}`] && (
-                          <div className="text-xs text-violet-300 mt-1 pl-8">
+                          <div className="w-full text-[10px] sm:text-xs text-violet-300 mt-0.5 sm:mt-1 pl-6 sm:pl-8">
                             Emojis: {suggestions[`${thread.id}-${i}`].emojis.join(' ')} &nbsp;&nbsp; Hashtags: {suggestions[`${thread.id}-${i}`].hashtags.join(' ')}
                           </div>
                         )}
