@@ -358,14 +358,40 @@ export default function Page() {
       <nav className="border-b border-white/10 bg-zinc-950/85 backdrop-blur-2xl sticky top-0 z-50 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Custom Logo - Modern & Distinctive */}
+            {/* Premium ThreadForge Logo - modern violet/indigo with subtle thread/AI motif */}
             <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center w-9 h-9">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-400 via-indigo-500 to-violet-400 rounded-2xl opacity-90"></div>
-                <div className="relative w-9 h-9 bg-zinc-950 rounded-2xl flex items-center justify-center border border-white/10">
-                  <span className="text-white text-[21px] font-bold tracking-[-1.5px]">TF</span>
-                </div>
-              </div>
+              <svg width="36" height="36" viewBox="0 0 36 36" className="flex-shrink-0" aria-label="ThreadForge logo">
+                <defs>
+                  <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a78bfa" />
+                    <stop offset="100%" stopColor="#6366f1" />
+                  </linearGradient>
+                  <linearGradient id="threadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#f4f4f5" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0.7" />
+                  </linearGradient>
+                  <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" />
+                  </filter>
+                </defs>
+                {/* Outer glow circle */}
+                <circle cx="18" cy="18" r="17" fill="url(#logoGrad)" opacity="0.25" filter="url(#logoGlow)" />
+                {/* Main circle with gradient */}
+                <circle cx="18" cy="18" r="16" fill="url(#logoGrad)" />
+                {/* Inner dark for contrast */}
+                <circle cx="18" cy="18" r="13" fill="#0a0a0c" />
+                {/* Subtle thread motif - crossing lines like interwoven threads */}
+                <path d="M7 11 Q12 9 18 12 Q24 9 29 11" stroke="url(#threadGrad)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                <path d="M7 15 Q12 17 18 15 Q24 17 29 15" stroke="url(#threadGrad)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                <path d="M8 20 Q13 22 18 20 Q23 22 28 20" stroke="url(#threadGrad)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+                {/* AI motif - subtle neural nodes and connections */}
+                <circle cx="11" cy="10" r="1.8" fill="#a5b4fc" />
+                <circle cx="25" cy="10" r="1.8" fill="#a5b4fc" />
+                <circle cx="18" cy="24" r="2.2" fill="#6366f1" />
+                <line x1="11" y1="10" x2="18" y2="24" stroke="#a5b4fc" strokeWidth="0.9" opacity="0.65" />
+                <line x1="25" y1="10" x2="18" y2="24" stroke="#a5b4fc" strokeWidth="0.9" opacity="0.65" />
+                <line x1="11" y1="10" x2="25" y2="10" stroke="#a5b4fc" strokeWidth="0.7" opacity="0.5" />
+              </svg>
               <div className="font-semibold text-2xl tracking-tighter">ThreadForge</div>
             </div>
           </div>
@@ -515,35 +541,39 @@ export default function Page() {
       {/* Hero - Stronger, more dynamic and premium */}
       <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
         
-        {/* Rich, layered, animated background for bigger visual impact - deeper modern dark with premium depth (Cursor/Perplexity level) */}
+        {/* Rich, more dynamic dark background with subtle glowing orbs + faint grid for premium life and depth */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          {/* Deeper base gradient for rich atmosphere */}
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/40 to-zinc-950/90"></div>
-          {/* Faint geometric grid (complements global body pattern) - slightly stronger for modern texture */}
-          <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-[length:4px_4px] opacity-45"></div>
-          {/* Soft gradient mesh for premium atmosphere - deeper layers */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/45 via-transparent to-indigo-950/35"></div>
-          {/* Subtle vignette for depth at edges */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.25)_100%)]"></div>
+          {/* Deep rich base atmosphere */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/85 via-zinc-950/50 to-zinc-950/95"></div>
+          {/* Faint grid for modern texture and depth */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(39,39,42,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(39,39,42,0.12)_1px,transparent_1px)] bg-[length:32px_32px] opacity-50"></div>
+          {/* Radial dot grid overlay for extra life */}
+          <div className="absolute inset-0 bg-[radial-gradient(#27272a_0.8px,transparent_1.2px)] bg-[length:5px_5px] opacity-40"></div>
+          {/* Soft gradient mesh */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-950/50 via-transparent to-indigo-950/40"></div>
+          {/* Vignette for focus and depth */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.3)_100%)]"></div>
           
-          {/* Dynamic glowing orbs with heroBlob animation - more layers, varied sizes/speeds for striking yet non-distracting depth */}
-          <div className="absolute top-1/4 left-1/3 w-[480px] h-[480px] bg-violet-500/22 rounded-full blur-[160px] animate-[heroBlob_22s_infinite_ease-in-out]"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-[420px] h-[420px] bg-indigo-500/18 rounded-full blur-[130px] animate-[heroBlob_28s_infinite_ease-in-out_4s]"></div>
-          <div className="absolute top-2/3 left-1/5 w-72 h-72 bg-violet-400/14 rounded-full blur-[100px] animate-[heroBlob_18s_infinite_ease-in-out_8s]"></div>
-          <div className="absolute top-[40%] right-[15%] w-[300px] h-[300px] bg-indigo-400/12 rounded-full blur-[180px] animate-[heroBlob_32s_infinite_ease-in-out_3s]"></div>
-          <div className="absolute bottom-[15%] left-[10%] w-[550px] h-[550px] bg-violet-500/10 rounded-full blur-[200px] animate-[heroBlob_45s_infinite_ease-in-out_15s]"></div>
+          {/* Subtle glowing orbs - richer, more dynamic for alive premium feel (violet/indigo, varied, slow) */}
+          <div className="absolute top-1/4 left-1/3 w-[520px] h-[520px] bg-violet-500/20 rounded-full blur-[170px] animate-[heroBlob_24s_infinite_ease-in-out]"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-[460px] h-[460px] bg-indigo-500/16 rounded-full blur-[140px] animate-[heroBlob_30s_infinite_ease-in-out_5s]"></div>
+          <div className="absolute top-2/3 left-1/5 w-80 h-80 bg-violet-400/13 rounded-full blur-[110px] animate-[heroBlob_19s_infinite_ease-in-out_9s]"></div>
+          <div className="absolute top-[38%] right-[12%] w-[340px] h-[340px] bg-indigo-400/11 rounded-full blur-[190px] animate-[heroBlob_35s_infinite_ease-in-out_2s]"></div>
+          <div className="absolute bottom-[12%] left-[8%] w-[600px] h-[600px] bg-violet-500/9 rounded-full blur-[210px] animate-[heroBlob_48s_infinite_ease-in-out_14s]"></div>
+          <div className="absolute top-[18%] right-[35%] w-[280px] h-[280px] bg-violet-500/8 rounded-full blur-[150px] animate-[heroBlob_27s_infinite_ease-in-out_7s]"></div>
           
-          {/* Soft glowing accents - very low opacity violet/indigo glows for high-end AI polish (behind headline area) */}
-          <div className="absolute top-[28%] left-1/2 -translate-x-1/2 w-[900px] h-[300px] bg-violet-500/8 rounded-full blur-[120px] animate-[softGlow_12s_infinite_ease-in-out]"></div>
-          <div className="absolute top-[35%] left-1/2 -translate-x-1/2 w-[700px] h-[220px] bg-indigo-500/7 rounded-full blur-[100px] animate-[softGlow_18s_infinite_ease-in-out_2s]"></div>
+          {/* Soft glowing accents - more prominent for premium alive hero */}
+          <div className="absolute top-[26%] left-1/2 -translate-x-1/2 w-[980px] h-[320px] bg-violet-500/9 rounded-full blur-[130px] animate-[softGlow_14s_infinite_ease-in-out]"></div>
+          <div className="absolute top-[33%] left-1/2 -translate-x-1/2 w-[760px] h-[240px] bg-indigo-500/8 rounded-full blur-[110px] animate-[softGlow_20s_infinite_ease-in-out_3s]"></div>
+          <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[620px] h-[180px] bg-violet-400/6 rounded-full blur-[90px] animate-[softGlow_16s_infinite_ease-in-out_1s]"></div>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/30 hover:shadow-[0_0_15px_rgba(167,139,250,0.2)] transition-all">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-sm mb-8 text-zinc-300 animate-[fadeInUp_0.5s_ease-out] hover:border-violet-500/40 hover:shadow-[0_0_22px_rgba(167,139,250,0.35)] transition-all">
           <span className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></span>
           Built for creators and founders who actually post
         </div>
 
-        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
+        <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-8 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_10px_rgba(0,0,0,0.4),0_0_20px_rgba(124,58,237,0.15)]">
           Stop staring at a blank<br />screen. Post on X in seconds.
         </h1>
         
@@ -554,7 +584,7 @@ export default function Page() {
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card bg-zinc-900/70 backdrop-blur-2xl border border-white/15 rounded-3xl p-7 md:p-9 shadow-2xl">
+          <div className="glass-card bg-zinc-900/65 backdrop-blur-2xl border border-white/20 rounded-3xl p-7 md:p-9 shadow-[0_20px_30px_-10px_rgb(0,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.06),0_0_25px_rgba(124,58,237,0.08)] hover:shadow-[0_28px_40px_-12px_rgb(0,0,0,0.4),0_0_0_1px_rgba(167,139,250,0.2),0_0_35px_rgba(124,58,237,0.15)] transition-all">
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -567,12 +597,12 @@ export default function Page() {
               }}
               placeholder="e.g. building in public, cold email outreach, personal branding..."
               disabled={isGenerating}
-              className="flex-1 bg-zinc-950/70 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30 rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 bg-zinc-950/60 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/40 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.1)] rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-lg hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] hover:shadow-xl"
+              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-2 min-w-[180px] shadow-[0_4px_15px_-2px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(167,139,250,0.55),0_8px_20px_-3px_rgba(0,0,0,0.25)] hover:shadow-xl"
             >
               {isGenerating ? (
                 <>
@@ -615,7 +645,7 @@ export default function Page() {
                       setTimeout(() => handleGenerate(), 40)
                     }}
                     disabled={isGenerating}
-                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/40 hover:shadow-[0_0_12px_rgba(167,139,250,0.25)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
+                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/50 hover:shadow-[0_0_18px_rgba(167,139,250,0.35)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
                   >
                     {example}
                   </button>
