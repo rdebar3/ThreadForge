@@ -88,11 +88,11 @@ export default function SuccessContent() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tighter mb-4">
-          Welcome to ThreadForge Pro!
+          Welcome to ThreadForge Pro / Pro+!
         </h1>
         
         <p className="text-xl text-zinc-400 mb-8">
-          Your subscription is now active. You have unlimited generations + priority access. Cancel anytime from your Stripe billing portal.
+          Your subscription is now active. Enjoy unlimited generations, priority, Post to X, history, suggestions (Pro) — or AI Image Generation too (Pro+). Cancel anytime from your Stripe billing portal.
         </p>
 
         <div className="space-y-4">

@@ -1,6 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
-import { getGenerationHistory } from '../../lib/clerk'
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { getGenerationHistory, isPro } from '../../lib/clerk'
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,11 +10,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const client = await clerkClient()
-    const user = await client.users.getUser(userId)
-    const hasPro = !!(user.publicMetadata?.hasPro || user.publicMetadata?.hasPaid)
+    const hasProAccess = await isPro(userId)
 
-    if (!hasPro) {
+    if (!hasProAccess) {
       return NextResponse.json({ error: 'Pro subscription required' }, { status: 403 })
     }
 

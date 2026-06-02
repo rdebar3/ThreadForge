@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
+import { isPro } from '../../lib/clerk'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
 
@@ -38,11 +39,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const client = await clerkClient()
-    const user = await client.users.getUser(userId)
-    const hasPro = !!(user.publicMetadata?.hasPro || user.publicMetadata?.hasPaid)
+    const hasProAccess = await isPro(userId)
 
-    if (!hasPro) {
+    if (!hasProAccess) {
       return NextResponse.json({ error: 'Pro subscription required for suggestions' }, { status: 403 })
     }
 

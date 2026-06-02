@@ -107,10 +107,12 @@ export async function POST(req: NextRequest) {
           const subId = typeof session.subscription === 'string' ? session.subscription : (session.subscription as any)?.id
           const custId = typeof session.customer === 'string' ? session.customer : (session.customer as any)?.id
 
+          const planFromMeta = (session.metadata?.plan as 'pro' | 'pro-plus') || 'pro'
           const updates: Record<string, any> = {
             ...existing,
             hasPro: true,
-            hasPaid: true, // backward compat with older one-time flow
+            hasPaid: true, // backward compat
+            plan: planFromMeta,
             paidAt: new Date().toISOString(),
             stripeSessionId: session.id,
           }
@@ -180,6 +182,7 @@ export async function POST(req: NextRequest) {
               ...existing,
               hasPro: isActive,
               hasPaid: isActive, // compat
+              plan: isActive ? (existing.plan || 'pro') : null, // preserve plan on active
               stripeSubscriptionId: subscription.id,
               subscriptionStatus: subscription.status,
             },
@@ -204,10 +207,12 @@ export async function POST(req: NextRequest) {
             publicMetadata: {
               ...existing,
               hasPro: false,
+              hasPaid: false,
+              plan: null,
               subscriptionStatus: 'canceled',
             },
           })
-          console.log(`✅ Sub canceled for ${clerkUserId}`)
+          console.log(`✅ Sub canceled for ${clerkUserId} — plan cleared`)
         }
 
         processedEvents.add(event.id)

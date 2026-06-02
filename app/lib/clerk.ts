@@ -123,3 +123,59 @@ export async function saveGenerationToHistory(userId: string, record: Omit<Gener
     // Do not throw — history save failure should not break generation
   }
 }
+
+/**
+ * User plan types for 3-tier pricing.
+ */
+export type UserPlan = 'pro' | 'pro-plus' | null
+
+/**
+ * Get the user's current plan from Clerk metadata.
+ * Falls back to 'pro-plus' for legacy hasPro/hasPaid users (grandfathering).
+ */
+export async function getUserPlan(userId: string): Promise<UserPlan> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const plan = (user.publicMetadata?.plan as UserPlan) || null
+
+    if (plan) {
+      return plan
+    }
+
+    // Grandfather existing Pro users into Pro+ (at least temporarily)
+    const hasLegacyPro = user.publicMetadata?.hasPro === true || user.publicMetadata?.hasPaid === true
+    if (hasLegacyPro) {
+      return 'pro-plus'
+    }
+
+    return null
+  } catch (error) {
+    console.error('Failed to get user plan:', error)
+    return null
+  }
+}
+
+/**
+ * Check if user has Pro+ (includes image generation).
+ */
+export async function isProPlus(userId: string): Promise<boolean> {
+  const plan = await getUserPlan(userId)
+  return plan === 'pro-plus'
+}
+
+/**
+ * Check if user can use image generation (Pro+ only).
+ */
+export async function canUseImageGen(userId: string): Promise<boolean> {
+  return await isProPlus(userId)
+}
+
+/**
+ * Check if user has at least basic Pro (unlimited, history, post to X, suggestions, priority).
+ * Pro or Pro+ both qualify.
+ */
+export async function isPro(userId: string): Promise<boolean> {
+  const plan = await getUserPlan(userId)
+  return plan === 'pro' || plan === 'pro-plus'
+}

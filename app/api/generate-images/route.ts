@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { IMAGE_STYLE_MODIFIERS, IMAGE_STYLES } from '../../lib/prompts'
+import { canUseImageGen } from '../../lib/clerk'
 
 // Pro-only endpoint: generates 1-4 relevant images for a generated thread using xAI Imagine API.
 // - Strict hasPro check (returns 402 + requireUpgrade for free users)
@@ -42,16 +43,21 @@ export async function POST(req: NextRequest) {
       cleanStyle = 'auto'
     }
 
-    // Pro check
-    const client = await clerkClient()
-    const user = await client.users.getUser(userId)
-    const metadata = user.publicMetadata as { hasPro?: boolean; hasPaid?: boolean }
-    const hasPro = metadata?.hasPro === true || metadata?.hasPaid === true
+    // Pro+ check (image gen is Pro+ exclusive)
+    const canGenerateImages = await canUseImageGen(userId)
 
-    if (!hasPro) {
+    if (!canGenerateImages) {
+      // Check if they have basic Pro (to give better message)
+      const { getUserPlan } = await import('../../lib/clerk')
+      const plan = await getUserPlan(userId)
+      const isBasicPro = plan === 'pro'
+
       return NextResponse.json({
-        error: 'Image generation is a Pro-only feature.',
-        requireUpgrade: true
+        error: isBasicPro 
+          ? 'Image Generation is a Pro+ feature. Upgrade your plan to unlock AI images.'
+          : 'Image generation is a Pro+ feature. Please upgrade.',
+        requireUpgrade: true,
+        upgradeTo: 'pro-plus'
       }, { status: 402 })
     }
 
@@ -103,14 +109,23 @@ export async function POST(req: NextRequest) {
       }
       const modifier = IMAGE_STYLE_MODIFIERS[resolvedStyle] || ''
 
-      const basePrompt = `High-quality, visually striking social media image that captures the essence of this X thread.
+      const basePrompt = `High-quality, visually striking social media image designed as a companion for an X thread. 
+
 Topic: ${topic}
 Thread title: ${title}
-Key excerpts:
-${tweets.slice(0, 3).map((t: string, i: number) => `${i + 1}. ${t.replace(/^\d+\/\s*/, '')}`).join('\n')}
-The image should be engaging, relevant to the thread's tone, and suitable as a header or illustration for the thread on X.`
 
-      const fullPrompt = basePrompt + (modifier ? ` ${modifier}.` : ' High detail, excellent composition, eye-catching for social media.')
+Key visual concepts only (do not include full sentences or long text):
+${tweets.slice(0, 3).map((t: string) => t.replace(/^\d+\/\s*/, '').substring(0, 80)).join(' • ')}
+
+Style: ${resolvedStyle}${modifier ? ' - ' + modifier : ''}
+
+Create a beautiful, eye-catching image that captures the emotion and core idea of this thread. 
+- NO ugly text overlays or long quotes on the image (at most 4-6 words if any text is used)
+- Clean, modern, professional or artistic composition
+- Perfect for X/Twitter (square format, high visual impact)
+- Focus on symbolism, scenes, metaphors, or aesthetic representation rather than literal text`
+
+      const fullPrompt = basePrompt
 
       // xAI images request body (no "size" - causes 400; use "resolution" + optional "aspect_ratio")
       const xaiRequestBody = {

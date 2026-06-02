@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { SYSTEM_PROMPT } from '../../lib/prompts'
-import { incrementUserGenerations, saveGenerationToHistory } from '../../lib/clerk'
+import { incrementUserGenerations, saveGenerationToHistory, isPro } from '../../lib/clerk'
 import type { GenerationRecord, Thread } from '../../lib/types'
 
 const XAI_API_URL = 'https://api.x.ai/v1/chat/completions'
@@ -70,19 +70,20 @@ export async function POST(req: NextRequest) {
     const metadata = user.publicMetadata as {
       hasPaid?: boolean
       hasPro?: boolean
+      plan?: string
       freeGenerationsUsed?: number
       lastFreeGenerationDate?: string
       generationHistory?: GenerationRecord[]
     }
 
-    const hasPro = metadata?.hasPro === true || metadata?.hasPaid === true
+    const hasProAccess = await isPro(userId)
 
     // Daily reset logic for free tier
     const today = new Date().toISOString().split('T')[0]
     const lastDate = metadata?.lastFreeGenerationDate
     let used = metadata?.freeGenerationsUsed ?? 0
 
-    if (!hasPro && lastDate !== today) {
+    if (!hasProAccess && lastDate !== today) {
       // New day — reset free count
       used = 0
       await client.users.updateUserMetadata(userId, {
@@ -95,9 +96,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Free users (no Pro) are limited to MAX_FREE_GENERATIONS per day
-    if (!hasPro && used >= MAX_FREE_GENERATIONS) {
+    if (!hasProAccess && used >= MAX_FREE_GENERATIONS) {
       return NextResponse.json({
-        error: 'You have reached your free daily limit (3 generations). Upgrade to Pro for unlimited access.',
+        error: 'You have reached your free daily limit (3 generations). Upgrade to Pro ($9) or Pro+ ($15) for unlimited access.',
         limitReached: true,
         requireUpgrade: true
       }, { status: 402 })
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
     const lastTime = lastGenerationTime.get(userId) || 0
     const timeSinceLast = (now - lastTime) / 1000
 
-    const rateLimitSeconds = hasPro ? 8 : RATE_LIMIT_SECONDS
+    const rateLimitSeconds = hasProAccess ? 8 : RATE_LIMIT_SECONDS
 
     if (timeSinceLast < rateLimitSeconds) {
       const waitTime = Math.ceil(rateLimitSeconds - timeSinceLast)
@@ -261,7 +262,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       await incrementUserGenerations(userId, 1)
 
       // For free (non-Pro) users, track daily free generation count with proper date
-      if (!hasPro) {
+      if (!hasProAccess) {
         const currentFreeUsed = (metadata?.freeGenerationsUsed as number) || 0
         const currentDate = new Date().toISOString().split('T')[0]
 
@@ -275,7 +276,7 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
       }
 
       // Save to history for Pro users only
-      if (hasPro) {
+      if (hasProAccess) {
         const record = {
           topic: cleanTopic,
           threads,
@@ -286,14 +287,14 @@ Do not fall back on any thread formulas. Prioritize honesty, specificity, and ed
     }
 
     // Calculate remaining for client
-    const remaining = hasPro ? Infinity : Math.max(0, MAX_FREE_GENERATIONS - (used + 1))
+    const remaining = hasProAccess ? Infinity : Math.max(0, MAX_FREE_GENERATIONS - (used + 1))
 
     return NextResponse.json({ 
       threads, 
       demoMode,
-      freeGenerationsUsed: !hasPro ? (used + 1) : 0,
-      remainingFree: hasPro ? null : remaining,
-      isPro: hasPro,
+      freeGenerationsUsed: !hasProAccess ? (used + 1) : 0,
+      remainingFree: hasProAccess ? null : remaining,
+      isPro: hasProAccess,
       rateLimitSeconds: rateLimitSeconds
     })
 

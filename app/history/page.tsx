@@ -13,7 +13,10 @@ interface Suggestion {
 export default function HistoryPage() {
   const { isSignedIn, user } = useUser()
   const { openSignIn } = useClerk()
-  const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
+  const legacyHasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
+  const userPlan = (user?.publicMetadata?.plan as 'pro' | 'pro-plus' | null) || (legacyHasPro ? 'pro-plus' : null)
+  const hasPro = userPlan === 'pro' || userPlan === 'pro-plus'  // Pro or Pro+
+  const isProPlus = userPlan === 'pro-plus'  // Image Gen exclusive
 
   const [history, setHistory] = useState<GenerationRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -28,7 +31,7 @@ export default function HistoryPage() {
   // Image generation states (Pro-only, per record+thread key)
   const [showImageModalFor, setShowImageModalFor] = useState<string | null>(null)
   const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStyle>('auto')
-  const [selectedImageCount, setSelectedImageCount] = useState(4)
+  const [selectedImageCount, setSelectedImageCount] = useState(1)
   const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [threadImages, setThreadImages] = useState<Record<string, Array<{url: string, style: string, revisedPrompt?: string}>>>({})
 
@@ -48,7 +51,7 @@ export default function HistoryPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 403) {
-          setError('Pro subscription required to view history.')
+          setError('Pro or Pro+ subscription required to view history.')
         } else {
           setError(data.error || 'Failed to load history')
         }
@@ -111,8 +114,8 @@ export default function HistoryPage() {
   }
 
   async function handleGenerateImages(recordId: string, thread: Thread, recordTopic: string) {
-    if (!hasPro) {
-      showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+    if (!isProPlus) {
+      showToast('Image generation is a Pro+ feature. Upgrade to unlock AI images.', 'info')
       return
     }
     const key = `${recordId}-${thread.id}`
@@ -133,7 +136,7 @@ export default function HistoryPage() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+          showToast('Image generation is a Pro+ feature. Upgrade to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -243,7 +246,7 @@ export default function HistoryPage() {
         <div className="max-w-md text-center bg-zinc-900/70 border border-white/10 rounded-3xl p-8">
           <h1 className="text-3xl font-semibold tracking-tight mb-4">Pro Feature</h1>
           <p className="text-zinc-400 mb-6">
-            Generation History is available for Pro users only. Upgrade to unlock full access to your past threads and other Pro features.
+            Generation History is available for Pro / Pro+ users only. Upgrade to unlock full access to your past threads and other Pro features.
           </p>
           <button
             onClick={handleUpgrade}
@@ -348,22 +351,107 @@ export default function HistoryPage() {
                                 </svg>
                                 Post to X
                               </button>
-                              {hasPro && (
+                              {isProPlus ? (
                                 <button
                                   onClick={() => {
                                     const key = `${record.id}-${thread.id}`
                                     setShowImageModalFor(key)
                                     setSelectedImageStyle('auto')
-                                    setSelectedImageCount(4)
+                                    setSelectedImageCount(1)
                                   }}
-                                  title="Generate 1-4 relevant AI images for this thread (Pro)"
+                                  title="Generate 1-4 relevant AI images for this thread (Pro+)"
                                   className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                                 >
                                   ✨ Generate Images
                                 </button>
-                              )}
+                              ) : hasPro ? (
+                                <a
+                                  href="#pricing"
+                                  title="AI Images require Pro+"
+                                  className="flex items-center gap-1 px-3 py-2 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                                >
+                                  Upgrade to Pro+ for AI Images
+                                </a>
+                              ) : null}
                             </div>
                           </div>
+
+                          {/* Image choice panel for history - moved near top */}
+                          {isProPlus && showImageModalFor === `${record.id}-${thread.id}` && (
+                            <div className="mt-4 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
+                              <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {IMAGE_STYLES.map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => setSelectedImageStyle(s)}
+                                    className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
+                              <div className="flex gap-2 mb-3">
+                                {[1, 2, 3, 4].map((n) => (
+                                  <button
+                                    key={n}
+                                    onClick={() => setSelectedImageCount(n)}
+                                    className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
+                                  >
+                                    {n}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleGenerateImages(record.id, thread, record.topic)}
+                                  disabled={isGeneratingImages}
+                                  className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                                >
+                                  {isGeneratingImages ? 'Generating...' : 'Generate Images'}
+                                </button>
+                                <button
+                                  onClick={() => setShowImageModalFor(null)}
+                                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(1); }}
+                                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                                >
+                                  Auto (1 image)
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Display generated images in history - moved to top (right below title / Post to X buttons) */}
+                          {isProPlus && threadImages[`${record.id}-${thread.id}`]?.length > 0 && (
+                            <div className="mt-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES — {threadImages[`${record.id}-${thread.id}`][0]?.style}</div>
+                                <button onClick={() => {
+                                  const key = `${record.id}-${thread.id}`
+                                  setShowImageModalFor(key)
+                                  setSelectedImageStyle('auto')
+                                  setSelectedImageCount(1)
+                                }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {threadImages[`${record.id}-${thread.id}`].map((img, idx) => (
+                                  <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
+                                    <img src={img.url} alt={`Visual ${idx + 1}`} className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform" />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                                      <button onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Download</button>
+                                      <button onClick={() => copyImageToClipboard(img.url)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Copy</button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           <div className="space-y-3">
                             {thread.tweets.map((tweet, i) => {
@@ -413,82 +501,6 @@ export default function HistoryPage() {
                             })}
                           </div>
 
-                          {/* Image choice panel for history */}
-                          {hasPro && showImageModalFor === `${record.id}-${thread.id}` && (
-                            <div className="mt-4 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
-                              <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                {IMAGE_STYLES.map((s) => (
-                                  <button
-                                    key={s}
-                                    onClick={() => setSelectedImageStyle(s)}
-                                    className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
-                                  >
-                                    {s}
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
-                              <div className="flex gap-2 mb-3">
-                                {[1, 2, 3, 4].map((n) => (
-                                  <button
-                                    key={n}
-                                    onClick={() => setSelectedImageCount(n)}
-                                    className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
-                                  >
-                                    {n}
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleGenerateImages(record.id, thread, record.topic)}
-                                  disabled={isGeneratingImages}
-                                  className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
-                                >
-                                  {isGeneratingImages ? 'Generating...' : 'Generate Images'}
-                                </button>
-                                <button
-                                  onClick={() => setShowImageModalFor(null)}
-                                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(4); }}
-                                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
-                                >
-                                  Auto (4 images)
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Display generated images in history */}
-                          {hasPro && threadImages[`${record.id}-${thread.id}`]?.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-white/10">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES — {threadImages[`${record.id}-${thread.id}`][0]?.style}</div>
-                                <button onClick={() => {
-                                  const key = `${record.id}-${thread.id}`
-                                  setShowImageModalFor(key)
-                                  setSelectedImageStyle('auto')
-                                  setSelectedImageCount(4)
-                                }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {threadImages[`${record.id}-${thread.id}`].map((img, idx) => (
-                                  <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
-                                    <img src={img.url} alt={`Visual ${idx + 1}`} className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform" />
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
-                                      <button onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Download</button>
-                                      <button onClick={() => copyImageToClipboard(img.url)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Copy</button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>

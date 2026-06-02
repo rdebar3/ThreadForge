@@ -5,14 +5,20 @@ import { auth } from '@clerk/nextjs/server'
 /**
  * Stripe Checkout Route - Recurring Subscriptions
  * 
- * Creates a Stripe Checkout Session for the $9/mo Pro plan.
- * Primary confirmation of Pro status happens via webhook.
+ * Creates a Stripe Checkout Session for Pro ($9) or Pro+ ($15) plans.
+ * Primary confirmation of plan status happens via webhook.
+ * Supports plan: 'pro' | 'pro-plus' in request body.
  */
 
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json()
     const secretKey = process.env.STRIPE_SECRET_KEY
-    const priceId = process.env.STRIPE_PRICE_ID
+    const plan = (body.plan as 'pro' | 'pro-plus') || 'pro'
+
+    const priceId = plan === 'pro-plus' 
+      ? process.env.STRIPE_PRICE_ID_PRO_PLUS 
+      : process.env.STRIPE_PRICE_ID
 
     if (!secretKey) {
       console.error('STRIPE_SECRET_KEY is missing in environment variables')
@@ -23,9 +29,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!priceId) {
-      console.error('STRIPE_PRICE_ID is missing in environment variables')
+      const missing = plan === 'pro-plus' ? 'STRIPE_PRICE_ID_PRO_PLUS' : 'STRIPE_PRICE_ID'
+      console.error(`${missing} is missing in environment variables`)
       return NextResponse.json(
-        { error: 'Payment system not configured. Missing STRIPE_PRICE_ID (must be a recurring price ID from Stripe).' },
+        { error: `Payment system not configured. Missing ${missing} (must be a recurring price ID from Stripe).` },
         { status: 500 }
       )
     }
@@ -40,7 +47,7 @@ export async function POST(req: NextRequest) {
       apiVersion: '2023-10-16',
     })
 
-    const { successUrl, cancelUrl } = await req.json()
+    const { successUrl, cancelUrl } = body
     const { userId } = await auth()
 
     // Basic validation
@@ -65,7 +72,7 @@ export async function POST(req: NextRequest) {
       client_reference_id: userId || undefined,
       metadata: {
         product: 'threadforge_pro',
-        plan: 'pro_monthly',
+        plan: plan,  // 'pro' or 'pro-plus'
       },
       // Pass userId into the Subscription so subscription.* webhooks can map back to Clerk user
       subscription_data: userId

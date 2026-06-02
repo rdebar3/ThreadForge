@@ -13,7 +13,10 @@ interface Thread {
 export default function Page() {
   const { isSignedIn, user } = useUser()
   const { openSignIn } = useClerk()
-  const hasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
+  const legacyHasPro = !!(user?.publicMetadata?.hasPro || user?.publicMetadata?.hasPaid)
+  const userPlan = (user?.publicMetadata?.plan as 'pro' | 'pro-plus' | null) || (legacyHasPro ? 'pro-plus' : null)
+  const hasPro = userPlan === 'pro' || userPlan === 'pro-plus'  // Pro or Pro+
+  const isProPlus = userPlan === 'pro-plus'  // Image Gen exclusive
 
   const [topic, setTopic] = useState('')
   const [threads, setThreads] = useState<Thread[]>([])
@@ -31,7 +34,7 @@ export default function Page() {
   // Image generation states (Pro-only)
   const [showImageModalFor, setShowImageModalFor] = useState<number | null>(null)
   const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStyle>('auto')
-  const [selectedImageCount, setSelectedImageCount] = useState(4)
+  const [selectedImageCount, setSelectedImageCount] = useState(1)
   const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [threadImages, setThreadImages] = useState<Record<number, Array<{url: string, style: string, revisedPrompt?: string}>>>({})
 
@@ -238,7 +241,7 @@ export default function Page() {
     }
   }
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: 'pro' | 'pro-plus' = 'pro') => {
     if (!isSignedIn) {
       setShowAuthPrompt(true)
       return
@@ -249,6 +252,7 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          plan,
           successUrl: `${window.location.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/?canceled=true`,
         })
@@ -387,8 +391,8 @@ export default function Page() {
   }
 
   async function handleGenerateImages(thread: Thread) {
-    if (!hasPro) {
-      showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+    if (!isProPlus) {
+      showToast('Image generation is a Pro+ feature. Upgrade to unlock AI images.', 'info')
       return
     }
     setIsGeneratingImages(true)
@@ -408,7 +412,7 @@ export default function Page() {
       const data = await res.json()
       if (!res.ok) {
         if (data.requireUpgrade) {
-          showToast('Image generation is a Pro feature. Upgrade to unlock.', 'info')
+          showToast('Image generation is a Pro+ feature. Upgrade to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
           showToast(data.error || 'Please wait before generating more images.', 'info')
         } else {
@@ -598,7 +602,7 @@ export default function Page() {
                   Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS}</span> generations left today
                 </span>
                 <span className="hidden sm:inline">•</span>
-                <span>Upgrade to Pro for unlimited</span>
+                <span>Upgrade to Pro / Pro+ for unlimited</span>
               </>
             ) : (
               <>
@@ -607,7 +611,7 @@ export default function Page() {
                 </span>
                 <span className="hidden sm:inline">•</span>
                 <span>
-                  Pro users get unlimited generations
+                  Pro / Pro+ get unlimited generations + more
                 </span>
               </>
             )}
@@ -720,7 +724,7 @@ export default function Page() {
             <div className="mt-4 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-xs text-violet-300 pro-sparkle">
                 <span className="text-violet-400">★</span>
-                Pro: unlimited generations • Priority enabled
+                {isProPlus ? 'Pro+: unlimited generations + AI Images • Priority' : 'Pro: unlimited generations • Priority enabled'}
               </span>
             </div>
           ) : isSignedIn && !hasPro ? (
@@ -756,7 +760,7 @@ export default function Page() {
 
           <p className="text-xs text-zinc-500 mt-4">
             {isSignedIn && hasPro ? (
-              "Pro: unlimited generations"
+              isProPlus ? "Pro+: unlimited + AI Image Generation" : "Pro: unlimited generations"
             ) : isSignedIn ? (
               `${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} free generations left today`
             ) : (
@@ -769,76 +773,50 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Pro Features Showcase - only visible on the homepage before you generate (clear value prop for Pro, especially images + Post to X) */}
+      {/* Pro vs Pro+ Features Showcase - split cards, only visible before generating (clear tier value prop) */}
       {!threads.length && (
         <div className="max-w-5xl mx-auto px-6 py-16 border-t border-zinc-800">
           <div className="text-center mb-10">
-            <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO ONLY</div>
-            <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Everything You Get With Pro</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Level up from the generous free tier with powerful tools that help you post faster, better, and more consistently on X.</p>
+            <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
+            <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+ — Choose Your Level</h2>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited power. Pro+ adds AI Image Generation for your threads.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              {
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
-                  </svg>
-                ),
-                title: "✨ Generate AI Images for your threads",
-                desc: "Create 1–4 custom visuals per thread using xAI Imagine. Pick from minimal, cinematic, meme, illustrative, realistic, abstract — or auto. Download or copy instantly."
-              },
-              {
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.244 2.25l-7.451 8.52L4.5 2.25H1.5l7.5 8.5L1.5 21.75h3l6.75-7.71 6.75 7.71h3l-7.5-8.5 7.5-8.5h-3z" />
-                  </svg>
-                ),
-                title: "One-click “Post to X”",
-                desc: "Copies the full thread and opens X’s compose window with it pre-filled. From finished thread to posted in seconds. No copy-paste hassle. (Pro)"
-              },
-              {
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25m7.5-3l2.25 2.25L21 12l-2.25 2.25m-7.5 3L7.5 18l-2.25-2.25M3 12l2.25-2.25m7.5-3L12 4.5 9.75 6.75" />
-                  </svg>
-                ),
-                title: "Smart emoji & hashtag suggestions",
-                desc: "Hover any tweet for three relevant, non-spammy emojis + hashtags generated by Grok. Makes every post look polished and engaging. (Pro)"
-              },
-              {
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                ),
-                title: "Unlimited generations + priority",
-                desc: "No daily limits. Pro users generate as much as they want and get priority processing — your threads come back faster even during busy hours."
-              },
-              {
-                icon: (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-                title: "Full history of your threads",
-                desc: "Every thread you generate is automatically saved. Search, revisit, reuse, or regenerate images from your entire history of ideas. (Pro)"
-              }
-            ].map((feature, index) => (
-              <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6 group hover:border-violet-400/30">
-                <div className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 group-hover:text-violet-300 transition-all">
-                  {feature.icon}
-                </div>
-                <div className="font-semibold text-[15px] tracking-tight mb-1.5 leading-snug">{feature.title}</div>
-                <div className="text-zinc-400 text-[13px] leading-relaxed">{feature.desc}</div>
-              </div>
-            ))}
+          {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Pro Card */}
+            <div className="glass-card bg-zinc-900/60 border border-white/10 rounded-3xl p-8 flex flex-col">
+              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-semibold mb-2">PRO — $9/mo</div>
+              <div className="text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
+              <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations + priority speed</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> One-click Post to X</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Full generation history (save &amp; revisit)</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions (Grok)</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Early access to new AI features</li>
+              </ul>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features • No image generation</div>
+            </div>
+
+            {/* Pro+ Card - highlighted */}
+            <div className="glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
+              <div className="absolute -top-3 right-6 px-3 py-px text-[10px] font-mono tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_10px_rgba(167,139,250,0.5)]">MOST POPULAR</div>
+              <div className="uppercase text-amber-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">INCLUDES IMAGES</span></div>
+              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Image Generation</div>
+              <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> 1–4 custom images per thread (xAI Imagine)</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Styles: minimal, cinematic, meme, realistic, abstract + auto</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Download or copy images instantly</li>
+              </ul>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals with every thread</div>
+            </div>
           </div>
 
           <div className="text-center mt-8">
             <a href="#pricing" className="text-sm font-medium inline-flex items-center gap-1.5 text-violet-400 hover:text-violet-300 transition-colors pro-sparkle">
-              See full Pro pricing &amp; upgrade <span aria-hidden>→</span>
+              See full Pro / Pro+ pricing &amp; upgrade <span aria-hidden>→</span>
             </a>
           </div>
         </div>
@@ -913,21 +891,115 @@ export default function Page() {
                         Post to X
                       </button>
                     )}
-                    {hasPro && (
+                    {isProPlus ? (
                       <button
                         onClick={() => {
                           setShowImageModalFor(thread.id)
                           setSelectedImageStyle('auto')
-                          setSelectedImageCount(4)
+                          setSelectedImageCount(1)
                         }}
-                        title="Generate 1-4 relevant AI images for this thread (Pro)"
+                        title="Generate 1-4 relevant AI images for this thread (Pro+)"
                         className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         ✨ Generate Images
                       </button>
-                    )}
+                    ) : hasPro ? (
+                      <a
+                        href="#pricing"
+                        title="Image Generation requires Pro+"
+                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                      >
+                        Upgrade to Pro+ for AI Images
+                      </a>
+                    ) : null}
                   </div>
                 </div>
+
+                {/* Image choice panel (shown when Generate Images clicked for this thread) - moved near top */}
+                {isProPlus && showImageModalFor === thread.id && (
+                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {IMAGE_STYLES.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setSelectedImageStyle(s)}
+                          className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
+                    <div className="flex gap-2 mb-3">
+                      {[1, 2, 3, 4].map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => setSelectedImageCount(n)}
+                          className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleGenerateImages(thread)}
+                        disabled={isGeneratingImages}
+                        className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                      >
+                        {isGeneratingImages ? 'Generating...' : 'Generate Images'}
+                      </button>
+                      <button
+                        onClick={() => setShowImageModalFor(null)}
+                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(1); }}
+                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                      >
+                        Auto (1 image)
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Display generated images for this thread - moved to top (right below title/buttons) */}
+                {isProPlus && threadImages[thread.id]?.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id][0]?.style}</div>
+                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {threadImages[thread.id].map((img, idx) => (
+                        <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
+                          <img
+                            src={img.url}
+                            alt={`Visual ${idx + 1} for ${thread.title}`}
+                            className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)}
+                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                            >
+                              Download
+                            </button>
+                            <button
+                              onClick={() => copyImageToClipboard(img.url)}
+                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {thread.tweets.map((tweet, i) => {
@@ -977,91 +1049,6 @@ export default function Page() {
                   })}
                 </div>
 
-                {/* Image choice panel (shown when Generate Images clicked for this thread) */}
-                {hasPro && showImageModalFor === thread.id && (
-                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro)</div>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {IMAGE_STYLES.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => setSelectedImageStyle(s)}
-                          className={`text-xs px-3 py-1 rounded-full border transition-all ${selectedImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
-                    <div className="flex gap-2 mb-3">
-                      {[1, 2, 3, 4].map((n) => (
-                        <button
-                          key={n}
-                          onClick={() => setSelectedImageCount(n)}
-                          className={`text-xs px-3 py-1 rounded border transition-all ${selectedImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
-                        >
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleGenerateImages(thread)}
-                        disabled={isGeneratingImages}
-                        className="text-sm px-4 py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
-                      >
-                        {isGeneratingImages ? 'Generating...' : 'Generate Images'}
-                      </button>
-                      <button
-                        onClick={() => setShowImageModalFor(null)}
-                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => { setSelectedImageStyle('auto'); setSelectedImageCount(4); }}
-                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
-                      >
-                        Auto (4 images)
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Display generated images for this thread */}
-                {hasPro && threadImages[thread.id]?.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id][0]?.style}</div>
-                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(4); }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {threadImages[thread.id].map((img, idx) => (
-                        <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
-                          <img
-                            src={img.url}
-                            alt={`Visual ${idx + 1} for ${thread.title}`}
-                            className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
-                            <button
-                              onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)}
-                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
-                            >
-                              Download
-                            </button>
-                            <button
-                              onClick={() => copyImageToClipboard(img.url)}
-                              className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
-                            >
-                              Copy
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -1095,25 +1082,29 @@ export default function Page() {
               num: "03",
               title: "Use “Post to X” for instant posting", 
               desc: "One click copies the full thread and opens X’s composer pre-filled. Ready to send in seconds. (Pro)",
-              pro: true
+              pro: true,
+              tier: 'pro'
             },
             { 
               num: "04",
-              title: "Generate relevant AI images (Pro)", 
-              desc: "Click ✨ Generate Images to create 1–4 matching visuals using xAI Imagine. Choose a style or let it auto-decide.",
-              pro: true
+              title: "Generate relevant AI images", 
+              desc: "Click ✨ Generate Images to create 1–4 matching visuals using xAI Imagine. Choose a style or let it auto-decide. (Pro+ exclusive)",
+              pro: true,
+              tier: 'pro-plus'
             },
             { 
               num: "05",
               title: "Copy, edit, or save to History", 
-              desc: "Copy individual tweets, tweak the text, or automatically save everything to your personal thread history for reuse later.",
-              pro: false
+              desc: "Copy individual tweets, tweak the text, or automatically save everything to your personal thread history for reuse later. (Pro)",
+              pro: true,
+              tier: 'pro'
             },
             { 
               num: "06",
               title: "Get smart emoji & hashtag suggestions", 
               desc: "Hover any tweet for three perfect, non-spammy emojis + hashtags. Makes posts look more engaging instantly. (Pro)",
-              pro: true
+              pro: true,
+              tier: 'pro'
             }
           ].map((step, index) => (
             <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6 flex gap-4 group">
@@ -1124,7 +1115,9 @@ export default function Page() {
                 <div className="font-semibold text-[15px] tracking-tight mb-1 flex items-center gap-2">
                   {step.title}
                   {step.pro && (
-                    <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px rounded bg-violet-500/10 text-violet-400">PRO</span>
+                    <span className={`text-[9px] font-mono tracking-[1.5px] px-1.5 py-px rounded ${step.tier === 'pro-plus' ? 'bg-amber-500/10 text-amber-400' : 'bg-violet-500/10 text-violet-400'}`}>
+                      {step.tier === 'pro-plus' ? 'PRO+' : 'PRO'}
+                    </span>
                   )}
                 </div>
                 <div className="text-zinc-400 text-[13px] leading-snug">{step.desc}</div>
@@ -1235,15 +1228,15 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Pricing - Option B: Free vs Pro comparison cards with cancel anytime */}
+      {/* Pricing - 3-Tier: Free / Pro ($9) / Pro+ ($15) with Image Gen Pro+ only */}
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-4">PRICING</div>
-          <h2 className="text-4xl font-semibold tracking-tighter mb-3">Free to start.<br className="hidden sm:block" /> Pro when you need it.</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">Generous free tier forever. Pro unlocks unlimited + premium features as we launch them.</p>
+          <h2 className="text-4xl font-semibold tracking-tighter mb-3">Free to start.<br className="hidden sm:block" /> Scale as you grow.</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">Generous free tier. Pro for power users. Pro+ for AI-powered visuals.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-[860px] mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
           {/* Free Tier Card */}
           <div className="glass-card rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
             <div className="mb-6">
@@ -1258,7 +1251,7 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 4 high-quality thread variants</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
-              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade to Pro for unlimited</li>
+              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade for unlimited &amp; Pro / Pro+ features</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
@@ -1266,14 +1259,12 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Pro Tier Card - highlighted */}
-          <div className="glass-card rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle shadow-[0_0_12px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
-
+          {/* Pro Tier Card */}
+          <div className="glass-card rounded-3xl border border-white/10 bg-zinc-900/60 p-8 flex flex-col">
             <div className="mb-6">
-              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2 pro-sparkle">
+              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2">
                 PRO
-                {hasPro && <span className="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-px rounded">ACTIVE</span>}
+                {hasPro && !isProPlus && <span className="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-px rounded">ACTIVE</span>}
               </div>
               <div className="flex items-end gap-1">
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$9</span>
@@ -1289,19 +1280,20 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
+              <li className="flex items-start gap-3 text-amber-400"><span className="mt-1.5">•</span> AI Images (Pro+ only)</li>
             </ul>
 
-            {hasPro ? (
+            {hasPro && !isProPlus ? (
               <div className="mt-8">
                 <div className="w-full py-4 bg-emerald-500/10 text-emerald-400 font-semibold rounded-2xl text-center text-lg border border-emerald-500/30">
                   ✓ You have Pro
                 </div>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage subscription via Stripe Billing Portal</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage via Stripe • Upgrade to Pro+ anytime</p>
               </div>
             ) : (
               <>
                 <button
-                  onClick={handleUpgrade}
+                  onClick={() => handleUpgrade('pro')}
                   className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]"
                 >
                   Upgrade to Pro — $9/mo
@@ -1310,9 +1302,53 @@ export default function Page() {
               </>
             )}
           </div>
+
+          {/* Pro+ Tier Card - highlighted as Most Popular */}
+          <div className="glass-card rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle shadow-[0_0_12px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
+
+            <div className="mb-6">
+              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2 pro-sparkle">
+                PRO+
+                {isProPlus && <span className="text-emerald-400 text-[10px] bg-emerald-500/10 px-2 py-px rounded">ACTIVE</span>}
+              </div>
+              <div className="flex items-end gap-1">
+                <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$15</span>
+                <span className="text-zinc-400 pb-1">/mo</span>
+              </div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images • Cancel anytime</div>
+            </div>
+
+            <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations + priority</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history, Post to X, emoji suggestions</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
+            </ul>
+
+            {isProPlus ? (
+              <div className="mt-8">
+                <div className="w-full py-4 bg-emerald-500/10 text-emerald-400 font-semibold rounded-2xl text-center text-lg border border-emerald-500/30">
+                  ✓ You have Pro+
+                </div>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage subscription via Stripe Billing Portal</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleUpgrade('pro-plus')}
+                  className="mt-8 w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] transition-all"
+                >
+                  Upgrade to Pro+ — $15/mo
+                </button>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images.</p>
+              </>
+            )}
+          </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. History, Post to X, emoji suggestions, and priority now live for Pro users.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation. Existing Pro users are grandfathered into Pro+.</p>
       </div>
 
       {/* Footer */}
@@ -1355,7 +1391,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro for unlimited generations.
+              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images.
             </p>
 
             <button 
