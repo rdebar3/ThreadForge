@@ -365,7 +365,7 @@ export default function Page() {
 
     // Visual feedback using state
     setCopiedThreadId(thread.id)
-    showToast('Thread copied to clipboard', 'success')
+    showToast('Full thread copied', 'success')
 
     setTimeout(() => {
       setCopiedThreadId(null)
@@ -386,7 +386,7 @@ export default function Page() {
   const copyToX = (thread: Thread) => {
     const formatted = thread.tweets.join('\n\n')
     navigator.clipboard.writeText(formatted)
-    showToast('Copied for X! Paste into the X composer to post as a thread.', 'success')
+    showToast('Copied to clipboard and opened X composer', 'success')
     // Open X compose with first tweet for convenience
     const firstTweet = encodeURIComponent(thread.tweets[0])
     window.open(`https://x.com/compose/tweet?text=${firstTweet}`, '_blank')
@@ -428,6 +428,13 @@ export default function Page() {
   const CopyIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16v-4m4 4v4m4-8v8m4-4v-4m-16 8h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
+    </svg>
+  )
+
+  // X (Twitter) logo icon for Post to X button
+  const XIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25l-7.451 8.52L4.5 2.25H1.5l7.5 8.5L1.5 21.75h3l6.75-7.71 6.75 7.71h3l-7.5-8.5 7.5-8.5h-3z" />
     </svg>
   )
 
@@ -727,13 +734,13 @@ export default function Page() {
         </div>
       )}
 
-      {/* Generated Threads */}
+      {/* Your Generated Threads */}
       {threads.length > 0 && (
         <div ref={resultsRef} className="max-w-4xl mx-auto px-6 pb-20">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-y-3">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Your Threads</h2>
-              <p className="text-sm text-zinc-500">Ready to post. Just copy &amp; go.</p>
+              <h2 className="text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Copy All = full thread to clipboard. Post to X opens composer (Pro). Hover tweets for Copy Tweet or ✨ Emojis & hashtags.</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -769,17 +776,20 @@ export default function Page() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => copyThread(thread)}
+                      title="Copy the entire thread (all tweets) to your clipboard"
                       className="copy-button flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                     >
                       <CopyIcon />
-                      <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy Thread'}</span>
+                      <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
                     </button>
                     {hasPro && (
                       <button
                         onClick={() => copyToX(thread)}
+                        title="Copy the full thread and open X's compose window (Pro)"
                         className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
-                        Copy to X
+                        <XIcon />
+                        Post to X
                       </button>
                     )}
                   </div>
@@ -799,13 +809,14 @@ export default function Page() {
                         </div>
                         <button
                           onClick={() => copyTweet(thread.id, i, tweet)}
+                          title="Copy just this single tweet"
                           className="opacity-0 group-hover:opacity-100 text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1.5"
                         >
                           {isCopied ? (
                             <span className="text-emerald-400 font-medium">Copied!</span>
                           ) : (
                             <>
-                              <span className="hidden sm:inline">Copy</span>
+                              <span>Copy Tweet</span>
                               <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16v-4m4 4v4m4-8v8m4-4v-4m-16 8h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
                               </svg>
@@ -816,9 +827,10 @@ export default function Page() {
                           <button
                             onClick={() => suggestForTweet(thread.id, i, tweet)}
                             disabled={suggestLoading[`${thread.id}-${i}`]}
+                            title="Get Emojis & Hashtags for this tweet (Pro)"
                             className="opacity-0 group-hover:opacity-100 text-xs px-3 py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
                           >
-                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨ Suggest'}
+                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨ Emojis'}
                           </button>
                         )}
                         {suggestions[`${thread.id}-${i}`] && (
@@ -1064,7 +1076,7 @@ export default function Page() {
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. History, Copy to X, emoji suggestions, and priority now live for Pro users.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro activates instantly. History, Post to X, emoji suggestions, and priority now live for Pro users.</p>
       </div>
 
       {/* Footer */}
