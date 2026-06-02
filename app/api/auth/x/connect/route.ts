@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const redirectUri = process.env.X_REDIRECT_URI || `${req.nextUrl.origin}/api/auth/callback/x`
 
   if (!clientId) {
-    console.error('[X OAuth] Missing X_API_KEY (preferred) or X_CLIENT_ID. Set in .env.local or hosting env. The OAuth authorize will use redirect_uri pointing to /api/auth/callback/x')
+    console.error('[X OAuth] Missing X_API_KEY (preferred) or X_CLIENT_ID. Set in .env.local or hosting env. The flow uses redirect_uri=https://threadforge.space/api/auth/callback/x (or X_REDIRECT_URI)')
     return NextResponse.redirect(new URL('/scheduler?error=config', req.url))
   }
 

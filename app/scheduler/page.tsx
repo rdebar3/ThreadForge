@@ -115,7 +115,7 @@ export default function SchedulerPage() {
     const err = params.get('error')
     if (err) {
       const friendly = err === 'config'
-        ? 'X OAuth is not configured (missing X_API_KEY / X_API_SECRET env vars). Check .env.local or your hosting (Vercel) Environment Variables. See .env.example for the X (OAuth 2.0 Client ID + Secret) setup.'
+        ? 'X OAuth is not configured (missing X_API_KEY / X_API_SECRET env vars). Ensure X app Callback URL is https://threadforge.space/api/auth/callback/x and envs set in Vercel/.env.local. See .env.example.'
         : err === 'invalid_state'
         ? 'Security check failed. Please try connecting again.'
         : 'Failed to connect X account. ' + err
@@ -131,7 +131,8 @@ export default function SchedulerPage() {
     }
     setIsConnecting(true)
     // This will redirect the browser to X
-    window.location.href = '/api/x/connect'
+    // Trigger the correct OAuth flow under /api/auth/x/connect to match registered callback https://threadforge.space/api/auth/callback/x
+    window.location.href = '/api/auth/x/connect'
   }
 
   async function disconnectX() {

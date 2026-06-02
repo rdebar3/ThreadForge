@@ -203,7 +203,7 @@ export async function refreshXToken(refreshToken: string): Promise<XTokenRefresh
   const clientSecret = process.env.X_API_SECRET || process.env.X_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    console.error('X_API_KEY or X_API_SECRET (or X_CLIENT_ID/X_CLIENT_SECRET) missing for token refresh')
+    console.error('[X OAuth] X_API_KEY or X_API_SECRET (preferred; or X_CLIENT_*) missing for token refresh. Scheduler posting may fail.')
     return null
   }
 

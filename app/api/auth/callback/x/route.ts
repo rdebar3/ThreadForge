@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
-import { saveXAccount } from '../../../lib/clerk'
-import type { XAccount } from '../../../lib/types'
+import { saveXAccount } from '../../../../lib/clerk'
+import type { XAccount } from '../../../../lib/types'
 
 const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
 const X_USER_URL = 'https://api.x.com/2/users/me'
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const redirectUri = process.env.X_REDIRECT_URI || `${req.nextUrl.origin}/api/auth/callback/x`
 
   if (!clientId || !clientSecret) {
-    console.error('[X OAuth] Missing X_API_KEY/X_API_SECRET (or fallback X_CLIENT_ID/X_CLIENT_SECRET) in /api/auth/callback/x . Check env vars + X app callback URL registration. See .env.example')
+    console.error('[X OAuth] Missing X_API_KEY/X_API_SECRET (or fallback X_CLIENT_ID/X_CLIENT_SECRET) in /api/auth/callback/x . Check env vars + X app callback URL registration (must be https://threadforge.space/api/auth/callback/x ). See .env.example')
     return NextResponse.redirect(new URL('/scheduler?error=config', req.url))
   }
 
