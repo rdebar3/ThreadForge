@@ -1479,42 +1479,6 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Early Creators Trust Section - premium glass cards, subtle icons */}
-      <div id="early-creators" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Join the growing list of consistent creators on X</h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">ThreadForge is already helping indie hackers, SaaS founders, and builders post with confidence every week.</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-              title: "Indie Hackers",
-              desc: "Shipping products and updates consistently without the writing tax."
-            },
-            {
-              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
-              title: "SaaS Founders",
-              desc: "Turning customer wins and lessons into high-engagement threads weekly."
-            },
-            {
-              icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
-              title: "Builders Documenting",
-              desc: "Turning experiments and progress into audience growth on X."
-            }
-          ].map((item, index) => (
-            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
-              <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4">
-                {item.icon}
-              </div>
-              <div className="font-semibold text-lg mb-2 tracking-tight">{item.title}</div>
-              <div className="text-zinc-400 text-[15px] leading-relaxed">{item.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Pricing - 3-Tier: Free / Pro ($9) / Pro+ ($15) with Image Gen Pro+ only */}
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
