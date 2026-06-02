@@ -1,5 +1,5 @@
 import { clerkClient } from '@clerk/nextjs/server'
-import type { GenerationRecord, Thread } from './types'
+import type { GenerationRecord, Thread, XAccount, ScheduledPost, Template } from './types'
 
 /**
  * Increment the total generations count for a user in Clerk publicMetadata.
@@ -178,4 +178,354 @@ export async function canUseImageGen(userId: string): Promise<boolean> {
 export async function isPro(userId: string): Promise<boolean> {
   const plan = await getUserPlan(userId)
   return plan === 'pro' || plan === 'pro-plus'
+}
+
+// ============================================
+// X (Twitter) Account helpers (tokens in privateMetadata for security)
+// Used by Pro+ Scheduler feature
+// ============================================
+
+export interface XTokenRefreshResult {
+  accessToken: string
+  refreshToken?: string
+  expiresAt: string
+}
+
+const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
+
+/**
+ * Refresh an X access token using the stored refresh_token.
+ */
+export async function refreshXToken(refreshToken: string): Promise<XTokenRefreshResult | null> {
+  const clientId = process.env.X_CLIENT_ID
+  const clientSecret = process.env.X_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    console.error('X_CLIENT_ID or X_CLIENT_SECRET missing for token refresh')
+    return null
+  }
+
+  try {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    })
+
+    const res = await fetch(X_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${basic}`,
+      },
+      body: body.toString(),
+    })
+
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('X token refresh failed:', res.status, errText)
+      return null
+    }
+
+    const data = await res.json()
+    const expiresAt = new Date(Date.now() + (data.expires_in || 7200) * 1000).toISOString()
+
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || refreshToken,
+      expiresAt,
+    }
+  } catch (e) {
+    console.error('X refresh token error:', e)
+    return null
+  }
+}
+
+/**
+ * Get the user's connected X account (from privateMetadata).
+ */
+export async function getXAccount(userId: string): Promise<XAccount | null> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const acct = (user.privateMetadata?.xAccount as XAccount | undefined) || null
+    return acct
+  } catch (error) {
+    console.error('Failed to get X account:', error)
+    return null
+  }
+}
+
+/**
+ * Save / update X account connection in privateMetadata.
+ */
+export async function saveXAccount(userId: string, account: XAccount): Promise<void> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    await client.users.updateUserMetadata(userId, {
+      privateMetadata: {
+        ...user.privateMetadata,
+        xAccount: account,
+      },
+    })
+  } catch (error) {
+    console.error('Failed to save X account:', error)
+  }
+}
+
+/**
+ * Remove X account (disconnect).
+ */
+export async function disconnectXAccount(userId: string): Promise<void> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const { xAccount, ...rest } = user.privateMetadata || {}
+    await client.users.updateUserMetadata(userId, {
+      privateMetadata: rest,
+    })
+  } catch (error) {
+    console.error('Failed to disconnect X account:', error)
+  }
+}
+
+/**
+ * Get a valid (non-expired) X access token for a user. Auto-refreshes if needed.
+ */
+export async function getValidXAccessToken(userId: string): Promise<string | null> {
+  const acct = await getXAccount(userId)
+  if (!acct?.accessToken) return null
+
+  if (acct.expiresAt && new Date(acct.expiresAt) > new Date()) {
+    return acct.accessToken
+  }
+
+  if (!acct.refreshToken) return null
+
+  const refreshed = await refreshXToken(acct.refreshToken)
+  if (refreshed) {
+    const updated: XAccount = {
+      ...acct,
+      accessToken: refreshed.accessToken,
+      refreshToken: refreshed.refreshToken,
+      expiresAt: refreshed.expiresAt,
+    }
+    await saveXAccount(userId, updated)
+    return refreshed.accessToken
+  }
+
+  return null
+}
+
+// ============================================
+// Scheduled Posts (publicMetadata) - Pro+ only feature
+// ============================================
+
+const MAX_SCHEDULED = 50
+
+/**
+ * Get all scheduled posts for user (newest first or as stored).
+ */
+export async function getScheduledPosts(userId: string): Promise<ScheduledPost[]> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const posts = (user.publicMetadata?.scheduledPosts as ScheduledPost[]) || []
+    return posts
+  } catch (error) {
+    console.error('Failed to get scheduled posts:', error)
+    return []
+  }
+}
+
+/**
+ * Add a new scheduled post. Generates id, caps list.
+ */
+export async function addScheduledPost(userId: string, post: Omit<ScheduledPost, 'id'>): Promise<ScheduledPost | null> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    const existing: ScheduledPost[] = (user.publicMetadata?.scheduledPosts as ScheduledPost[]) || []
+
+    const newPost: ScheduledPost = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+      ...post,
+    }
+
+    // Keep most recent, cap total
+    const updated = [newPost, ...existing].slice(0, MAX_SCHEDULED)
+
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        scheduledPosts: updated,
+      },
+    })
+
+    return newPost
+  } catch (error) {
+    console.error('Failed to add scheduled post:', error)
+    return null
+  }
+}
+
+/**
+ * Update a specific scheduled post by id (e.g. status after publish).
+ */
+export async function updateScheduledPost(userId: string, postId: string, updates: Partial<ScheduledPost>): Promise<boolean> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    const existing: ScheduledPost[] = (user.publicMetadata?.scheduledPosts as ScheduledPost[]) || []
+    let found = false
+
+    const updated = existing.map((p) => {
+      if (p.id === postId) {
+        found = true
+        return { ...p, ...updates }
+      }
+      return p
+    })
+
+    if (!found) return false
+
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        scheduledPosts: updated,
+      },
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to update scheduled post:', error)
+    return false
+  }
+}
+
+/**
+ * Remove a scheduled post (used for cancel or cleanup).
+ */
+export async function removeScheduledPost(userId: string, postId: string): Promise<boolean> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    const existing: ScheduledPost[] = (user.publicMetadata?.scheduledPosts as ScheduledPost[]) || []
+    const updated = existing.filter((p) => p.id !== postId)
+
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        scheduledPosts: updated,
+      },
+    })
+
+    return true
+  } catch (error) {
+    console.error('Failed to remove scheduled post:', error)
+    return false
+  }
+}
+
+/**
+ * Helper used by cron: get due pending scheduled posts across a user.
+ */
+export function filterDuePending(posts: ScheduledPost[]): ScheduledPost[] {
+  const now = new Date()
+  return posts.filter((p) => p.status === 'pending' && new Date(p.scheduledFor) <= now)
+}
+
+// ============================================
+// Saved Templates (Pro users can save private ones, everyone sees library)
+// ============================================
+
+const MAX_TEMPLATES = 30
+
+/**
+ * Get user's saved private templates from publicMetadata.
+ */
+export async function getUserTemplates(userId: string): Promise<Template[]> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    return (user.publicMetadata?.templates as Template[]) || []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Save a new private template for the user.
+ */
+export async function saveUserTemplate(userId: string, tpl: Omit<Template, 'id' | 'savedAt'>): Promise<Template | null> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const existing: Template[] = (user.publicMetadata?.templates as Template[]) || []
+
+    const newTpl: Template = {
+      id: 'tpl_' + Date.now().toString(36),
+      savedAt: new Date().toISOString(),
+      ...tpl,
+    }
+
+    const updated = [newTpl, ...existing].slice(0, MAX_TEMPLATES)
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        templates: updated,
+      },
+    })
+    return newTpl
+  } catch (e) {
+    console.error('saveUserTemplate failed', e)
+    return null
+  }
+}
+
+/**
+ * Delete one of the user's templates.
+ */
+export async function deleteUserTemplate(userId: string, templateId: string): Promise<boolean> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const existing: Template[] = (user.publicMetadata?.templates as Template[]) || []
+    const updated = existing.filter((t) => t.id !== templateId)
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        templates: updated,
+      },
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Lightweight analytics: increment "threads posted to X" counter (used by scheduler + Post to X for Pro+).
+ */
+export async function incrementPostedCount(userId: string, by: number = 1) {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const current = (user.publicMetadata?.postedCount as number) || 0
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        postedCount: current + by,
+        lastPostedAt: new Date().toISOString(),
+      },
+    })
+  } catch (e) {
+    // non fatal
+  }
 }

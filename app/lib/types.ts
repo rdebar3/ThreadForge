@@ -10,3 +10,32 @@ export interface GenerationRecord {
   threads: Thread[];
   timestamp: string;
 }
+
+export interface XAccount {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: string; // ISO string
+  xUserId: string;
+  username: string;
+  connectedAt: string;
+}
+
+export interface ScheduledPost {
+  id: string;
+  title?: string;
+  tweets: string[];
+  scheduledFor: string; // ISO datetime string
+  status: 'pending' | 'posted' | 'failed' | 'canceled';
+  createdAt: string;
+  postedAt?: string;
+  xPostIds?: string[];
+  error?: string;
+}
+
+export interface Template {
+  id: string;
+  title: string;
+  tweets: string[];
+  category?: string;
+  savedAt: string;
+}

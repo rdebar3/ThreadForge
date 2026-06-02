@@ -38,6 +38,17 @@ export default function Page() {
   const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [threadImages, setThreadImages] = useState<Record<number, Array<{url: string, style: string, revisedPrompt?: string}>>>({})
 
+  // Thread Scheduler (Pro+ only)
+  const [showScheduleFor, setShowScheduleFor] = useState<number | null>(null)
+  const [scheduleTime, setScheduleTime] = useState('')
+  const [isScheduling, setIsScheduling] = useState(false)
+
+  // AI Rewriter (Pro+)
+  const [showRewriteFor, setShowRewriteFor] = useState<number | null>(null)
+  const [rewriteMode, setRewriteMode] = useState('Punchier')
+  const [rewriteCustom, setRewriteCustom] = useState('')
+  const [isRewriting, setIsRewriting] = useState(false)
+
   const resultsRef = useRef<HTMLDivElement>(null)
 
   const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3') // Daily free tier limit for non-Pro users
@@ -89,6 +100,26 @@ export default function Page() {
   // Randomize examples on initial load
   useEffect(() => {
     setExampleTopics(getRandomExamples(5))
+  }, [])
+
+  // Consume pending template from /templates "Use Template" (localStorage handoff)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('threadforge_pending_template')
+      if (raw) {
+        const tpl = JSON.parse(raw)
+        if (tpl?.title && Array.isArray(tpl.tweets) && tpl.tweets.length) {
+          setTopic(tpl.title)
+          const loadedThread: Thread = { id: 1, title: tpl.title, tweets: tpl.tweets }
+          setThreads([loadedThread])
+          setTimeout(() => {
+            const el = document.getElementById('generator')
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 120)
+          localStorage.removeItem('threadforge_pending_template')
+        }
+      }
+    } catch {}
   }, [])
 
   // Load free generation status (real product mode with daily reset awareness)
@@ -300,6 +331,11 @@ export default function Page() {
     // Open X compose with first tweet for convenience
     const firstTweet = encodeURIComponent(thread.tweets[0])
     window.open(`https://x.com/compose/tweet?text=${firstTweet}`, '_blank')
+
+    // Track for Pro+ analytics (fire and forget)
+    if (isProPlus) {
+      fetch('/api/track/posted', { method: 'POST' }).catch(() => {})
+    }
   }
 
   const suggestForTweet = async (threadId: number, tweetIndex: number, tweet: string) => {
@@ -430,6 +466,107 @@ export default function Page() {
     }
   }
 
+  // Pro+ Thread Scheduler handler (full thread)
+  async function handleSchedule(thread: Thread) {
+    if (!isProPlus) {
+      showToast('Thread Scheduler is a Pro+ feature.', 'info')
+      return
+    }
+    if (!scheduleTime) {
+      showToast('Please select a date and time.', 'error')
+      return
+    }
+    setIsScheduling(true)
+    try {
+      const res = await fetch('/api/schedules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: thread.title,
+          tweets: thread.tweets,
+          scheduledFor: new Date(scheduleTime).toISOString(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.requireUpgrade) {
+          showToast('Upgrade to Pro+ to schedule threads.', 'info')
+        } else {
+          showToast(data.error || 'Failed to schedule thread.', 'error')
+        }
+        return
+      }
+      showToast('Thread scheduled! View it in Scheduler.', 'success')
+      setShowScheduleFor(null)
+      setScheduleTime('')
+      // Optional: could navigate but keep user here
+    } catch (e) {
+      showToast('Failed to schedule. Please try again.', 'error')
+    } finally {
+      setIsScheduling(false)
+    }
+  }
+
+  // Save current generated thread as private template (Pro+ / Pro)
+  async function saveCurrentThreadAsTemplate(thread: Thread) {
+    if (!hasPro) return
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: thread.title,
+          tweets: thread.tweets,
+          category: 'From Generator',
+        }),
+      })
+      if (res.ok) {
+        showToast('Saved to your private templates! View in Templates.', 'success')
+      } else {
+        const d = await res.json().catch(() => ({}))
+        showToast(d.error || 'Failed to save template', 'error')
+      }
+    } catch {
+      showToast('Could not save template right now.', 'error')
+    }
+  }
+
+  const REWRITE_OPTIONS = ['Punchier', 'More Hooks', 'Shorter', 'More Controversial', 'Add storytelling', 'Professional']
+
+  // Pro+ AI Rewriter for full thread
+  async function handleRewriteThread(thread: Thread) {
+    if (!isProPlus) {
+      showToast('AI Rewriter is Pro+ only.', 'info')
+      return
+    }
+    setIsRewriting(true)
+    try {
+      const res = await fetch('/api/rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: rewriteMode,
+          custom: rewriteCustom,
+          thread: { title: thread.title, tweets: thread.tweets },
+        }),
+      })
+      const data = await res.json()
+      if (data.title && Array.isArray(data.tweets)) {
+        // Replace in state
+        setThreads(prev => prev.map(t => t.id === thread.id ? { ...t, title: data.title, tweets: data.tweets } : t))
+        showToast('Thread rewritten with Grok 4.3', 'success')
+        setShowRewriteFor(null)
+        setRewriteCustom('')
+      } else {
+        showToast('Rewrite returned no changes.', 'info')
+      }
+    } catch {
+      showToast('Rewrite failed (demo fallback may apply).', 'error')
+    } finally {
+      setIsRewriting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col overflow-x-hidden">
       {/* Global ambient orbs for whole-page premium depth - enhanced with more layers and soft glowing accents for striking modern feel (still very subtle, non-distracting) */}
@@ -493,6 +630,15 @@ export default function Page() {
             {isSignedIn && hasPro && (
               <a href="/history" className="text-zinc-400 hover:text-white transition-colors pro-sparkle">History</a>
             )}
+            {isSignedIn && isProPlus && (
+              <a href="/scheduler" className="text-violet-400 hover:text-violet-300 transition-colors">Scheduler</a>
+            )}
+            {isSignedIn && hasPro && (
+              <a href="/templates" className="text-emerald-400 hover:text-emerald-300 transition-colors">Templates</a>
+            )}
+            {isSignedIn && isProPlus && (
+              <a href="/analytics" className="text-amber-400 hover:text-amber-300 transition-colors">Analytics</a>
+            )}
             
             {isSignedIn ? (
               <div className="flex items-center gap-3">
@@ -554,13 +700,33 @@ export default function Page() {
                 Pricing
               </a>
               {isSignedIn && hasPro && (
-                <a 
-                  href="/history" 
-                  className="text-zinc-400 hover:text-white py-1 pro-sparkle"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  History
-                </a>
+                <>
+                  <a 
+                    href="/history" 
+                    className="text-zinc-400 hover:text-white py-1 pro-sparkle"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    History
+                  </a>
+                  {isProPlus && (
+                    <a 
+                      href="/scheduler" 
+                      className="text-violet-400 hover:text-violet-300 py-1"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Scheduler
+                    </a>
+                  )}
+                  {hasPro && (
+                    <a 
+                      href="/templates" 
+                      className="text-emerald-400 hover:text-emerald-300 py-1"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Templates
+                    </a>
+                  )}
+                </>
               )}
               
               <div className="border-t border-white/10 pt-3 mt-1 flex flex-col gap-3">
@@ -760,7 +926,7 @@ export default function Page() {
 
           <p className="text-xs text-zinc-500 mt-4">
             {isSignedIn && hasPro ? (
-              isProPlus ? "Pro+: unlimited + AI Image Generation" : "Pro: unlimited generations"
+              isProPlus ? "Pro+: unlimited + AI Images + Scheduler" : "Pro: unlimited generations"
             ) : isSignedIn ? (
               `${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} free generations left today`
             ) : (
@@ -779,7 +945,7 @@ export default function Page() {
           <div className="text-center mb-10">
             <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
             <h2 className="text-3xl font-semibold tracking-tight mb-3 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+ — Choose Your Level</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited power. Pro+ adds AI Image Generation for your threads.</p>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited power. Pro+ adds AI Images + auto Thread Scheduler for your X posts.</p>
           </div>
 
           {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
@@ -801,14 +967,14 @@ export default function Page() {
             {/* Pro+ Card - highlighted */}
             <div className="glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
               <div className="absolute -top-3 right-6 px-3 py-px text-[10px] font-mono tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_10px_rgba(167,139,250,0.5)]">MOST POPULAR</div>
-              <div className="uppercase text-amber-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">INCLUDES IMAGES</span></div>
-              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Image Generation</div>
+              <div className="uppercase text-amber-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">IMAGES + SCHEDULER</span></div>
+              <div className="text-2xl font-semibold tracking-tight mb-4">Pro + AI Images + Scheduler</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>✨ AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
                 <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> 1–4 custom images per thread (xAI Imagine)</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Styles: minimal, cinematic, meme, realistic, abstract + auto</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Download or copy images instantly</li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-amber-400">•</span> <strong>📅 Thread Scheduler</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">PRO+ ONLY</span></li>
+                <li className="flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Best-time suggestions + auto X posting</li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals with every thread</div>
             </div>
@@ -837,7 +1003,7 @@ export default function Page() {
           <div className="flex items-center justify-between mb-6 flex-wrap gap-y-3">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Copy All = full thread to clipboard. Post to X opens composer (Pro). Hover tweets for Copy Tweet or ✨ Emojis & hashtags.</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Copy All = full thread to clipboard. Post to X (Pro). 📅 Schedule = auto-post later (Pro+). Hover tweets for Copy Tweet or ✨ Emojis & hashtags.</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -847,6 +1013,9 @@ export default function Page() {
                   setDemoMode(false)
                   setThreadImages({})
                   setShowImageModalFor(null)
+                  setShowScheduleFor(null)
+                  setScheduleTime('')
+                  setIsScheduling(false)
                   setTimeout(() => {
                     const input = document.querySelector('input[type="text"]') as HTMLInputElement
                     input?.focus()
@@ -912,6 +1081,50 @@ export default function Page() {
                         Upgrade to Pro+ for AI Images
                       </a>
                     ) : null}
+
+                    {/* Scheduler (Pro+ exclusive) */}
+                    {isProPlus ? (
+                      <button
+                        onClick={() => {
+                          setShowScheduleFor(thread.id)
+                          setScheduleTime('')
+                        }}
+                        title="Schedule this full thread to post automatically to X (Pro+)"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        📅 Schedule
+                      </button>
+                    ) : hasPro ? (
+                      <a
+                        href="#pricing"
+                        title="Thread Scheduler requires Pro+"
+                        className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                      >
+                        Schedule (Pro+)
+                      </a>
+                    ) : null}
+
+                    {/* Save as Template (Pro) */}
+                    {hasPro && (
+                      <button
+                        onClick={() => saveCurrentThreadAsTemplate(thread)}
+                        title="Save this thread as a reusable private template"
+                        className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
+                      >
+                        Save Template
+                      </button>
+                    )}
+
+                    {/* AI Rewriter (Pro+) */}
+                    {isProPlus && (
+                      <button
+                        onClick={() => { setShowRewriteFor(thread.id); setRewriteMode('Punchier'); setRewriteCustom('') }}
+                        title="Rewrite entire thread with AI (Pro+)"
+                        className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
+                      >
+                        ✎ Rewrite
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -962,6 +1175,55 @@ export default function Page() {
                       >
                         Auto (1 image)
                       </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Schedule picker (Pro+ only) - appears when Schedule clicked */}
+                {isProPlus && showScheduleFor === thread.id && (
+                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+)</div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <input
+                        type="datetime-local"
+                        value={scheduleTime}
+                        onChange={(e) => setScheduleTime(e.target.value)}
+                        min={new Date(Date.now() + 2 * 60 * 1000).toISOString().slice(0, 16)}
+                        className="bg-zinc-950 border border-white/10 focus:border-violet-500/60 rounded-2xl px-3 py-2 text-sm outline-none"
+                      />
+                      <button
+                        onClick={() => handleSchedule(thread)}
+                        disabled={!scheduleTime || isScheduling}
+                        className="px-5 py-2 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-sm font-semibold text-white transition"
+                      >
+                        {isScheduling ? 'Scheduling...' : 'Confirm Schedule'}
+                      </button>
+                      <button
+                        onClick={() => { setShowScheduleFor(null); setScheduleTime('') }}
+                        className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <div className="mt-2 text-[10px] text-zinc-500">
+                      Full thread will be posted as a reply chain at the selected time. <a href="/scheduler" className="text-violet-400 hover:text-violet-300">Open full Scheduler →</a>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Rewriter panel (Pro+ only) */}
+                {isProPlus && showRewriteFor === thread.id && (
+                  <div className="mt-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                    <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">AI REWRITE THREAD (Grok 4.3) — Pro+</div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {REWRITE_OPTIONS.map(opt => (
+                        <button key={opt} onClick={() => setRewriteMode(opt)} className={`text-xs px-3 py-1 rounded-full border ${rewriteMode === opt ? 'bg-violet-500 border-violet-500 text-white' : 'border-white/10 hover:border-violet-400/50'}`}>{opt}</button>
+                      ))}
+                    </div>
+                    <input value={rewriteCustom} onChange={e=>setRewriteCustom(e.target.value)} placeholder="Or custom instructions (e.g. more storytelling, add data)" className="w-full mb-3 bg-zinc-950 border border-white/10 rounded-2xl px-3 py-2 text-sm" />
+                    <div className="flex gap-2">
+                      <button onClick={() => handleRewriteThread(thread)} disabled={isRewriting} className="px-5 py-2 bg-violet-500 rounded-2xl text-sm font-semibold disabled:opacity-60">{isRewriting ? 'Rewriting...' : 'Apply Rewrite'}</button>
+                      <button onClick={() => setShowRewriteFor(null)} className="px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Cancel</button>
                     </div>
                   </div>
                 )}
@@ -1094,10 +1356,10 @@ export default function Page() {
             },
             { 
               num: "05",
-              title: "Copy, edit, or save to History", 
-              desc: "Copy individual tweets, tweak the text, or automatically save everything to your personal thread history for reuse later. (Pro)",
+              title: "Schedule to X or save to History", 
+              desc: "Pro: save full history. Pro+: schedule the thread to auto-post to X at perfect time with one click (or use custom scheduler).",
               pro: true,
-              tier: 'pro'
+              tier: 'pro-plus'
             },
             { 
               num: "06",
@@ -1280,7 +1542,7 @@ export default function Page() {
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> One-click post to X</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart emoji &amp; hashtag suggestions</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
-              <li className="flex items-start gap-3 text-amber-400"><span className="mt-1.5">•</span> AI Images (Pro+ only)</li>
+              <li className="flex items-start gap-3 text-amber-400"><span className="mt-1.5">•</span> AI Images + Thread Scheduler (Pro+ only)</li>
             </ul>
 
             {hasPro && !isProPlus ? (
@@ -1316,15 +1578,15 @@ export default function Page() {
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$15</span>
                 <span className="text-zinc-400 pb-1">/mo</span>
               </div>
-              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images • Cancel anytime</div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Thread Scheduler • Cancel anytime</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>AI Image Generation</strong> (xAI Imagine, 1-4 per thread)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong>Thread Scheduler</strong> — auto-post to X with best-time suggestions</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations + priority</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Full history, Post to X, emoji suggestions</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Early access to new AI features</li>
             </ul>
 
             {isProPlus ? (
@@ -1342,13 +1604,13 @@ export default function Page() {
                 >
                   Upgrade to Pro+ — $15/mo
                 </button>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images.</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler.</p>
               </>
             )}
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation. Existing Pro users are grandfathered into Pro+.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler (auto X posting). Existing Pro users are grandfathered into Pro+.</p>
       </div>
 
       {/* Footer */}
@@ -1391,7 +1653,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images.
+              Free users get 3 generations per day. Sign in to continue with your daily allowance, or upgrade to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler.
             </p>
 
             <button 
