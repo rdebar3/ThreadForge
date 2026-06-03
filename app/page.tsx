@@ -28,8 +28,20 @@ export default function Page() {
   const [freeGenerationsUsed, setFreeGenerationsUsed] = useState(0)
   const [copiedThreadId, setCopiedThreadId] = useState<number | null>(null)
   const [copiedTweetKey, setCopiedTweetKey] = useState<string | null>(null)
-  const [suggestions, setSuggestions] = useState<Record<string, {emojis: string[], hashtags: string[]}>>({})
   const [suggestLoading, setSuggestLoading] = useState<Record<string, boolean>>({})
+
+  // New premium thread-level emoji & hashtag feature (smart suggestions for entire thread)
+  const [showEmojiModalFor, setShowEmojiModalFor] = useState<number | null>(null)
+  const [modalThread, setModalThread] = useState<Thread | null>(null)
+  const [modalEmojis, setModalEmojis] = useState<string[]>([])
+  const [modalHashtags, setModalHashtags] = useState<string[]>([])
+  const [modalSelectedTweets, setModalSelectedTweets] = useState<number[]>([])
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false)
+
+  // Applied suggestions for clean display (emojis next to tweets, hashtags at thread bottom)
+  const [threadEmojis, setThreadEmojis] = useState<Record<number, Record<number, string>>>({})
+  const [threadHashtags, setThreadHashtags] = useState<Record<number, string[]>>({})
+
   const [toast, setToast] = useState<{ 
     message: string; 
     type: 'success' | 'error' | 'info'; 
@@ -579,27 +591,125 @@ export default function Page() {
     setPreviewImageCount(1)
   }
 
-  const suggestForTweet = async (threadId: number, tweetIndex: number, tweet: string) => {
-    const key = `${threadId}-${tweetIndex}`
-    setSuggestLoading(prev => ({ ...prev, [key]: true }))
+  // New smart thread-level emoji & hashtag suggestions (replaces old per-tweet clunky version)
+  const openEmojiSuggestions = (thread: Thread) => {
+    if (!hasPro) {
+      showToast('Smart emoji & hashtag suggestions are a Pro feature.', 'info')
+      return
+    }
+    setModalThread(thread)
+    setShowEmojiModalFor(thread.id)
+    setModalSelectedTweets(thread.tweets.map((_, i) => i)) // default: apply to all
+    loadThreadSuggestions(thread)
+  }
+
+  const loadThreadSuggestions = async (thread: Thread) => {
+    setIsGeneratingSuggestions(true)
+    setSuggestLoading(prev => ({ ...prev, [`${thread.id}-thread`]: true }))
     try {
       const res = await fetch('/api/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweet, topic })
+        body: JSON.stringify({ 
+          title: thread.title, 
+          tweets: thread.tweets, 
+          topic 
+        })
       })
       const data = await res.json()
       if (res.ok && data.emojis) {
-        setSuggestions(prev => ({ ...prev, [key]: { emojis: data.emojis, hashtags: data.hashtags } }))
-        showToast('Suggestions added!', 'success')
+        setModalEmojis(data.emojis || [])
+        setModalHashtags(data.hashtags || [])
+        showToast('High-quality thread suggestions loaded!', 'success')
       } else {
-        showToast(data.error || 'Failed to get suggestions', 'error')
+        // fallback will have been returned
+        setModalEmojis(data.emojis || ['✨', '🚀', '💡', '🎯'])
+        setModalHashtags(data.hashtags || ['#build', '#growth', '#x'])
+        showToast(data.error || 'Using smart fallback suggestions.', 'info')
       }
     } catch (e) {
-      showToast('Failed to get suggestions. Please try again.', 'error')
+      setModalEmojis(['✨', '🚀', '💡', '🎯', '🌟'])
+      setModalHashtags(['#x', '#threads', '#growth', '#buildinpublic'])
+      showToast('Using premium fallback suggestions.', 'info')
     } finally {
-      setSuggestLoading(prev => ({ ...prev, [key]: false }))
+      setIsGeneratingSuggestions(false)
+      setSuggestLoading(prev => ({ ...prev, [`${thread.id}-thread`]: false }))
     }
+  }
+
+  const regenerateSuggestions = () => {
+    if (modalThread) {
+      loadThreadSuggestions(modalThread)
+    }
+  }
+
+  const addToModalEmojis = (val: string) => {
+    const v = val.trim()
+    if (v && !modalEmojis.includes(v)) {
+      setModalEmojis([...modalEmojis, v])
+    }
+  }
+  const removeFromModalEmojis = (idx: number) => {
+    setModalEmojis(modalEmojis.filter((_, i) => i !== idx))
+  }
+
+  const addToModalHashtags = (val: string) => {
+    let v = val.trim()
+    if (v && !v.startsWith('#')) v = '#' + v
+    if (v && !modalHashtags.includes(v)) {
+      setModalHashtags([...modalHashtags, v])
+    }
+  }
+  const removeFromModalHashtags = (idx: number) => {
+    setModalHashtags(modalHashtags.filter((_, i) => i !== idx))
+  }
+
+  const toggleModalTweet = (idx: number) => {
+    setModalSelectedTweets(prev => 
+      prev.includes(idx) ? prev.filter(x => x !== idx) : [...prev, idx].sort((a,b)=>a-b)
+    )
+  }
+  const selectAllModalTweets = () => {
+    if (modalThread) setModalSelectedTweets(modalThread.tweets.map((_,i)=>i))
+  }
+  const selectNoneModalTweets = () => setModalSelectedTweets([])
+
+  const applyEmojiSuggestions = (toAll: boolean) => {
+    if (!modalThread) return
+    const tid = modalThread.id
+    const sel = toAll ? modalThread.tweets.map((_,i)=>i) : modalSelectedTweets
+    if (sel.length === 0) {
+      showToast('Select at least one tweet to apply emojis to.', 'info')
+      return
+    }
+
+    const newEm: Record<number, string> = {}
+    sel.forEach((tIdx, pos) => {
+      const emoji = modalEmojis[pos % Math.max(1, modalEmojis.length)] || '✨'
+      newEm[tIdx] = emoji
+    })
+
+    setThreadEmojis(prev => ({ ...prev, [tid]: newEm }))
+    setThreadHashtags(prev => ({ ...prev, [tid]: [...modalHashtags] }))
+
+    setShowEmojiModalFor(null)
+    setModalThread(null)
+    setModalEmojis([])
+    setModalHashtags([])
+    setModalSelectedTweets([])
+
+    showToast(
+      `Applied ${sel.length} emoji(s) + ${modalHashtags.length} hashtag(s) cleanly!`, 
+      'success'
+    )
+  }
+
+  const closeEmojiModal = () => {
+    setShowEmojiModalFor(null)
+    setModalThread(null)
+    setModalEmojis([])
+    setModalHashtags([])
+    setModalSelectedTweets([])
   }
 
   const showToast = (
@@ -1333,6 +1443,16 @@ export default function Page() {
                     </button>
                     {hasPro && (
                       <button
+                        onClick={() => openEmojiSuggestions(thread)}
+                        disabled={isGeneratingSuggestions}
+                        title="Smart AI emojis & hashtags for the entire thread (Pro) — premium suggestions + preview + apply"
+                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                      >
+                        ✨ Emojis & Hashtags
+                      </button>
+                    )}
+                    {hasPro && (
+                      <button
                         onClick={() => copyToX(thread)}
                         title="Post full thread to X as reply chain (Pro)"
                         className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
@@ -1572,15 +1692,17 @@ export default function Page() {
                   {thread.tweets.map((tweet, i) => {
                     const key = `${thread.id}-${i}`
                     const isCopied = copiedTweetKey === key
+                    const appliedEmoji = threadEmojis[thread.id]?.[i]
                     return (
                       <div key={i} className="group rounded-xl hover:bg-zinc-950/60 px-2 sm:px-3 py-1.5 sm:py-2 -mx-2 sm:-mx-3 transition-colors">
-                        {/* Main tweet line: always keeps proper flex row (nowrap on desktop) so emoji suggestions don't break horizontal layout/width */}
+                        {/* Main tweet line: always keeps proper flex row (nowrap on desktop) — emoji suggestions now in clean modal, no layout break */}
                         <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
                           <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
                             {i + 1}/
                           </div>
                           <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0">
                             {tweet}
+                            {appliedEmoji && <span className="ml-1 text-base opacity-75 align-middle">{appliedEmoji}</span>}
                           </div>
                           <button
                             onClick={() => copyTweet(thread.id, i, tweet)}
@@ -1600,24 +1722,27 @@ export default function Page() {
                           </button>
                           {hasPro && (
                             <button
-                              onClick={() => suggestForTweet(thread.id, i, tweet)}
-                              disabled={suggestLoading[`${thread.id}-${i}`]}
-                              title="Get Emojis & Hashtags for this tweet (Pro)"
+                              onClick={() => openEmojiSuggestions(thread)}
+                              disabled={isGeneratingSuggestions}
+                              title="Smart AI emojis & hashtags for the entire thread (Pro)"
                               className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
                             >
-                              {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨'}
+                              {isGeneratingSuggestions ? '...' : '✨'}
                             </button>
                           )}
                         </div>
-                        {/* Suggestions added cleanly below the tweet row (block, not flex child) - prevents breaking desktop horizontal layout/width when emoji button clicked */}
-                        {suggestions[`${thread.id}-${i}`] && (
-                          <div className="text-[10px] sm:text-xs text-violet-300 mt-0.5 sm:mt-1 pl-6 sm:pl-8">
-                            Emojis: {suggestions[`${thread.id}-${i}`].emojis.join(' ')} &nbsp;&nbsp; Hashtags: {suggestions[`${thread.id}-${i}`].hashtags.join(' ')}
-                          </div>
-                        )}
                       </div>
                     )
                   })}
+
+                  {/* Hashtags applied cleanly at bottom of thread (small, premium, no layout break) */}
+                  {threadHashtags[thread.id]?.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-white/10 text-[10px] sm:text-xs text-violet-400 flex flex-wrap gap-x-2 gap-y-0.5 pl-1">
+                      {threadHashtags[thread.id].map((h, idx) => (
+                        <span key={idx} className="hover:text-violet-300 transition-colors cursor-default">{h}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -1931,6 +2056,145 @@ export default function Page() {
             >
               Maybe later
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Emoji & Hashtag Smart Suggestions Modal (thread-level, clean, no layout break) */}
+      {showEmojiModalFor !== null && modalThread && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[75] p-4"
+          onClick={closeEmojiModal}
+        >
+          <div 
+            className="glass-card border border-white/10 rounded-3xl p-0 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
+              <div>
+                <h3 className="text-2xl font-semibold tracking-tight">Smart Emojis &amp; Hashtags</h3>
+                <p className="text-sm text-zinc-400">AI-powered for the entire thread — premium, relevant, intentional.</p>
+              </div>
+              <button onClick={closeEmojiModal} className="text-zinc-400 hover:text-white text-xl leading-none">×</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Suggestions - editable for premium feel */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">SUGGESTED EMOJIS (edit to taste)</div>
+                  <button onClick={regenerateSuggestions} disabled={isGeneratingSuggestions} className="text-[10px] px-2 py-0.5 bg-violet-500/10 hover:bg-violet-500/20 rounded text-violet-300 disabled:opacity-50">Regenerate</button>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {modalEmojis.map((e, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-zinc-800 border border-white/10 rounded-full text-sm">
+                      {e}
+                      <button onClick={() => removeFromModalEmojis(idx)} className="text-zinc-400 hover:text-red-400 ml-1">×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input 
+                    id="add-emoji" 
+                    placeholder="Add emoji (e.g. 🧠)" 
+                    className="flex-1 bg-zinc-950 border border-white/10 rounded px-3 py-1 text-sm"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { addToModalEmojis((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }}
+                  />
+                  <button onClick={() => {
+                    const inp = document.getElementById('add-emoji') as HTMLInputElement;
+                    if (inp) { addToModalEmojis(inp.value); inp.value = ''; }
+                  }} className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs">Add</button>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-2">SUGGESTED HASHTAGS (edit to taste)</div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {modalHashtags.map((h, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1 px-3 py-1 bg-zinc-800 border border-white/10 rounded-full text-xs">
+                      {h}
+                      <button onClick={() => removeFromModalHashtags(idx)} className="text-zinc-400 hover:text-red-400 ml-1">×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input 
+                    id="add-hashtag" 
+                    placeholder="Add hashtag (e.g. #founders)" 
+                    className="flex-1 bg-zinc-950 border border-white/10 rounded px-3 py-1 text-sm"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { addToModalHashtags((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; } }}
+                  />
+                  <button onClick={() => {
+                    const inp = document.getElementById('add-hashtag') as HTMLInputElement;
+                    if (inp) { addToModalHashtags(inp.value); inp.value = ''; }
+                  }} className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs">Add</button>
+                </div>
+              </div>
+
+              {/* Live Preview - shows exactly how it will look applied */}
+              <div>
+                <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-2">LIVE PREVIEW (how it will appear in thread)</div>
+                <div className="p-4 bg-zinc-950/70 border border-white/10 rounded-2xl text-sm max-h-64 overflow-auto space-y-2">
+                  {modalThread.tweets.map((t, idx) => {
+                    const em = modalEmojis[idx % Math.max(modalEmojis.length, 1)] || ''
+                    const isSel = modalSelectedTweets.includes(idx)
+                    return (
+                      <div key={idx} className={`flex gap-2 ${!isSel ? 'opacity-40' : ''}`}>
+                        <span className="text-zinc-500 font-mono text-xs w-5 flex-shrink-0">{idx+1}.</span>
+                        <span className="flex-1 text-zinc-100 leading-snug">{t} {em}</span>
+                      </div>
+                    )
+                  })}
+                  {modalHashtags.length > 0 && (
+                    <div className="pt-2 mt-2 border-t border-white/10 text-violet-400 text-xs">
+                      {modalHashtags.join(' ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Selection for Apply to Selected */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">APPLY EMOJIS TO (toggle for selected)</div>
+                  <div className="flex gap-2 text-[10px]">
+                    <button onClick={selectAllModalTweets} className="text-violet-300 hover:text-white">All</button>
+                    <button onClick={selectNoneModalTweets} className="text-violet-300 hover:text-white">None</button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {modalThread.tweets.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => toggleModalTweet(idx)}
+                      className={`text-[10px] px-2 py-0.5 rounded border transition ${modalSelectedTweets.includes(idx) ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                    >
+                      Tweet {idx + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky footer actions */}
+            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => applyEmojiSuggestions(true)}
+                disabled={isGeneratingSuggestions || modalEmojis.length === 0}
+                className="flex-1 py-2.5 bg-white text-zinc-950 font-semibold rounded-2xl text-sm disabled:opacity-50 hover:bg-zinc-100 active:scale-[0.985] transition"
+              >
+                Apply to All Tweets
+              </button>
+              <button
+                onClick={() => applyEmojiSuggestions(false)}
+                disabled={isGeneratingSuggestions || modalEmojis.length === 0 || modalSelectedTweets.length === 0}
+                className="flex-1 py-2.5 border border-white/20 hover:bg-white/5 font-semibold rounded-2xl text-sm disabled:opacity-50 transition"
+              >
+                Apply to Selected
+              </button>
+              <button onClick={closeEmojiModal} className="px-6 py-2.5 border border-white/10 rounded-2xl text-sm hover:bg-white/5">Cancel</button>
+            </div>
           </div>
         </div>
       )}
