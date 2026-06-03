@@ -1,5 +1,5 @@
 import { clerkClient } from '@clerk/nextjs/server'
-import type { GenerationRecord, Thread, XAccount, ScheduledPost, Template } from './types'
+import type { GenerationRecord, Thread, XAccount, ScheduledPost, Template, ShowcasePost } from './types'
 
 /**
  * Increment the total generations count for a user in Clerk publicMetadata.
@@ -720,4 +720,175 @@ export async function canUseProPlusFeature(userId: string): Promise<{ allowed: b
     return { allowed: false, isTrial: false }
   }
   return { allowed: true, isTrial: true }
+}
+
+// ============================================
+// Community Showcase (public feed, simple submissions)
+// Uses per-user publicMetadata.showcasePosts (capped) + likedShowcaseIds
+// Aggregated via getUserList for feed (fine for early <100 creators)
+// ============================================
+
+const MAX_SHOWCASE_PER_USER = 5
+
+export interface EnrichedShowcasePost extends ShowcasePost {
+  authorName: string
+  likedByMe?: boolean
+}
+
+/**
+ * Submit a thread to the public community showcase.
+ * Stored in the submitting user's publicMetadata.
+ */
+export async function submitShowcasePost(
+  userId: string,
+  data: { title: string; tweets: string[]; images?: ShowcasePost['images'] }
+): Promise<ShowcasePost | null> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+
+    const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+
+    const newPost: ShowcasePost = {
+      id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      title: (data.title || 'Untitled Thread').trim().slice(0, 120),
+      tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 12) : [],
+      images: data.images || [],
+      likes: 0,
+      createdAt: new Date().toISOString(),
+      userId,
+    }
+
+    const updated = [newPost, ...existing].slice(0, MAX_SHOWCASE_PER_USER)
+
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        showcasePosts: updated,
+      },
+    })
+
+    return newPost
+  } catch (error) {
+    console.error('Failed to submit showcase post:', error)
+    return null
+  }
+}
+
+/**
+ * Get ALL public showcase posts by scanning recent users' metadata.
+ * Enriches with authorName from Clerk profile.
+ * If viewerUserId provided, marks likedByMe for that user.
+ */
+export async function getCommunityShowcasePosts(viewerUserId?: string | null): Promise<EnrichedShowcasePost[]> {
+  try {
+    const client = await clerkClient()
+
+    // Get up to 200 users (early community is tiny; fine for hobby)
+    const { data: users } = await client.users.getUserList({ limit: 200 })
+
+    let myLiked: string[] = []
+    if (viewerUserId) {
+      try {
+        const me = await client.users.getUser(viewerUserId)
+        myLiked = (me.publicMetadata?.likedShowcaseIds as string[]) || []
+      } catch {}
+    }
+
+    const all: EnrichedShowcasePost[] = []
+
+    for (const u of users) {
+      const theirPosts: ShowcasePost[] = (u.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+      if (!theirPosts.length) continue
+
+      const authorName =
+        [u.firstName, u.lastName].filter(Boolean).join(' ').trim() ||
+        (u.username as string | undefined) ||
+        'Early Creator'
+
+      for (const p of theirPosts) {
+        if (!p || !p.id || !p.title) continue
+        all.push({
+          ...p,
+          authorName,
+          userId: p.userId || u.id,
+          likedByMe: myLiked.includes(p.id),
+        })
+      }
+    }
+
+    // Default newest first (client can resort)
+    all.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1))
+    return all
+  } catch (error) {
+    console.error('Failed to load community showcase posts:', error)
+    return []
+  }
+}
+
+/**
+ * Toggle like on a showcase post.
+ * Finds the owner via scan (small N), updates likes count on owner, and viewer's liked list.
+ */
+export async function toggleShowcaseLike(viewerUserId: string, postId: string): Promise<{ likes: number; likedByMe: boolean } | null> {
+  try {
+    const client = await clerkClient()
+
+    // Find owner + post by scanning (early app, N small)
+    const { data: users } = await client.users.getUserList({ limit: 200 })
+    let ownerId: string | null = null
+    let postIndex = -1
+    let currentLikes = 0
+
+    for (const u of users) {
+      const posts: ShowcasePost[] = (u.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+      const idx = posts.findIndex((pp) => pp.id === postId)
+      if (idx >= 0) {
+        ownerId = u.id
+        postIndex = idx
+        currentLikes = posts[idx].likes || 0
+        break
+      }
+    }
+
+    if (!ownerId || postIndex < 0) return null
+
+    // Get viewer liked list
+    const viewer = await client.users.getUser(viewerUserId)
+    const likedIds: string[] = (viewer.publicMetadata?.likedShowcaseIds as string[]) || []
+    const alreadyLiked = likedIds.includes(postId)
+
+    const newLiked = alreadyLiked
+      ? likedIds.filter((id) => id !== postId)
+      : [...likedIds, postId]
+
+    const newLikes = Math.max(0, currentLikes + (alreadyLiked ? -1 : 1))
+
+    // Update owner post likes
+    const owner = await client.users.getUser(ownerId)
+    const ownerPosts: ShowcasePost[] = (owner.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+    if (ownerPosts[postIndex]) {
+      ownerPosts[postIndex] = { ...ownerPosts[postIndex], likes: newLikes }
+    }
+
+    await client.users.updateUserMetadata(ownerId, {
+      publicMetadata: {
+        ...owner.publicMetadata,
+        showcasePosts: ownerPosts,
+      },
+    })
+
+    // Update viewer's liked list
+    await client.users.updateUserMetadata(viewerUserId, {
+      publicMetadata: {
+        ...viewer.publicMetadata,
+        likedShowcaseIds: newLiked,
+      },
+    })
+
+    return { likes: newLikes, likedByMe: !alreadyLiked }
+  } catch (error) {
+    console.error('Failed to toggle showcase like:', error)
+    return null
+  }
 }

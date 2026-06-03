@@ -1,11 +1,121 @@
 ﻿'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useUser, useClerk } from '@clerk/nextjs';
 
-// Community Showcase - transparent early access page. No fake data. Fully honest.
+// Community Showcase - now fully functional public feed + one-click submit from generator.
+// Transparent, premium, dead-simple for first-time users.
+interface ShowcasePost {
+  id: string;
+  title: string;
+  tweets: string[];
+  images?: Array<{ url: string; style: string; revisedPrompt?: string }>;
+  likes: number;
+  createdAt: string;
+  authorName: string;
+  likedByMe?: boolean;
+}
+
 export default function CommunityPage() {
-  // Filter tabs are present for future but currently disabled (coming soon)
-  const filterOptions = ['All', 'Newest', 'Most Liked', 'Launch', 'Lesson', 'Growth', 'Story'] as const;
+  const { isSignedIn, user } = useUser();
+  const { openSignIn } = useClerk();
+
+  const [posts, setPosts] = useState<ShowcasePost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [sortMode, setSortMode] = useState<'newest' | 'liked'>('newest');
+  const [likingId, setLikingId] = useState<string | null>(null);
+
+  // Fetch public feed (with likedByMe if signed in)
+  const loadPosts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/community', { cache: 'no-store' });
+      const data = await res.json();
+      setPosts(Array.isArray(data.posts) ? data.posts : []);
+    } catch (e) {
+      console.error('Failed to load community posts', e);
+      setPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
+
+  // Client-side sort (simple & instant)
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (sortMode === 'liked') {
+      if (b.likes !== a.likes) return b.likes - a.likes;
+    }
+    return b.createdAt.localeCompare(a.createdAt); // newest fallback
+  });
+
+  // Simple relative time (no extra deps)
+  const timeAgo = (iso: string) => {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const days = Math.floor(h / 24);
+    return `${days}d ago`;
+  };
+
+  // Optimistic like + persist via API
+  const handleLike = async (post: ShowcasePost) => {
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
+    if (likingId) return;
+
+    const wasLiked = !!post.likedByMe;
+    const prevLikes = post.likes;
+
+    // Optimistic
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? { ...p, likes: Math.max(0, p.likes + (wasLiked ? -1 : 1)), likedByMe: !wasLiked }
+          : p
+      )
+    );
+    setLikingId(post.id);
+
+    try {
+      const res = await fetch('/api/community/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id }),
+      });
+      const data = await res.json();
+      if (data?.success && typeof data.likes === 'number') {
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === post.id ? { ...p, likes: data.likes, likedByMe: data.likedByMe } : p
+          )
+        );
+      } else {
+        // revert
+        setPosts((prev) =>
+          prev.map((p) => (p.id === post.id ? { ...p, likes: prevLikes, likedByMe: wasLiked } : p))
+        );
+      }
+    } catch {
+      // revert
+      setPosts((prev) =>
+        prev.map((p) => (p.id === post.id ? { ...p, likes: prevLikes, likedByMe: wasLiked } : p))
+      );
+    } finally {
+      setLikingId(null);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
@@ -34,84 +144,157 @@ export default function CommunityPage() {
           <p className="text-lg text-zinc-400 max-w-lg mx-auto">An exclusive space for early members. Share your best threads, get discovered, and help shape the future of the showcase.</p>
         </div>
 
-        {/* Inspiring Empty State with premium visual + prominent CTA */}
-        <div className="max-w-lg mx-auto mb-14 text-center">
-          <div className="glass-card rounded-3xl border border-white/10 p-10 relative overflow-hidden">
-            {/* Subtle premium glowing thread / creators visual */}
-            <div className="flex justify-center mb-6">
-              <div className="relative w-28 h-28">
-                {/* Outer glow ring */}
-                <div className="absolute inset-0 rounded-full bg-violet-500/10 blur-2xl" />
-                {/* SVG glowing thread icon (stylized connected posts / thread) */}
-                <svg 
-                  width="112" 
-                  height="112" 
-                  viewBox="0 0 112 112" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="relative z-10"
-                >
-                  {/* Glow layers */}
-                  <circle cx="56" cy="56" r="42" fill="url(#glowGrad)" opacity="0.25" />
-                  <circle cx="56" cy="56" r="32" fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.4" />
-                  {/* Central thread representation: stacked lines + connector */}
-                  <rect x="32" y="30" width="48" height="6" rx="3" fill="#c4b5fd" />
-                  <rect x="32" y="44" width="48" height="6" rx="3" fill="#a78bfa" />
-                  <rect x="32" y="58" width="48" height="6" rx="3" fill="#c4b5fd" />
-                  <rect x="32" y="72" width="48" height="6" rx="3" fill="#a78bfa" />
-                  {/* Vertical connector "thread" */}
-                  <path d="M56 36 L56 42 M56 50 L56 56 M56 64 L56 70" stroke="#67e8f9" strokeWidth="2.5" strokeLinecap="round" />
-                  {/* Small accent nodes (creators) */}
-                  <circle cx="28" cy="33" r="3.5" fill="#a78bfa" />
-                  <circle cx="84" cy="47" r="3.5" fill="#67e8f9" />
-                  <circle cx="28" cy="61" r="3.5" fill="#c4b5fd" />
-                  <circle cx="84" cy="75" r="3.5" fill="#a78bfa" />
-                  <defs>
-                    <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="40%">
-                      <stop offset="0%" stopColor="#a78bfa" />
-                      <stop offset="100%" stopColor="#1e1135" />
-                    </radialGradient>
-                  </defs>
-                </svg>
-                {/* Subtle orbiting dots for "early community" feel */}
-                <div className="absolute inset-0 community-icon-orbit">
-                  <div className="absolute top-2 left-1/2 w-1.5 h-1.5 bg-violet-400/60 rounded-full -translate-x-1/2" />
-                  <div className="absolute bottom-3 right-4 w-1 h-1 bg-cyan-400/50 rounded-full" />
+        {/* Conditional: Beautiful empty state (when no posts) OR live functional feed */}
+        {sortedPosts.length === 0 && !isLoading ? (
+          <div className="max-w-lg mx-auto mb-14 text-center">
+            <div className="glass-card rounded-3xl border border-white/10 p-10 relative overflow-hidden">
+              {/* Subtle premium glowing thread / creators visual (kept exactly as inspiring empty) */}
+              <div className="flex justify-center mb-6">
+                <div className="relative w-28 h-28">
+                  <div className="absolute inset-0 rounded-full bg-violet-500/10 blur-2xl" />
+                  <svg 
+                    width="112" 
+                    height="112" 
+                    viewBox="0 0 112 112" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="relative z-10"
+                  >
+                    <circle cx="56" cy="56" r="42" fill="url(#glowGrad)" opacity="0.25" />
+                    <circle cx="56" cy="56" r="32" fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.4" />
+                    <rect x="32" y="30" width="48" height="6" rx="3" fill="#c4b5fd" />
+                    <rect x="32" y="44" width="48" height="6" rx="3" fill="#a78bfa" />
+                    <rect x="32" y="58" width="48" height="6" rx="3" fill="#c4b5fd" />
+                    <rect x="32" y="72" width="48" height="6" rx="3" fill="#a78bfa" />
+                    <path d="M56 36 L56 42 M56 50 L56 56 M56 64 L56 70" stroke="#67e8f9" strokeWidth="2.5" strokeLinecap="round" />
+                    <circle cx="28" cy="33" r="3.5" fill="#a78bfa" />
+                    <circle cx="84" cy="47" r="3.5" fill="#67e8f9" />
+                    <circle cx="28" cy="61" r="3.5" fill="#c4b5fd" />
+                    <circle cx="84" cy="75" r="3.5" fill="#a78bfa" />
+                    <defs>
+                      <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="40%">
+                        <stop offset="0%" stopColor="#a78bfa" />
+                        <stop offset="100%" stopColor="#1e1135" />
+                      </radialGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 community-icon-orbit">
+                    <div className="absolute top-2 left-1/2 w-1.5 h-1.5 bg-violet-400/60 rounded-full -translate-x-1/2" />
+                    <div className="absolute bottom-3 right-4 w-1 h-1 bg-cyan-400/50 rounded-full" />
+                  </div>
                 </div>
               </div>
+
+              <h3 className="text-2xl font-semibold tracking-tight mb-3">The community is just getting started.</h3>
+              <p className="text-zinc-400 mb-4 text-[15px] leading-relaxed">No threads yet — but the first 100 creators who share will define what this space becomes. Be early. Be real.</p>
+
+              {/* Motivational line for first-time users */}
+              <p className="text-emerald-400 text-sm mb-8 font-medium">Your thread could be the first one featured here.</p>
+
+              {/* Prominent CTA - direct to generator for effortless flow */}
+              <Link 
+                href="/" 
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-100 active:scale-[0.985] transition-all text-base shadow-[0_10px_30px_-10px_rgba(167,139,250,0.4)] w-full sm:w-auto"
+              >
+                Create Your First Showcase Thread →
+              </Link>
+              <p className="mt-3 text-[10px] text-zinc-500 tracking-[1px]">Generate → one click submit. Under 2 minutes.</p>
+            </div>
+          </div>
+        ) : (
+          /* LIVE FEED - vertical on mobile, clean cards, simple sort */
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-xs uppercase tracking-[2px] text-violet-400 mb-1">EARLY CREATORS</div>
+                <h2 className="text-2xl font-semibold tracking-tight">Community Showcase</h2>
+              </div>
+              <Link href="/" className="text-xs px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5 text-zinc-300">+ Submit your thread</Link>
             </div>
 
-            <h3 className="text-2xl font-semibold tracking-tight mb-3">The community is just getting started.</h3>
-            <p className="text-zinc-400 mb-8 text-[15px] leading-relaxed">No threads yet — but the first 100 creators who share will define what this space becomes. Be early. Be real.</p>
-
-            {/* Prominent CTA */}
-            <Link 
-              href="/" 
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-100 active:scale-[0.985] transition-all text-base shadow-[0_10px_30px_-10px_rgba(167,139,250,0.4)] w-full sm:w-auto"
-            >
-              Create Your First Showcase Thread →
-            </Link>
-            <p className="mt-3 text-[10px] text-zinc-500 tracking-[1px]">It only takes a minute. Your threads will appear here once submitted.</p>
-          </div>
-        </div>
-
-        {/* Filters - kept for future but fully disabled + transparent */}
-        <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 mr-2">Filter</span>
-            {filterOptions.map((f) => (
+            {/* Simple sort tabs - Newest | Most Liked (exactly as requested) */}
+            <div className="flex items-center gap-2 mb-4">
               <button
-                key={f}
-                disabled
-                className="text-xs px-3 py-1 rounded-full border border-white/10 text-zinc-500/60 bg-zinc-900/40 cursor-not-allowed opacity-60"
-                title="Coming soon"
+                onClick={() => setSortMode('newest')}
+                className={`text-xs px-4 py-1.5 rounded-full border transition ${sortMode === 'newest' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
               >
-                {f}
+                Newest
               </button>
-            ))}
+              <button
+                onClick={() => setSortMode('liked')}
+                className={`text-xs px-4 py-1.5 rounded-full border transition ${sortMode === 'liked' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+              >
+                Most Liked
+              </button>
+              <span className="ml-2 text-[10px] text-zinc-500">{sortedPosts.length} thread{sortedPosts.length === 1 ? '' : 's'}</span>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-10 text-zinc-400">Loading community threads…</div>
+            ) : (
+              <div className="space-y-4">
+                {sortedPosts.map((post) => {
+                  const previewTweets = post.tweets.slice(0, 3);
+                  const mainImage = post.images && post.images[0];
+                  return (
+                    <div key={post.id} className="glass-card border border-white/10 rounded-3xl p-5 sm:p-6 max-w-2xl mx-auto">
+                      {/* Header: author + date */}
+                      <div className="flex items-center justify-between mb-3 text-xs">
+                        <div className="text-violet-400 font-medium">{post.authorName}</div>
+                        <div className="text-zinc-500">{timeAgo(post.createdAt)}</div>
+                      </div>
+
+                      {/* Title */}
+                      <div className="font-semibold text-[17px] sm:text-[19px] tracking-tight mb-2 pr-2">{post.title}</div>
+
+                      {/* Optional main image (first one) - clean, not overwhelming */}
+                      {mainImage && (
+                        <div className="mb-3 rounded-2xl overflow-hidden border border-white/10">
+                          <img
+                            src={mainImage.url}
+                            alt={post.title}
+                            className="w-full aspect-[16/9] object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {/* First 2-3 tweets preview */}
+                      <div className="space-y-1.5 text-[13px] sm:text-[14px] text-zinc-300 leading-snug mb-3">
+                        {previewTweets.map((t, i) => (
+                          <div key={i} className="line-clamp-2">• {t}</div>
+                        ))}
+                        {post.tweets.length > 3 && (
+                          <div className="text-[11px] text-zinc-500">+{post.tweets.length - 3} more tweets</div>
+                        )}
+                      </div>
+
+                      {/* Engagement row: likes (functional) */}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <button
+                          onClick={() => handleLike(post)}
+                          disabled={likingId === post.id}
+                          className="flex items-center gap-1.5 text-sm px-3 py-1 rounded-full hover:bg-white/5 active:bg-white/10 transition disabled:opacity-60"
+                          title={post.likedByMe ? 'Unlike' : 'Like this thread'}
+                        >
+                          <span className="text-base leading-none">{post.likedByMe ? '❤️' : '♡'}</span>
+                          <span className="tabular-nums font-medium text-zinc-300">{post.likes}</span>
+                          <span className="text-[10px] text-zinc-500 ml-0.5">likes</span>
+                        </button>
+
+                        <div className="text-[10px] text-zinc-500">Shared from ThreadForge</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <div className="text-[10px] text-zinc-500 pl-1">Filters, sorting, and search are coming soon.</div>
-        </div>
+        )}
+
+        {/* Sort note removed - now live tabs above feed (or hidden in empty) */}
+        {sortedPosts.length > 0 && (
+          <div className="text-[10px] text-center text-zinc-500 mb-8 -mt-6">Sorted client-side • Updates on refresh</div>
+        )}
 
         {/* Why Share? - honest benefits */}
         <div className="mb-12">
@@ -144,10 +327,10 @@ export default function CommunityPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
             {[
-              { label: "Likes & Reactions", note: "Appreciate threads you love" },
+              { label: "Likes & Reactions", note: "Appreciate threads you love", live: true },
+              { label: "Public Submissions", note: "One-click from generator (live now)", live: true },
               { label: "Comments & Feedback", note: "Discuss what worked (and what didn't)" },
               { label: "Creator Leaderboards", note: "Top threads by real engagement" },
-              { label: "Public Submissions", note: "Upload your own best threads directly" },
               { label: "Profiles & History", note: "See a creator's showcase in one place" },
               { label: "Weekly Highlights", note: "Curated threads + insights from the community" },
             ].map((item, idx) => (
@@ -156,11 +339,15 @@ export default function CommunityPage() {
                   <div className="font-medium">{item.label}</div>
                   <div className="text-xs text-zinc-500">{item.note}</div>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 whitespace-nowrap">Coming soon</span>
+                {item.live ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 whitespace-nowrap">Live now</span>
+                ) : (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 whitespace-nowrap">Coming soon</span>
+                )}
               </div>
             ))}
           </div>
-          <p className="text-center text-xs text-zinc-500 mt-4">We&apos;re keeping this 100% real. No placeholder posts. When real threads arrive, you&apos;ll see them here first.</p>
+          <p className="text-center text-xs text-zinc-500 mt-4">We&apos;re keeping this 100% real. Submit from the generator — your threads appear instantly. No fakes, no placeholders.</p>
         </div>
       </div>
 

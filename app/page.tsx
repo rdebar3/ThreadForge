@@ -77,7 +77,60 @@ export default function Page() {
   // For saving edited thread + images to history on confirm post
   const [previewTitle, setPreviewTitle] = useState('')
 
+  // Community Showcase one-click submit (super simple for first-time users)
+  const [showSubmitFor, setShowSubmitFor] = useState<number | null>(null)
+  const [submitTitle, setSubmitTitle] = useState('')
+  const [isSubmittingShowcase, setIsSubmittingShowcase] = useState(false)
+  const [submittedToShowcase, setSubmittedToShowcase] = useState<Record<number, boolean>>({})
+
   const resultsRef = useRef<HTMLDivElement>(null)
+
+  // --- Community handlers (declared early so visible to JSX in return) ---
+  const openSubmitToShowcase = (thread: Thread) => {
+    if (!isSignedIn) {
+      openSignIn()
+      return
+    }
+    setSubmitTitle(thread.title || 'My Thread')
+    setShowSubmitFor(thread.id)
+  }
+
+  const confirmSubmitToShowcase = async () => {
+    if (showSubmitFor === null) return
+    const thread = threads.find((t: any) => t.id === showSubmitFor)
+    if (!thread) return
+
+    const imagesToSend = threadImages[showSubmitFor] || thread.images || []
+
+    setIsSubmittingShowcase(true)
+    try {
+      const res = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: submitTitle.trim() || thread.title,
+          tweets: thread.tweets,
+          images: imagesToSend,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Failed to submit. Please try again.', 'error')
+        return
+      }
+      setSubmittedToShowcase((prev) => ({ ...prev, [showSubmitFor]: true }))
+      setShowSubmitFor(null)
+      setSubmitTitle('')
+      showToast('Thanks! Your thread is live in the Community Showcase.', 'success', {
+        label: 'View Showcase',
+        href: '/community',
+      })
+    } catch {
+      showToast('Network error submitting to showcase. Try again.', 'error')
+    } finally {
+      setIsSubmittingShowcase(false)
+    }
+  }
 
   const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3') // Daily free tier limit for non-Pro users
 
@@ -1706,6 +1759,29 @@ export default function Page() {
                   )}
                 </div>
 
+                {/* Prominent "Submit to Community Showcase" - auto shown after generate for first-time effortless flow */}
+                {!submittedToShowcase[thread.id] && (
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <button
+                      onClick={() => openSubmitToShowcase(thread)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-sm font-semibold active:scale-[0.985] transition hover:brightness-105 shadow"
+                    >
+                      🚀 Submit to Community Showcase
+                    </button>
+                    <p className="text-center text-[10px] text-zinc-500 mt-1.5 tracking-wide">Join the first creators • 1 click • visible to everyone</p>
+                  </div>
+                )}
+                {submittedToShowcase[thread.id] && (
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <a
+                      href="/community"
+                      className="block w-full text-center py-2.5 rounded-2xl border border-emerald-500/40 text-emerald-400 text-xs font-medium hover:bg-emerald-500/10"
+                    >
+                      ✓ Submitted to Showcase — View in Community
+                    </a>
+                  </div>
+                )}
+
               </div>
             ))}
           </div>
@@ -2022,6 +2098,49 @@ export default function Page() {
             >
               Maybe later
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Super simple Community Showcase submit modal (minimal title + confirm, for <2min first-time flow) */}
+      {showSubmitFor !== null && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+          onClick={() => { if (!isSubmittingShowcase) setShowSubmitFor(null) }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-card w-full max-w-md rounded-3xl p-6 border border-white/10"
+          >
+            <div className="text-xs tracking-[1.5px] text-violet-400 mb-1">COMMUNITY SHOWCASE</div>
+            <h3 className="text-xl font-semibold tracking-tight mb-1">Share this thread?</h3>
+            <p className="text-sm text-zinc-400 mb-4">One click publishes your title + tweets + images to the public feed. Be one of the first 100.</p>
+
+            <input
+              value={submitTitle}
+              onChange={(e) => setSubmitTitle(e.target.value)}
+              className="w-full bg-zinc-950 border border-white/10 focus:border-violet-400 rounded-2xl px-4 py-2.5 text-sm mb-4"
+              placeholder="Thread title"
+              disabled={isSubmittingShowcase}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={confirmSubmitToShowcase}
+                disabled={isSubmittingShowcase || !submitTitle.trim()}
+                className="flex-1 py-3 bg-white text-zinc-950 font-semibold rounded-2xl text-sm disabled:opacity-50 hover:bg-zinc-100 active:scale-[0.985] transition"
+              >
+                {isSubmittingShowcase ? 'Submitting…' : 'Confirm & Submit to Showcase'}
+              </button>
+              <button
+                onClick={() => setShowSubmitFor(null)}
+                disabled={isSubmittingShowcase}
+                className="px-5 py-3 border border-white/10 rounded-2xl text-sm hover:bg-white/5 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-center text-[10px] text-zinc-500 mt-3">Your name appears as the creator. Edits won&apos;t affect the original.</p>
           </div>
         </div>
       )}

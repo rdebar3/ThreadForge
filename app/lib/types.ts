@@ -40,3 +40,18 @@ export interface Template {
   category?: string;
   savedAt: string;
 }
+
+/**
+ * Community Showcase post - stored per-user in Clerk publicMetadata (showcasePosts),
+ * aggregated server-side for public feed. Likes tracked with count + per-user liked list.
+ */
+export interface ShowcasePost {
+  id: string;
+  title: string;
+  tweets: string[];
+  images?: Array<{ url: string; style: string; revisedPrompt?: string }>;
+  likes: number;
+  createdAt: string;
+  // Populated server-side when listing
+  userId?: string;
+}
