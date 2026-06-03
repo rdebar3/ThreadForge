@@ -363,7 +363,12 @@ export default function Page() {
   }
 
   // Actual post logic (used by confirm in preview modal)
-  const performPostToX = async (tweetsToPost: string[], attachedImages: Array<{url: string, style: string, revisedPrompt?: string}> = [], titleForHistory?: string) => {
+  const performPostToX = async (
+    tweetsToPost: string[],
+    imagePool: Array<{url: string, style: string, revisedPrompt?: string}> = [],
+    mediaAssignments: Record<number, number[]> = {},
+    titleForHistory?: string
+  ) => {
     if (tweetsToPost.length === 0) return
 
     setIsPosting(true)
@@ -373,7 +378,8 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tweets: tweetsToPost,
-          images: attachedImages,
+          images: imagePool,
+          mediaAssignments, // e.g. { "0": [2], "1": [0] } => tweet 0 gets images[2], tweet 1 gets images[0]
           title: titleForHistory || previewTitle || 'Thread',
           topic: topic || 'Posted thread'
         }),
@@ -397,11 +403,14 @@ export default function Page() {
         return
       }
 
-      showToast('Full thread posted successfully!', 'success')
+      const firstPostId = data.postIds && data.postIds.length > 0 ? data.postIds[0] : null
+      const mediaAttached = !!data.mediaAttached
+      const successMsg = mediaAttached ? 'Full thread with images posted to X!' : 'Full thread posted successfully!'
+      showToast(successMsg, 'success', firstPostId ? { label: 'View on X', href: `https://x.com/i/web/status/${firstPostId}` } : undefined)
 
-      // Optionally open the first post in X for confirmation
-      if (data.postIds && data.postIds.length > 0) {
-        window.open(`https://x.com/i/web/status/${data.postIds[0]}`, '_blank')
+      // Open the first post in X for confirmation (and action link in toast)
+      if (firstPostId) {
+        window.open(`https://x.com/i/web/status/${firstPostId}`, '_blank')
       }
 
       // Close preview on success
@@ -499,15 +508,28 @@ export default function Page() {
   }
 
   const confirmPostFromPreview = () => {
-    // filter empty
-    const cleaned = previewTweets.map(t => t.trim()).filter(t => t.length > 0)
+    // filter empty + remap image assignments to the *cleaned* tweet indices (supports multiple per tweet via array)
+    const cleaned: string[] = []
+    const mediaAssignments: Record<number, number[]> = {}
+    let cleanIdx = 0
+    previewTweets.forEach((raw, oldIdx) => {
+      const t = (raw || '').trim()
+      if (t.length > 0) {
+        cleaned.push(t)
+        const a = previewImageAssignments[oldIdx]
+        if (a != null) {
+          mediaAssignments[cleanIdx] = [a] // wrap single for now; posting layer supports number[] for multi
+        }
+        cleanIdx++
+      }
+    })
     if (cleaned.length === 0) {
       showToast('No tweets to post', 'error')
       return
     }
-    // Collect attached images for this preview thread (generated in modal or prior)
-    const attachedImages = showPostPreviewFor !== null ? (threadImages[showPostPreviewFor] || []) : []
-    performPostToX(cleaned, attachedImages, previewTitle)
+    // Pass the image pool + which images (by pool index) are assigned to which (cleaned) tweet positions
+    const imagePool = showPostPreviewFor !== null ? (threadImages[showPostPreviewFor] || []) : []
+    performPostToX(cleaned, imagePool, mediaAssignments, previewTitle)
   }
 
   const cancelPostPreview = () => {

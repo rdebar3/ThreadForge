@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX, saveGenerationToHistory } from '../../../lib/clerk'
+import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX, saveGenerationToHistory, uploadMediaToX } from '../../../lib/clerk'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No tweets to post' }, { status: 400 })
   }
 
-  // Attached images from preview modal (if generated/assigned before Confirm & Post)
+  // Image pool + per-tweet assignments from the Preview & Edit modal (single or multi via number[])
   const images = Array.isArray(body?.images) ? body.images : []
+  const mediaAssignments: Record<number, number | number[]> = body?.mediaAssignments || {}
   const title = typeof body?.title === 'string' ? body.title : 'Posted Thread'
   const postTopic = typeof body?.topic === 'string' ? body.topic : 'Posted thread'
 
@@ -36,13 +37,46 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const postIds = await postThreadToX(accessToken, tweets)
+    // 1. Upload any assigned images to X (before posting tweets) to obtain media_ids.
+    // Assignments: { tweetIndexInCleanedList: imageIndexInPool or array of them }
+    // We support multiple images per tweet (X allows up to 4).
+    const tweetMediaIds: Record<number, string[]> = {}
+    for (const [tweetIdxStr, imgIdxOrArr] of Object.entries(mediaAssignments)) {
+      const tIdx = parseInt(tweetIdxStr, 10)
+      if (isNaN(tIdx) || tIdx < 0 || tIdx >= tweets.length) continue
+      const idxs = Array.isArray(imgIdxOrArr) ? imgIdxOrArr : (imgIdxOrArr != null ? [imgIdxOrArr] : [])
+      const ids: string[] = []
+      for (const poolIdx of idxs) {
+        const img = images[poolIdx]
+        if (!img?.url) continue
+        try {
+          const mediaId = await uploadMediaToX(accessToken, img.url)
+          ids.push(mediaId)
+          console.log(`[x/post] Uploaded media ${mediaId} for tweet #${tIdx}`)
+        } catch (upErr: any) {
+          console.error(`[x/post] Media upload failed for tweet #${tIdx} (poolIdx ${poolIdx}):`, upErr?.message || upErr)
+          // Continue without this image; do not fail the entire thread
+        }
+      }
+      if (ids.length > 0) {
+        tweetMediaIds[tIdx] = ids
+      }
+    }
+
+    // 2. Build rich items for the shared poster (text + optional mediaIds per tweet)
+    const items = tweets.map((text: string, i: number) => ({
+      text,
+      ...(tweetMediaIds[i]?.length ? { mediaIds: tweetMediaIds[i] } : {}),
+    }))
+
+    // 3. Post the full chain (root + replies), now with media attached where assigned
+    const postIds = await postThreadToX(accessToken, items)
 
     // Track for Pro+ analytics (increment posted count)
     await incrementPostedCount(userId, 1)
 
     // Save the (possibly edited) thread + attached images to history so images are persisted with the thread history
-    // This fulfills "when Confirm & Post clicked, include the attached images with the thread (at min save with history)"
+    // (images list saved even if some uploads failed; the actual X thread has the successfully attached ones)
     try {
       const postedThread = {
         id: Date.now(),
@@ -60,7 +94,7 @@ export async function POST(req: NextRequest) {
       console.error('[x/post] Failed to save posted thread+images to history (non-fatal):', histErr)
     }
 
-    return NextResponse.json({ success: true, postIds })
+    return NextResponse.json({ success: true, postIds, mediaAttached: Object.keys(tweetMediaIds).length > 0 })
   } catch (err: any) {
     console.error('Direct X post failed for user', userId, ':', err)
     const errMsg = err.message || 'Failed to post thread to X'

@@ -194,6 +194,7 @@ export interface XTokenRefreshResult {
 
 const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
 const X_TWEETS_URL = 'https://api.x.com/2/tweets'
+const X_MEDIA_UPLOAD_URL = 'https://upload.twitter.com/1.1/media/upload.json'
 
 /**
  * Refresh an X access token using the stored refresh_token.
@@ -324,19 +325,81 @@ export async function getValidXAccessToken(userId: string): Promise<string | nul
 }
 
 /**
+ * Uploads an image (from URL) to X for use in tweets.
+ * Downloads the image bytes server-side, then POSTs multipart to X's media upload endpoint
+ * using the user's access token (Bearer). Returns the media_id_string for use in /2/tweets media param.
+ * Supports common formats returned by xAI (and demo picsum). Simple upload for images (<~5MB).
+ */
+export async function uploadMediaToX(accessToken: string, imageUrl: string): Promise<string> {
+  // 1. Fetch the image bytes (works for https://picsum.photos/... and xAI image URLs)
+  const imgRes = await fetch(imageUrl)
+  if (!imgRes.ok) {
+    throw new Error(`Failed to fetch image for X upload: ${imgRes.status} ${imageUrl}`)
+  }
+  const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
+  const buffer = await imgRes.arrayBuffer()
+  const blob = new Blob([buffer], { type: contentType })
+
+  // Choose a reasonable filename/extension
+  let ext = 'jpg'
+  if (contentType.includes('png')) ext = 'png'
+  else if (contentType.includes('gif')) ext = 'gif'
+  else if (contentType.includes('webp')) ext = 'webp'
+  else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = 'jpg'
+
+  const form = new FormData()
+  form.append('media', blob, `threadforge.${ext}`)
+
+  // 2. Upload to X (v1.1 media endpoint still required for attaching photos to tweets)
+  const uploadRes = await fetch(X_MEDIA_UPLOAD_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      // Let fetch set the correct multipart/form-data boundary; do not override Content-Type
+    },
+    body: form,
+  })
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text()
+    throw new Error(`X media upload failed (${uploadRes.status}): ${errText.substring(0, 200)}`)
+  }
+
+  const mediaJson = await uploadRes.json()
+  const mediaId = mediaJson?.media_id_string || mediaJson?.media_id
+  if (!mediaId) {
+    throw new Error('X media upload returned no media_id_string')
+  }
+  return String(mediaId)
+}
+
+/**
  * Posts a full thread as a connected reply chain on X using the user's access token.
  * Uses reply_settings on root tweet and in_reply_to_tweet_id for subsequent tweets.
+ * Supports optional media per tweet via items form (or legacy string[] for text-only callers like cron).
  * Returns array of created tweet IDs.
  */
-export async function postThreadToX(accessToken: string, tweets: string[]): Promise<string[]> {
+export async function postThreadToX(
+  accessToken: string,
+  tweetsOrItems: string[] | Array<{ text: string; mediaIds?: string[] }>
+): Promise<string[]> {
   const postedIds: string[] = []
   let inReplyTo: string | null = null
 
-  for (const raw of tweets) {
-    const text = (raw || '').trim().slice(0, 280)
+  // Normalize input: support legacy string[] (text only, e.g. cron/scheduler) and new richer form for images
+  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && tweetsOrItems.length > 0 && typeof tweetsOrItems[0] === 'string'
+    ? (tweetsOrItems as string[]).map(t => ({ text: t }))
+    : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
+
+  for (const item of items) {
+    const text = (item.text || '').trim().slice(0, 280)
     if (!text) continue
 
     const payload: any = { text }
+    if (item.mediaIds && item.mediaIds.length > 0) {
+      // Attach media (images) to this specific tweet in the chain. X supports 1-4 per tweet.
+      payload.media = { media_ids: item.mediaIds }
+    }
     if (!inReplyTo) {
       // Set reply settings on the root tweet of the chain.
       // Valid values per X API: following, mentionedUsers, subscribers, verified
