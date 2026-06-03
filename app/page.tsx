@@ -60,6 +60,12 @@ export default function Page() {
   const [previewTweets, setPreviewTweets] = useState<string[]>([])
   const [isPosting, setIsPosting] = useState(false)
 
+  // Preview-specific image generation states (to not conflict with main panel)
+  const [previewImageStyle, setPreviewImageStyle] = useState<ImageStyle>('auto')
+  const [previewImageCount, setPreviewImageCount] = useState(1)
+  const [isGeneratingPreviewImages, setIsGeneratingPreviewImages] = useState(false)
+  const [previewImageAssignments, setPreviewImageAssignments] = useState<Record<number, number | null>>({})
+
   const resultsRef = useRef<HTMLDivElement>(null)
 
   const MAX_FREE_GENERATIONS = parseInt(process.env.NEXT_PUBLIC_MAX_FREE_GENERATIONS || '3') // Daily free tier limit for non-Pro users
@@ -341,6 +347,9 @@ export default function Page() {
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
     if (tweets.length === 0) return
     setPreviewTweets([...tweets]) // editable copy
+    setPreviewImageAssignments({})
+    setPreviewImageStyle('auto')
+    setPreviewImageCount(1)
     setShowPostPreviewFor(thread.id)
   }
 
@@ -384,11 +393,60 @@ export default function Page() {
       // Close preview on success
       setShowPostPreviewFor(null)
       setPreviewTweets([])
+      setPreviewImageAssignments({})
+      setPreviewImageStyle('auto')
+      setPreviewImageCount(1)
     } catch (err) {
       console.error('Post to X error:', err)
       showToast('Network error while posting to X. Please try again.', 'error')
     } finally {
       setIsPosting(false)
+    }
+  }
+
+  async function handleGeneratePreviewImages() {
+    if (showPostPreviewFor === null) return
+    const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
+    if (!origThread) return
+    if (!isProPlus && hasUsedProPlusTrial) {
+      showToast('You have used your one-time Pro+ trial for AI Images. Upgrade to unlock permanently.', 'info')
+      return
+    }
+    setIsGeneratingPreviewImages(true)
+    try {
+      const res = await fetch('/api/generate-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          threadId: showPostPreviewFor,
+          title: origThread.title,
+          tweets: previewTweets,  // use edited preview tweets so prompt matches the preview content
+          style: previewImageStyle,
+          count: previewImageCount
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.requireUpgrade) {
+          showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to unlock AI images.', 'info')
+        } else if (data.rateLimited) {
+          showToast(data.error || 'Please wait before generating more images.', 'info')
+        } else {
+          showToast(data.error || 'Failed to generate images', 'error')
+        }
+        return
+      }
+      setThreadImages(prev => ({ ...prev, [showPostPreviewFor]: data.images }))
+      showToast(`Generated ${data.images?.length || 4} images for preview!`, 'success')
+      if (data.wasTrial) {
+        showToast('Pro+ Trial used! This was your one free use of AI Images.', 'info')
+        setShowProPlusTrialBanner(true)
+      }
+    } catch (e) {
+      showToast('Error generating images for preview. Please try again.', 'error')
+    } finally {
+      setIsGeneratingPreviewImages(false)
     }
   }
 
@@ -434,6 +492,9 @@ export default function Page() {
   const cancelPostPreview = () => {
     setShowPostPreviewFor(null)
     setPreviewTweets([])
+    setPreviewImageAssignments({})
+    setPreviewImageStyle('auto')
+    setPreviewImageCount(1)
   }
 
   const suggestForTweet = async (threadId: number, tweetIndex: number, tweet: string) => {
@@ -1807,6 +1868,56 @@ export default function Page() {
 
             {/* Scrollable tweets list */}
             <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {/* Image choice and generated images inside modal for the preview thread */}
+              <div className="mb-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 tracking-[1.5px]">GENERATE IMAGES FOR THIS PREVIEW (uses edited tweets for prompt)</div>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {IMAGE_STYLES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setPreviewImageStyle(s)}
+                      className={`text-xs px-2.5 py-0.5 rounded-full border transition-all ${previewImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
+                <div className="flex gap-1.5 mb-2">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setPreviewImageCount(n)}
+                      className={`text-xs px-2.5 py-0.5 rounded border transition-all ${previewImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleGeneratePreviewImages}
+                  disabled={isGeneratingPreviewImages}
+                  className="text-xs px-3 py-1.5 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                >
+                  {isGeneratingPreviewImages ? 'Generating...' : 'Generate Images'}
+                </button>
+              </div>
+
+              {/* Display generated images inside modal */}
+              {showPostPreviewFor !== null && threadImages[showPostPreviewFor]?.length > 0 && (
+                <div className="mb-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                  <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">IMAGES FOR PREVIEW THREAD — assign below to tweets</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(threadImages[showPostPreviewFor] || []).map((img, idx) => (
+                      <div key={idx} className="group relative overflow-hidden rounded border border-white/10 bg-zinc-950/50">
+                        <img src={img.url} alt={`Preview image ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
+                        <div className="text-[9px] p-1 text-center text-zinc-400 bg-black/50">{img.style}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {previewTweets.map((tweet, index) => {
                 const charCount = tweet.length
                 const overLimit = charCount > 280
@@ -1853,6 +1964,37 @@ export default function Page() {
                         + Add tweet
                       </button>
                     </div>
+
+                    {/* Assign image to this specific tweet */}
+                    {showPostPreviewFor !== null && threadImages[showPostPreviewFor]?.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-white/10">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-zinc-400">Attach image:</span>
+                          <select
+                            value={previewImageAssignments[index] ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? null : parseInt(e.target.value, 10)
+                              setPreviewImageAssignments(prev => ({ ...prev, [index]: val }))
+                            }}
+                            className="text-xs bg-zinc-950 border border-white/10 rounded p-1"
+                          >
+                            <option value="">None</option>
+                            {(threadImages[showPostPreviewFor] || []).map((img, i) => (
+                              <option key={i} value={i}>Image {i+1} ({img.style})</option>
+                            ))}
+                          </select>
+                        </div>
+                        {/* Show attached image preview */}
+                        {(() => {
+                          const aidx = previewImageAssignments[index]
+                          if (aidx !== null && threadImages[showPostPreviewFor]?.[aidx]) {
+                            const aimg = threadImages[showPostPreviewFor][aidx]
+                            return <img src={aimg.url} alt="attached" className="mt-1 w-20 h-20 object-cover rounded border border-white/10" />
+                          }
+                          return null
+                        })()}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -1860,21 +2002,8 @@ export default function Page() {
 
             {/* Sticky footer with actions and confirm button */}
             <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 sticky bottom-0 z-10">
-              {/* Actions row - keep inside footer for visibility */}
-              <div className="flex flex-wrap gap-3 items-center mb-4">
-                <button
-                  onClick={() => {
-                    if (showPostPreviewFor !== null) {
-                      const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
-                      if (origThread) handleGenerateImages(origThread)
-                    }
-                  }}
-                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-violet-500/20 border border-white/10 rounded-2xl transition flex items-center gap-2"
-                >
-                  ✨ Generate Images
-                </button>
-                <div className="text-[10px] text-zinc-500">Images will appear in the thread view below (text-only is posted to X).</div>
-              </div>
+              {/* Note - generate controls are in the scrollable area above */}
+              <div className="text-[10px] text-zinc-500 mb-4">Use the image generator controls above to create and assign images to tweets in this preview. (Images save with the thread; X post remains text-only.)</div>
 
               {/* Big confirm */}
               <div className="flex flex-col sm:flex-row gap-3">
