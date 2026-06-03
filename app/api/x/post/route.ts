@@ -27,9 +27,24 @@ export async function POST(req: NextRequest) {
 
   // Image pool + per-tweet assignments from the Preview & Edit modal (single or multi via number[])
   const images = Array.isArray(body?.images) ? body.images : []
-  const mediaAssignments: Record<number, number | number[]> = body?.mediaAssignments || {}
+  const rawMediaAssignments = body?.mediaAssignments || {}
+  // Normalize to number-keyed Record<number, number[]> (JSON turns keys to strings)
+  const mediaAssignments: Record<number, number[]> = {}
+  for (const [k, v] of Object.entries(rawMediaAssignments)) {
+    const nk = parseInt(k, 10)
+    if (isNaN(nk)) continue
+    const arr = Array.isArray(v) ? v.map((x: any) => Number(x)).filter((x: number) => !isNaN(x)) : (v != null ? [Number(v)].filter((x: number) => !isNaN(x)) : [])
+    if (arr.length > 0) mediaAssignments[nk] = arr
+  }
+
   const title = typeof body?.title === 'string' ? body.title : 'Posted Thread'
   const postTopic = typeof body?.topic === 'string' ? body.topic : 'Posted thread'
+
+  console.log('[x/post] === Received Confirm & Post to X ===')
+  console.log('[x/post] tweets:', tweets)
+  console.log('[x/post] images pool (count, sample urls):', images.length, images.slice(0, 3).map((im: any) => im?.url ? im.url.substring(0, 80) + '...' : null))
+  console.log('[x/post] mediaAssignments (normalized):', mediaAssignments)
+  console.log('[x/post] image data being sent for attachment - assignments map & pool size logged above')
 
   const accessToken = await getValidXAccessToken(userId)
   if (!accessToken) {
@@ -48,11 +63,15 @@ export async function POST(req: NextRequest) {
       const ids: string[] = []
       for (const poolIdx of idxs) {
         const img = images[poolIdx]
-        if (!img?.url) continue
+        if (!img?.url) {
+          console.warn(`[x/post] No url for poolIdx ${poolIdx} on tweet #${tIdx}`)
+          continue
+        }
         try {
+          console.log(`[x/post] Uploading image for tweet #${tIdx} (pool index ${poolIdx}) url=${img.url.substring(0,70)}...`)
           const mediaId = await uploadMediaToX(accessToken, img.url)
           ids.push(mediaId)
-          console.log(`[x/post] Uploaded media ${mediaId} for tweet #${tIdx}`)
+          console.log(`[x/post] SUCCESS: media_id=${mediaId} attached to tweet #${tIdx}`)
         } catch (upErr: any) {
           console.error(`[x/post] Media upload failed for tweet #${tIdx} (poolIdx ${poolIdx}):`, upErr?.message || upErr)
           // Continue without this image; do not fail the entire thread
@@ -68,6 +87,7 @@ export async function POST(req: NextRequest) {
       text,
       ...(tweetMediaIds[i]?.length ? { mediaIds: tweetMediaIds[i] } : {}),
     }))
+    console.log('[x/post] Prepared items for postThreadToX (with media?):', items.map((it: any, ii: number) => ({ i: ii, textPreview: (it.text||'').substring(0,40), mediaIds: it.mediaIds || null })))
 
     // 3. Post the full chain (root + replies), now with media attached where assigned
     const postIds = await postThreadToX(accessToken, items)

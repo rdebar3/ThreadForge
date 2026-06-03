@@ -331,45 +331,45 @@ export async function getValidXAccessToken(userId: string): Promise<string | nul
  * Supports common formats returned by xAI (and demo picsum). Simple upload for images (<~5MB).
  */
 export async function uploadMediaToX(accessToken: string, imageUrl: string): Promise<string> {
+  console.log(`[uploadMediaToX] Starting: fetch image from ${imageUrl ? imageUrl.substring(0, 80) + '...' : '(no url)'}`)
   // 1. Fetch the image bytes (works for https://picsum.photos/... and xAI image URLs)
   const imgRes = await fetch(imageUrl)
   if (!imgRes.ok) {
+    console.error(`[uploadMediaToX] Image fetch failed: ${imgRes.status} for ${imageUrl}`)
     throw new Error(`Failed to fetch image for X upload: ${imgRes.status} ${imageUrl}`)
   }
-  const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
   const buffer = await imgRes.arrayBuffer()
-  const blob = new Blob([buffer], { type: contentType })
+  const mediaData = Buffer.from(buffer).toString('base64')
+  console.log(`[uploadMediaToX] Fetched image ok, raw bytes=${buffer.byteLength}, base64Len≈${Math.round(mediaData.length/1024)}KB. Preparing upload...`)
 
-  // Choose a reasonable filename/extension
-  let ext = 'jpg'
-  if (contentType.includes('png')) ext = 'png'
-  else if (contentType.includes('gif')) ext = 'gif'
-  else if (contentType.includes('webp')) ext = 'webp'
-  else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = 'jpg'
-
-  const form = new FormData()
-  form.append('media', blob, `threadforge.${ext}`)
+  // Use base64 + media_data + urlencoded for maximum server compatibility (avoids Blob/FormData quirks in some runtimes)
+  const body = new URLSearchParams({ media_data: mediaData })
 
   // 2. Upload to X (v1.1 media endpoint still required for attaching photos to tweets)
+  console.log(`[uploadMediaToX] POSTing to X media upload endpoint with Bearer token...`)
   const uploadRes = await fetch(X_MEDIA_UPLOAD_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      // Let fetch set the correct multipart/form-data boundary; do not override Content-Type
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: form,
+    body: body.toString(),
   })
 
   if (!uploadRes.ok) {
     const errText = await uploadRes.text()
+    console.error(`[uploadMediaToX] X upload HTTP error ${uploadRes.status}: ${errText.substring(0, 300)}`)
     throw new Error(`X media upload failed (${uploadRes.status}): ${errText.substring(0, 200)}`)
   }
 
   const mediaJson = await uploadRes.json()
+  console.log(`[uploadMediaToX] X response keys: ${Object.keys(mediaJson || {}).join(',')}`)
   const mediaId = mediaJson?.media_id_string || mediaJson?.media_id
   if (!mediaId) {
+    console.error(`[uploadMediaToX] No media id in response: ${JSON.stringify(mediaJson).substring(0,200)}`)
     throw new Error('X media upload returned no media_id_string')
   }
+  console.log(`[uploadMediaToX] SUCCESS, media_id=${mediaId}`)
   return String(mediaId)
 }
 

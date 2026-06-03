@@ -65,7 +65,7 @@ export default function Page() {
   const [previewImageStyle, setPreviewImageStyle] = useState<ImageStyle>('auto')
   const [previewImageCount, setPreviewImageCount] = useState(1)
   const [isGeneratingPreviewImages, setIsGeneratingPreviewImages] = useState(false)
-  const [previewImageAssignments, setPreviewImageAssignments] = useState<Record<number, number | null>>({})
+  const [previewImageAssignments, setPreviewImageAssignments] = useState<Record<number, number[]>>({})
 
   // For saving edited thread + images to history on confirm post
   const [previewTitle, setPreviewTitle] = useState('')
@@ -373,6 +373,12 @@ export default function Page() {
 
     setIsPosting(true)
     try {
+      console.log('[performPostToX] Sending to /api/x/post - image data:', {
+        tweetsToPost,
+        imagePoolCount: imagePool.length,
+        mediaAssignments,
+        title: titleForHistory
+      })
       const res = await fetch('/api/x/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -491,7 +497,17 @@ export default function Page() {
       return
     }
     const updated = previewTweets.filter((_, i) => i !== index)
+    // Rebuild assignments so they stay attached to the correct (shifted) tweets after removal
+    const newAssignments: Record<number, number[]> = {}
+    let newIdx = 0
+    previewTweets.forEach((_, oldIdx) => {
+      if (oldIdx === index) return
+      const val = previewImageAssignments[oldIdx]
+      if (val && val.length > 0) newAssignments[newIdx] = val
+      newIdx++
+    })
     setPreviewTweets(updated)
+    setPreviewImageAssignments(newAssignments)
   }
 
   const movePreviewTweet = (index: number, direction: number) => {
@@ -500,7 +516,22 @@ export default function Page() {
     const updated = [...previewTweets]
     const [item] = updated.splice(index, 1)
     updated.splice(newIndex, 0, item)
+    // Keep assignment with the tweet being moved (swap assignment values for the two positions)
+    const newAssignments: Record<number, number[]> = { ...previewImageAssignments }
+    const valIndex = newAssignments[index]
+    const valNew = newAssignments[newIndex]
+    if (valIndex && valIndex.length > 0) {
+      newAssignments[newIndex] = valIndex
+    } else {
+      delete newAssignments[newIndex]
+    }
+    if (valNew && valNew.length > 0) {
+      newAssignments[index] = valNew
+    } else {
+      delete newAssignments[index]
+    }
     setPreviewTweets(updated)
+    setPreviewImageAssignments(newAssignments)
   }
 
   const addPreviewTweet = () => {
@@ -517,8 +548,8 @@ export default function Page() {
       if (t.length > 0) {
         cleaned.push(t)
         const a = previewImageAssignments[oldIdx]
-        if (a != null) {
-          mediaAssignments[cleanIdx] = [a] // wrap single for now; posting layer supports number[] for multi
+        if (a && a.length > 0) {
+          mediaAssignments[cleanIdx] = a // already number[] (supports multi)
         }
         cleanIdx++
       }
@@ -529,6 +560,13 @@ export default function Page() {
     }
     // Pass the image pool + which images (by pool index) are assigned to which (cleaned) tweet positions
     const imagePool = showPostPreviewFor !== null ? (threadImages[showPostPreviewFor] || []) : []
+    console.log('[preview] Confirm & Post: image data being sent', {
+      cleanedTweets: cleaned,
+      imagePoolCount: imagePool.length,
+      imagePoolSampleUrls: imagePool.slice(0,2).map((im: any) => im?.url ? im.url.substring(0,80)+'...' : null),
+      mediaAssignments,
+      showPostPreviewFor
+    })
     performPostToX(cleaned, imagePool, mediaAssignments, previewTitle)
   }
 
@@ -2020,30 +2058,36 @@ export default function Page() {
                     {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                       <div className="mt-2 pt-2 border-t border-white/10">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-zinc-400">Attach image:</span>
+                          <span className="text-[10px] text-zinc-400">Attach images (multi-select):</span>
                           <select
-                            value={previewImageAssignments[index] ?? ''}
+                            multiple
+                            size={Math.min(4, getThreadImages({ id: showPostPreviewFor }).length || 1)}
+                            value={(previewImageAssignments[index] || []).map(String)}
                             onChange={(e) => {
-                              const val = e.target.value === '' ? null : parseInt(e.target.value, 10)
-                              setPreviewImageAssignments(prev => ({ ...prev, [index]: val }))
+                              const vals = Array.from(e.target.selectedOptions, opt => parseInt(opt.value, 10)).filter(n => !isNaN(n))
+                              setPreviewImageAssignments(prev => ({ ...prev, [index]: vals }))
                             }}
                             className="text-xs bg-zinc-950 border border-white/10 rounded p-1"
                           >
-                            <option value="">None</option>
                             {getThreadImages({ id: showPostPreviewFor }).map((img: any, i: number) => (
                               <option key={i} value={i}>Image {i+1} ({img.style})</option>
                             ))}
                           </select>
                         </div>
-                        {/* Show attached image preview */}
+                        {/* Show attached image preview(s) - supports multiple */}
                         {(() => {
-                          const aidx = previewImageAssignments[index]
+                          const assigned = previewImageAssignments[index] || []
                           const pimgs = getThreadImages({ id: showPostPreviewFor })
-                          if (aidx !== null && pimgs[aidx]) {
-                            const aimg = pimgs[aidx]
-                            return <img src={aimg.url} alt="attached" className="mt-1 w-20 h-20 object-cover rounded border border-white/10" />
-                          }
-                          return null
+                          if (!assigned.length) return null
+                          return (
+                            <div className="mt-1 flex gap-1 flex-wrap">
+                              {assigned.map((aidx, k) => {
+                                const aimg = pimgs[aidx]
+                                if (!aimg) return null
+                                return <img key={k} src={aimg.url} alt={`attached-${k}`} className="w-16 h-16 object-cover rounded border border-white/10" />
+                              })}
+                            </div>
+                          )
                         })()}
                       </div>
                     )}
