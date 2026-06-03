@@ -12,9 +12,6 @@ export default function AnalyticsPage() {
   const posted = (user?.publicMetadata?.postedCount as number) || 0
   const last = user?.publicMetadata?.lastPostedAt as string | undefined
 
-  const estimatedReach = Math.round(posted * 920 + (posted > 0 ? 340 : 0))
-  const avgPerThread = posted > 0 ? Math.round(estimatedReach / posted) : 0
-
   if (!isSignedIn || !isProPlus) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-6">
@@ -47,9 +44,9 @@ export default function AnalyticsPage() {
             <div className="text-emerald-400 text-sm mt-1">Lifetime (tracked)</div>
           </div>
           <div className="glass-card rounded-3xl p-6 border border-white/10">
-            <div className="text-xs text-zinc-400">EST. REACH</div>
-            <div className="text-5xl font-semibold tracking-tighter mt-2">{estimatedReach.toLocaleString()}</div>
-            <div className="text-xs mt-1 text-zinc-400">~{avgPerThread} per thread (industry avg model)</div>
+            <div className="text-xs text-zinc-400">AVG. IMPRESSIONS (EARLY)</div>
+            <div className="text-2xl font-semibold tracking-tighter mt-2">100–800</div>
+            <div className="text-xs mt-1 text-zinc-400">Per thread. Real reach grows with audience &amp; consistency. Building momentum.</div>
           </div>
           <div className="glass-card rounded-3xl p-6 border border-white/10">
             <div className="text-xs text-zinc-400">LAST POST</div>
