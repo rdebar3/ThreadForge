@@ -401,17 +401,26 @@ export default function Page() {
 
       if (!res.ok) {
         if (data.requireConnect) {
-          showToast('Connect your X account in the Scheduler page first to enable direct posting.', 'info')
+          showToast('To post directly to X, first connect your X account (free) from the Scheduler page.', 'info')
         } else if (data.requireUpgrade) {
-          showToast('Pro subscription required to post directly to X.', 'info')
+          showToast('Direct posting to X requires a Pro subscription. Upgrade to unlock.', 'info')
         } else if (data.creditsDepleted) {
           showToast(
-            'X API credits depleted. Go to your X Developer Console to add credits and try again.',
+            'X API credits depleted. Add credits in your X Developer Console to post again.',
             'error',
             { label: 'Add X Credits', href: 'https://developer.x.com/en/portal/dashboard' }
           )
         } else {
-          showToast(data.error || 'Failed to post to X', 'error')
+          // User-friendly error: strip raw "X API error N: " prefix and show clean message
+          let msg = data.error || 'Could not post to X right now. Please try again in a moment.'
+          if (typeof msg === 'string') {
+            msg = msg.replace(/^X API error \d+:\s*/i, '').replace(/\(code: \d+\)/i, '').trim()
+            if (msg.length > 160) msg = msg.slice(0, 157) + '…'
+            if (/rate|too many|limit/i.test(msg)) msg = 'X rate limit reached. Wait a minute and try again.'
+            else if (/auth|unauthorized|token|connect/i.test(msg)) msg = 'X connection issue. Reconnect your account from Scheduler.'
+            else if (/duplicate|already|posted/i.test(msg)) msg = 'Looks like this was already posted recently. Edit and try again.'
+          }
+          showToast(msg, 'error')
         }
         return
       }
@@ -435,7 +444,7 @@ export default function Page() {
       setPreviewImageCount(1)
     } catch (err) {
       console.error('Post to X error:', err)
-      showToast('Network error while posting to X. Please try again.', 'error')
+      showToast('Something went wrong connecting to X. Check your connection or try again in a moment.', 'error')
     } finally {
       setIsPosting(false)
     }
@@ -1083,14 +1092,14 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Free Tier Banner */}
+      {/* Free Tier Banner - immediately obvious for new users */}
       <div className="bg-zinc-900/70 border-b border-white/10 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-2 text-center">
           <div className="text-sm text-zinc-400">
             {isSignedIn && !hasPro ? (
-              <>Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> left today • Upgrade for unlimited</>
+              <>Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> generations left today • Upgrade for unlimited</>
             ) : (
-              <>Free: 3/day • Pro: unlimited • Pro+: + AI images + scheduler</>
+              <>Free: 3 generations per day • Pro ($9): unlimited + core tools • Pro+ ($15): + AI images + scheduler + analytics</>
             )}
             {!isSignedIn && <button onClick={() => openSignIn()} className="ml-2 underline text-violet-400 hover:text-violet-300">Sign in</button>}
           </div>
@@ -1148,16 +1157,24 @@ export default function Page() {
         </div>
 
         <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-6 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
-          Turn any idea into ready-to-post X threads with AI images — instantly.
+          Turn any idea into ready-to-post X threads + AI images — in seconds.
         </h1>
         
-        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-6 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
-          From one sentence to 4 high-quality threads + matching visuals in under a minute.
+        <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-4 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
+          From any idea to 4 polished threads with matching images — ready to post in seconds. No fluff. Just results.
+        </p>
+
+        <p className="text-sm text-zinc-500 mb-6 max-w-[520px] mx-auto">
+          Built for creators, founders, and indie hackers who post consistently.
         </p>
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
           <div className="glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all">
+          {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) */}
+          <div className="text-center mb-3">
+            <p className="text-[11px] text-zinc-400">Start by typing any idea above. You get 3 free generations per day — upgrade anytime for unlimited.</p>
+          </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -1183,7 +1200,7 @@ export default function Page() {
                   <span>Generating...</span>
                 </>
               ) : (
-                <>Create 4 Threads Now <span className="group-hover:translate-x-1 transition text-lg">→</span></>
+                <>Start Generating <span className="group-hover:translate-x-1 transition text-lg">→</span></>
               )}
             </button>
           </div>
@@ -1228,6 +1245,7 @@ export default function Page() {
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
             <div className="mt-5">
+              <div className="text-[10px] text-zinc-400 mb-1.5">Start by typing any idea above • Free: 3 generations/day (resets daily)</div>
               <div className="text-xs text-zinc-500 mb-2 tracking-wider">TRY AN EXAMPLE</div>
               <div className="flex flex-wrap justify-center gap-2">
                 {exampleTopics.map((example, i) => (
@@ -1249,11 +1267,11 @@ export default function Page() {
 
           <p className="text-xs text-zinc-500 mt-4">
             {isSignedIn && hasPro ? (
-              isProPlus ? "Pro+: unlimited + AI images + scheduler" : "Pro: unlimited generations"
+              isProPlus ? "Pro+: unlimited + AI images + scheduler + analytics" : "Pro: unlimited generations + Post to X + History"
             ) : isSignedIn ? (
               `${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / ${MAX_FREE_GENERATIONS} free generations left today`
             ) : (
-              <>Press Enter • Free: 3/day</>
+              <>Press Enter or click Start • Free: 3 generations/day</>
             )}
           </p>
           </div>
@@ -1271,7 +1289,7 @@ export default function Page() {
           <div className="text-center mb-8">
             <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. <span className="text-cyan-400">Pro+ adds AI images + scheduler + analytics (Pro+ only)</span>.</p>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. <span className="text-cyan-400">Pro+ adds AI images + scheduler + analytics</span> <span className="text-[10px] px-1 py-px bg-cyan-500/10 text-cyan-400 rounded">Pro+</span>.</p>
           </div>
 
           {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
@@ -1300,9 +1318,9 @@ export default function Page() {
               
               <ul className="space-y-3.5 text-[14px] text-zinc-200 mb-auto">
                 <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><span className="scheduler-modern"><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+ Only</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><span className="scheduler-modern"><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
               </ul>
               <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
             </div>
@@ -1369,11 +1387,11 @@ export default function Page() {
                     <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
                   </div>
                   <div className="relative">
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 md:gap-2.5">
                       <button
                         onClick={() => copyThread(thread)}
                         title="Copy the entire thread (all tweets) to your clipboard"
-                        className="copy-button flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="copy-button flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
                         <CopyIcon />
                         <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
@@ -1383,7 +1401,7 @@ export default function Page() {
                           onClick={() => enhanceThread(thread)}
                           disabled={suggestLoading[`${thread.id}-enhance`]}
                           title="One-click smart enhance: auto-add 1 natural emoji per tweet + 2-4 strategic hashtags (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                         >
                           ✨ Enhance
                         </button>
@@ -1392,7 +1410,7 @@ export default function Page() {
                         <button
                           onClick={() => copyToX(thread)}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                         >
                           <XIcon />
                           Post to X
@@ -1407,7 +1425,7 @@ export default function Page() {
                             setSelectedImageCount(1)
                           }}
                           title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                         >
                           ✨ Generate Images
                         </button>
@@ -1420,7 +1438,7 @@ export default function Page() {
                             setSelectedImageCount(1)
                           }}
                           title="Try AI Images once for free (one-time Pro+ trial)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                         >
                           ✨ Try Pro+ Images (1-time)
                         </button>
@@ -1428,7 +1446,7 @@ export default function Page() {
                         <a
                           href="#pricing"
                           title="Image Generation requires Pro+ (trial used)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                         >
                           Upgrade to Pro+ for AI Images
                         </a>
@@ -1443,7 +1461,7 @@ export default function Page() {
                             setScheduleTime('')
                           }}
                           title="Schedule this full thread to post automatically to X (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                         >
                           📅 Schedule
                         </button>
@@ -1455,7 +1473,7 @@ export default function Page() {
                             setScheduleTime('')
                           }}
                           title="Try Scheduler once for free (one-time Pro+ trial)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
                         >
                           📅 Try Pro+ Scheduler (1-time)
                         </button>
@@ -1463,18 +1481,18 @@ export default function Page() {
                         <a
                           href="#pricing"
                           title="Thread Scheduler requires Pro+ (trial used)"
-                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
                         >
                           Schedule (Pro+)
                         </a>
                       ) : null}
 
-                      {/* More dropdown (Save Template + Rewrite) */}
+                      {/* More dropdown (Save Template + Rewrite) - small, keeps main 5 clean */}
                       {(hasPro || isProPlus) && (
                         <button
                           onClick={() => setShowMoreFor(showMoreFor === thread.id ? null : thread.id)}
-                          title="More actions"
-                          className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
+                          title="More actions (Save Template, Rewrite)"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-zinc-800/70 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
                         >
                           ⋯ More
                         </button>
@@ -1805,7 +1823,7 @@ export default function Page() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-3">PRICING</div>
           <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Scale as you grow.</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">Free tier. Pro for power. Pro+ for images + scheduler (Pro+ only).</p>
+          <p className="text-zinc-400 max-w-md mx-auto">Free: 3 generations/day. Pro ($9): Unlimited generations + core tools. Pro+ ($15): Everything in Pro + AI Images + Scheduler + Analytics. Clear pricing, no surprises.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
@@ -1891,9 +1909,9 @@ export default function Page() {
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+ Only</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
             </ul>
 
             {isProPlus ? (
@@ -1918,6 +1936,11 @@ export default function Page() {
         </div>
 
         <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler + Analytics (Pro+ only). Existing Pro users are grandfathered into Pro+.</p>
+
+        <div className="text-center mt-6 space-y-1">
+          <p className="text-[11px] text-zinc-400">Early access – we’re building in public.</p>
+          <p className="text-[10px] text-zinc-500">Join the first creators using ThreadForge. No fake testimonials. Real tool. Real results coming.</p>
+        </div>
       </div>
 
       {/* Footer */}
@@ -1983,7 +2006,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free users get 3 generations per day. Sign in to continue with your daily allowance, or subscribe to Pro ($9) or Pro+ ($15) for unlimited + AI Images + Scheduler (Pro+ only).
+              Free: exactly 3 generations per day (resets daily). Sign in for your count, or upgrade to Pro ($9) for unlimited generations + Post to X + History, or Pro+ ($15) for everything including AI images, scheduler, and analytics.
             </p>
 
             <button 
@@ -2014,14 +2037,14 @@ export default function Page() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - fixed */}
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-2xl font-semibold tracking-tight">Preview &amp; Edit Thread</h3>
-                <p className="text-sm text-zinc-400">Edit tweets before posting as a reply chain to X. Changes are for this post only.</p>
+                <p className="text-[13px] text-zinc-400 mt-0.5">Edit any tweet. Assign images if attached. Then confirm to post as reply chain.</p>
               </div>
               <button 
                 onClick={cancelPostPreview}
-                className="text-zinc-400 hover:text-white text-xl leading-none"
+                className="text-zinc-400 hover:text-white text-2xl leading-none px-1"
               >
                 ×
               </button>
@@ -2029,50 +2052,15 @@ export default function Page() {
 
             {/* Scrollable tweets list */}
             <div className="flex-1 overflow-y-auto p-6 space-y-3">
-              {/* Image choice and generated images inside modal for the preview thread */}
-              <div className="mb-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 tracking-[1.5px]">GENERATE IMAGES FOR THIS PREVIEW (uses edited tweets for prompt)</div>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {IMAGE_STYLES.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setPreviewImageStyle(s)}
-                      className={`text-xs px-2.5 py-0.5 rounded-full border transition-all ${previewImageStyle === s ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-800 border-white/10 hover:border-violet-400/50'}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-                <div className="text-xs font-medium text-violet-400 mb-1 tracking-[1.5px]">Number of images:</div>
-                <div className="flex gap-1.5 mb-2">
-                  {[1, 2, 3, 4].map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setPreviewImageCount(n)}
-                      className={`text-xs px-2.5 py-0.5 rounded border transition-all ${previewImageCount === n ? 'bg-violet-500 border-violet-500 text-white' : 'bg-zinc-800 border-white/10'}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={handleGeneratePreviewImages}
-                  disabled={isGeneratingPreviewImages}
-                  className="text-xs px-3 py-1.5 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
-                >
-                  {isGeneratingPreviewImages ? 'Generating...' : 'Generate Images'}
-                </button>
-              </div>
-
-              {/* Display generated images inside modal */}
+              {/* Display generated images inside modal (if any) - simplified */}
               {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
-                <div className="mb-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
-                  <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">IMAGES FOR PREVIEW THREAD — assign below to tweets</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="mb-4 p-3 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                  <div className="text-[10px] font-medium text-violet-400 mb-1.5 tracking-[1.5px]">ATTACHED IMAGES — assign below per tweet</div>
+                  <div className="grid grid-cols-4 gap-2">
                     {getThreadImages({ id: showPostPreviewFor }).map((img: any, idx: number) => (
                       <div key={idx} className="group relative overflow-hidden rounded border border-white/10 bg-zinc-950/50">
                         <img src={img.url} alt={`Preview image ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
-                        <div className="text-[9px] p-1 text-center text-zinc-400 bg-black/50">{img.style}</div>
+                        <div className="text-[8px] p-0.5 text-center text-zinc-400 bg-black/50">{img.style}</div>
                       </div>
                     ))}
                   </div>
@@ -2083,44 +2071,44 @@ export default function Page() {
                 const charCount = tweet.length
                 const overLimit = charCount > 280
                 return (
-                  <div key={index} className="bg-zinc-900/70 border border-white/10 rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-violet-400 tracking-[1px]">TWEET {index + 1}</span>
-                      <span className={`text-xs tabular-nums ${overLimit ? 'text-red-400 font-semibold' : 'text-zinc-500'}`}>
+                  <div key={index} className="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 sm:p-5">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-xs font-semibold text-violet-400 tracking-[1.5px]">TWEET {index + 1}</span>
+                      <span className={`text-xs tabular-nums font-medium ${overLimit ? 'text-red-400' : 'text-zinc-400'}`}>
                         {charCount}/280
                       </span>
                     </div>
                     <textarea
                       value={tweet}
                       onChange={(e) => updatePreviewTweet(index, e.target.value)}
-                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/50' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3 text-sm leading-relaxed min-h-[70px] resize-y outline-none`}
+                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/50' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3.5 text-[14px] leading-relaxed min-h-[68px] resize-y outline-none`}
                       placeholder="Write your tweet..."
                     />
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                       <button
                         onClick={() => removePreviewTweet(index)}
                         disabled={previewTweets.length <= 1}
-                        className="text-[10px] px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition"
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition min-h-[28px]"
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, -1)}
                         disabled={index === 0}
-                        className="text-[10px] px-2 py-1 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition"
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[28px]"
                       >
                         ↑ Move up
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, 1)}
                         disabled={index === previewTweets.length - 1}
-                        className="text-[10px] px-2 py-1 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition"
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[28px]"
                       >
                         ↓ Move down
                       </button>
                       <button
                         onClick={addPreviewTweet}
-                        className="ml-auto text-[10px] px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition"
+                        className="ml-auto text-[10px] px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition min-h-[28px]"
                       >
                         + Add tweet
                       </button>
@@ -2130,7 +2118,7 @@ export default function Page() {
                     {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                       <div className="mt-2 pt-2 border-t border-white/10">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-zinc-400">Attach images (multi-select):</span>
+                          <span className="text-[10px] text-zinc-400">Attach to this tweet:</span>
                           <select
                             multiple
                             size={Math.min(4, getThreadImages({ id: showPostPreviewFor }).length || 1)}
@@ -2170,10 +2158,7 @@ export default function Page() {
 
             {/* Sticky footer with actions and confirm button */}
             <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 sticky bottom-0 z-10">
-              {/* Note - generate controls are in the scrollable area above */}
-              <div className="text-[10px] text-zinc-500 mb-4">Use the image generator controls above to create and assign images to tweets in this preview. (Images save with the thread; X post remains text-only.)</div>
-
-              {/* Big confirm */}
+              {/* Big clear confirm button */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={confirmPostFromPreview}
@@ -2191,7 +2176,7 @@ export default function Page() {
                 </button>
               </div>
 
-              <p className="text-center text-[10px] text-zinc-500 mt-3 tracking-[0.5px]">This posts as a reply chain using your connected X account. Edits are preview-only.</p>
+              <p className="text-center text-[10px] text-zinc-500 mt-3 tracking-[0.5px]">Images attach where assigned. Posts as reply chain via your X account. Edits preview-only.</p>
             </div>
           </div>
         </div>
