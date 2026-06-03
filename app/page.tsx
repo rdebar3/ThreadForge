@@ -60,6 +60,9 @@ export default function Page() {
   const [rewriteCustom, setRewriteCustom] = useState('')
   const [isRewriting, setIsRewriting] = useState(false)
 
+  // More actions dropdown per thread (for less-used actions: Save Template, Rewrite)
+  const [showMoreFor, setShowMoreFor] = useState<number | null>(null)
+
   // Post to X Preview/Edit Modal (Pro)
   const [showPostPreviewFor, setShowPostPreviewFor] = useState<number | null>(null)
   const [previewTweets, setPreviewTweets] = useState<string[]>([])
@@ -1365,122 +1368,139 @@ export default function Page() {
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
                     <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
-                    <button
-                      onClick={() => copyThread(thread)}
-                      title="Copy the entire thread (all tweets) to your clipboard"
-                      className="copy-button flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
-                    >
-                      <CopyIcon />
-                      <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
-                    </button>
-                    {hasPro && (
+                  <div className="relative">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
                       <button
-                        onClick={() => enhanceThread(thread)}
-                        disabled={suggestLoading[`${thread.id}-enhance`]}
-                        title="One-click smart enhance: auto-add 1 natural emoji per tweet + 2-4 strategic hashtags (Pro)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        onClick={() => copyThread(thread)}
+                        title="Copy the entire thread (all tweets) to your clipboard"
+                        className="copy-button flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
                       >
-                        ✨ Enhance
+                        <CopyIcon />
+                        <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
                       </button>
-                    )}
-                    {hasPro && (
-                      <button
-                        onClick={() => copyToX(thread)}
-                        title="Post full thread to X as reply chain (Pro)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
-                      >
-                        <XIcon />
-                        Post to X
-                      </button>
-                    )}
-                    {isProPlus ? (
-                      <button
-                        onClick={() => {
-                          setShowImageModalFor(thread.id)
-                          setSelectedImageStyle('auto')
-                          setSelectedImageCount(1)
-                        }}
-                        title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
-                      >
-                        ✨ Generate Images
-                      </button>
-                    ) : !hasUsedProPlusTrial ? (
-                      <button
-                        onClick={() => {
-                          setShowImageModalFor(thread.id)
-                          setSelectedImageStyle('auto')
-                          setSelectedImageCount(1)
-                        }}
-                        title="Try AI Images once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
-                      >
-                        ✨ Try Pro+ Images (1-time)
-                      </button>
-                    ) : hasPro ? (
-                      <a
-                        href="#pricing"
-                        title="Image Generation requires Pro+ (trial used)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
-                      >
-                        Upgrade to Pro+ for AI Images
-                      </a>
-                    ) : null}
+                      {hasPro && (
+                        <button
+                          onClick={() => enhanceThread(thread)}
+                          disabled={suggestLoading[`${thread.id}-enhance`]}
+                          title="One-click smart enhance: auto-add 1 natural emoji per tweet + 2-4 strategic hashtags (Pro)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          ✨ Enhance
+                        </button>
+                      )}
+                      {hasPro && (
+                        <button
+                          onClick={() => copyToX(thread)}
+                          title="Post full thread to X as reply chain (Pro)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          <XIcon />
+                          Post to X
+                        </button>
+                      )}
+                      {isProPlus ? (
+                        <button
+                          onClick={() => {
+                            setShowMoreFor(null)
+                            setShowImageModalFor(thread.id)
+                            setSelectedImageStyle('auto')
+                            setSelectedImageCount(1)
+                          }}
+                          title="Generate 1-4 relevant AI images for this thread (Pro+)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          ✨ Generate Images
+                        </button>
+                      ) : !hasUsedProPlusTrial ? (
+                        <button
+                          onClick={() => {
+                            setShowMoreFor(null)
+                            setShowImageModalFor(thread.id)
+                            setSelectedImageStyle('auto')
+                            setSelectedImageCount(1)
+                          }}
+                          title="Try AI Images once for free (one-time Pro+ trial)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          ✨ Try Pro+ Images (1-time)
+                        </button>
+                      ) : hasPro ? (
+                        <a
+                          href="#pricing"
+                          title="Image Generation requires Pro+ (trial used)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        >
+                          Upgrade to Pro+ for AI Images
+                        </a>
+                      ) : null}
 
-                    {/* Scheduler (Pro+ exclusive) */}
-                    {isProPlus ? (
-                      <button
-                        onClick={() => {
-                          setShowScheduleFor(thread.id)
-                          setScheduleTime('')
-                        }}
-                        title="Schedule this full thread to post automatically to X (Pro+)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
-                      >
-                        📅 Schedule
-                      </button>
-                    ) : !hasUsedProPlusTrial ? (
-                      <button
-                        onClick={() => {
-                          setShowScheduleFor(thread.id)
-                          setScheduleTime('')
-                        }}
-                        title="Try Scheduler once for free (one-time Pro+ trial)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
-                      >
-                        📅 Try Pro+ Scheduler (1-time)
-                      </button>
-                    ) : hasPro ? (
-                      <a
-                        href="#pricing"
-                        title="Thread Scheduler requires Pro+ (trial used)"
-                        className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
-                      >
-                        Schedule (Pro+)
-                      </a>
-                    ) : null}
+                      {/* Scheduler (Pro+ exclusive) */}
+                      {isProPlus ? (
+                        <button
+                          onClick={() => {
+                            setShowMoreFor(null)
+                            setShowScheduleFor(thread.id)
+                            setScheduleTime('')
+                          }}
+                          title="Schedule this full thread to post automatically to X (Pro+)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          📅 Schedule
+                        </button>
+                      ) : !hasUsedProPlusTrial ? (
+                        <button
+                          onClick={() => {
+                            setShowMoreFor(null)
+                            setShowScheduleFor(thread.id)
+                            setScheduleTime('')
+                          }}
+                          title="Try Scheduler once for free (one-time Pro+ trial)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-3 sm:px-4 py-1.5 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                        >
+                          📅 Try Pro+ Scheduler (1-time)
+                        </button>
+                      ) : hasPro ? (
+                        <a
+                          href="#pricing"
+                          title="Thread Scheduler requires Pro+ (trial used)"
+                          className="flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                        >
+                          Schedule (Pro+)
+                        </a>
+                      ) : null}
 
-                    {/* Save as Template (Pro) */}
-                    {hasPro && (
-                      <button
-                        onClick={() => saveCurrentThreadAsTemplate(thread)}
-                        title="Save this thread as a reusable private template"
-                        className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-emerald-500/10 hover:text-emerald-400 border border-emerald-500/30 rounded-2xl transition-all"
-                      >
-                        Save Template
-                      </button>
-                    )}
+                      {/* More dropdown (Save Template + Rewrite) */}
+                      {(hasPro || isProPlus) && (
+                        <button
+                          onClick={() => setShowMoreFor(showMoreFor === thread.id ? null : thread.id)}
+                          title="More actions"
+                          className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
+                        >
+                          ⋯ More
+                        </button>
+                      )}
+                    </div>
 
-                    {/* AI Rewriter (Pro+) */}
-                    {isProPlus && (
-                      <button
-                        onClick={() => { setShowRewriteFor(thread.id); setRewriteMode('Punchier'); setRewriteCustom('') }}
-                        title="Rewrite entire thread with AI (Pro+)"
-                        className="flex items-center gap-1 sm:gap-1.5 md:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-white/10 rounded-2xl transition-all"
-                      >
-                        ✎ Rewrite
-                      </button>
+                    {/* Premium More dropdown menu */}
+                    {showMoreFor === thread.id && (
+                      <div className="absolute right-0 top-full mt-1 z-30 w-44 glass-card border border-white/10 rounded-2xl py-1 shadow-2xl text-xs">
+                        {hasPro && (
+                          <button
+                            onClick={() => { saveCurrentThreadAsTemplate(thread); setShowMoreFor(null); }}
+                            className="w-full text-left px-3 py-1.5 hover:bg-white/5 flex items-center gap-2 text-emerald-400"
+                          >
+                            Save Template
+                          </button>
+                        )}
+                        {isProPlus && (
+                          <button
+                            onClick={() => { setShowRewriteFor(thread.id); setRewriteMode('Punchier'); setRewriteCustom(''); setShowMoreFor(null); }}
+                            className="w-full text-left px-3 py-1.5 hover:bg-white/5 flex items-center gap-2 text-violet-300"
+                          >
+                            ✎ Rewrite with AI
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

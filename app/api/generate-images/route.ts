@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
 
       const basePrompt = `High-quality, visually striking social media image designed as a companion for an X thread. 
 
+Cinematic scene, atmospheric lighting, minimal text (strongly prefer zero text overlays or at most 0-2 small words if absolutely necessary), symbolic, metaphorical, or abstract visuals preferred over literal depictions. No heavy typography, no cluttered text, no quotes, no logos.
+
 Topic: ${topic}
 Thread title: ${title}
 
@@ -113,11 +115,11 @@ ${tweets.slice(0, 3).map((t: string) => t.replace(/^\d+\/\s*/, '').substring(0, 
 
 Style: ${resolvedStyle}${modifier ? ' - ' + modifier : ''}
 
-Create a beautiful, eye-catching image that captures the emotion and core idea of this thread. 
-- NO ugly text overlays or long quotes on the image (at most 4-6 words if any text is used)
-- Clean, modern, professional or artistic composition
+Create a beautiful, eye-catching, premium cinematic image that captures the emotion and core idea of this thread with atmospheric depth, high visual impact, and professional quality. 
+- Strongly avoid any text overlays; use pure visual storytelling, symbolism, scenes, metaphors, or aesthetic representation.
+- Clean, modern, cinematic composition
 - Perfect for X/Twitter (square format, high visual impact)
-- Focus on symbolism, scenes, metaphors, or aesthetic representation rather than literal text`
+- Focus on mood, light, and symbolic elements`
 
       const fullPrompt = basePrompt
 
