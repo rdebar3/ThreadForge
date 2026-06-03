@@ -15,22 +15,29 @@ function extractJsonFromLlm(text: string): string | null {
 }
 
 function getFallbackSuggestions(input: string | string[], title: string, topic: string) {
-  const content = Array.isArray(input) ? input.join(' ') : input
+  const tweets = Array.isArray(input) ? input : [input || '']
+  const content = tweets.join(' ')
   const lower = (title + ' ' + content + ' ' + topic).toLowerCase()
-  const emojis: string[] = []
-  if (lower.includes('ai') || lower.includes('tech') || lower.includes('tool') || lower.includes('grok')) emojis.push('🤖', '🧠')
-  if (lower.includes('growth') || lower.includes('success') || lower.includes('scale') || lower.includes('launch')) emojis.push('🚀', '📈')
-  if (lower.includes('fail') || lower.includes('mistake') || lower.includes('learn') || lower.includes('story')) emojis.push('💡', '🔥')
-  if (lower.includes('money') || lower.includes('business') || lower.includes('founder')) emojis.push('💰')
-  if (emojis.length < 4) emojis.push('✨', '🎯', '💬', '🌟')
-  const hashtags: string[] = ['#x', '#twitter', '#buildinpublic']
-  if (lower.includes('ai')) hashtags.push('#ai', '#grok')
-  if (lower.includes('growth') || lower.includes('founder')) hashtags.push('#growth', '#founders')
-  if (lower.includes('launch') || lower.includes('product')) hashtags.push('#startup', '#product')
+  // Per-tweet emojis (1 max per tweet, tasteful based on content)
+  const perTweetEmojis: string[] = tweets.map((t, i) => {
+    const tLower = (title + ' ' + t + ' ' + topic).toLowerCase()
+    if (tLower.includes('ai') || tLower.includes('tech') || tLower.includes('tool') || tLower.includes('grok')) return '🤖'
+    if (tLower.includes('growth') || tLower.includes('success') || tLower.includes('scale') || tLower.includes('launch')) return '🚀'
+    if (tLower.includes('fail') || tLower.includes('mistake') || tLower.includes('learn') || tLower.includes('story')) return '💡'
+    if (tLower.includes('money') || tLower.includes('business') || tLower.includes('founder')) return '💰'
+    const defaults = ['✨', '🎯', '🌟', '💬']
+    return defaults[i % defaults.length]
+  })
+  const hashtags: string[] = ['#x', '#buildinpublic']
+  if (lower.includes('ai')) hashtags.push('#ai')
+  if (lower.includes('growth') || lower.includes('founder')) hashtags.push('#growth')
+  if (lower.includes('launch') || lower.includes('product')) hashtags.push('#startup')
   if (lower.includes('thread') || lower.includes('tips')) hashtags.push('#threads')
+  // limit to 2-4 strategic
+  const finalHashtags = [...new Set(hashtags)].slice(0, 4)
   return {
-    emojis: [...new Set(emojis)].slice(0, 6),
-    hashtags: [...new Set(hashtags)].slice(0, 8)
+    emojis: perTweetEmojis,  // exactly one per tweet
+    hashtags: finalHashtags
   }
 }
 
@@ -69,12 +76,14 @@ export async function POST(req: NextRequest) {
 
     if (isThreadMode) {
       const threadText = tweets.map((t: string, idx: number) => `${idx + 1}. ${t}`).join('\n')
-      system = `You are a premium X/Twitter content strategist specializing in high-engagement threads. For the full thread provided (title + numbered tweets, overall topic: ${topic}), suggest 5-7 highly relevant, visually striking, non-generic emojis that perfectly capture the key ideas, emotions, and moments across the thread (mix visual, emotional, and action emojis; avoid overused ones unless they fit exactly). Suggest 6-10 specific, valuable, non-spammy hashtags that are on-trend for the niche, help discoverability, and feel intentional/premium (mix 1-2 broad + targeted long-tail). 
+      system = `You are a premium X/Twitter content strategist specializing in high-engagement threads. For the full thread provided (title + numbered tweets, overall topic: ${topic}), intelligently suggest EXACTLY one tasteful, relevant emoji per tweet (N emojis for N tweets). Emojis must enhance the emotion/tone of that specific tweet naturally, placed at the end without distracting or breaking flow/readability. Never spammy or overdone. 
+
+Also suggest 2-4 strategic, relevant hashtags for the overall thread message (on-trend for niche, help discoverability, feel professional/intentional, mix broad + specific).
 
 Return EXACTLY this JSON only, nothing else:
-{"emojis": ["🧠","🚀","💡","🎯","✨"], "hashtags": ["#ai"," #buildinpublic","#growth","#founder","#x"]} 
+{"emojis": ["😊", "🚀", "💡"], "hashtags": ["#ai", "#growth"]} 
 
-Emojis and hashtags must be directly relevant to the provided thread content. Prioritize quality, specificity, and premium feel.`
+Emojis array length MUST exactly match number of tweets. Hashtags 2-4 max. Prioritize natural, high-quality, clean/professional feel.`
 
       userPrompt = `Thread title: ${title || 'Untitled'}\n\nFull thread:\n${threadText}`
     } else {
