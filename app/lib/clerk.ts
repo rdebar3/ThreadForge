@@ -749,11 +749,26 @@ export async function submitShowcasePost(
 
     const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
 
+    // Ensure images array saved correctly: sanitize/accept image objects from generator (url, style, revisedPrompt)
+    let cleanImages: Array<{ url: string; style: string; revisedPrompt?: string }> = []
+    if (Array.isArray(data.images)) {
+      cleanImages = data.images
+        .filter((img: any) => img && typeof img.url === 'string' && img.url.length > 0)
+        .map((img: any) => ({
+          url: String(img.url),
+          style: img.style ? String(img.style) : 'auto',
+          revisedPrompt: (img.revisedPrompt || img.revised_prompt) ? String(img.revisedPrompt || img.revised_prompt) : undefined,
+        }))
+        .slice(0, 4) // cap reasonably
+    }
+
+    console.log(`[clerk] submitShowcasePost: user=${userId}, titleLen=${(data.title||'').length}, tweets=${(data.tweets||[]).length}, rawImages=${(data.images||[]).length}, cleanImages=${cleanImages.length}`)
+
     const newPost: ShowcasePost = {
       id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
       title: (data.title || 'Untitled Thread').trim().slice(0, 120),
       tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 12) : [],
-      images: data.images || [],
+      images: cleanImages,
       likes: 0,
       createdAt: new Date().toISOString(),
       userId,
@@ -761,16 +776,24 @@ export async function submitShowcasePost(
 
     const updated = [newPost, ...existing].slice(0, MAX_SHOWCASE_PER_USER)
 
-    await client.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        ...user.publicMetadata,
-        showcasePosts: updated,
-      },
-    })
+    // Proper error handling specifically around the Clerk publicMetadata update
+    try {
+      await client.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          ...user.publicMetadata,
+          showcasePosts: updated,
+        },
+      })
+      console.log(`[clerk] submitShowcasePost: Clerk update SUCCESS for postId=${newPost.id}, user=${userId}, imagesSaved=${cleanImages.length}`)
+    } catch (updateErr: any) {
+      console.error(`[clerk] submitShowcasePost: Clerk updateUserMetadata FAILED for user=${userId}:`, updateErr?.message || updateErr, 'status:', updateErr?.status, 'clerkCode:', updateErr?.clerkError?.code)
+      // Do not swallow without return; still return null so caller knows
+      throw updateErr // rethrow so outer can log full, but will be caught below
+    }
 
     return newPost
-  } catch (error) {
-    console.error('Failed to submit showcase post:', error)
+  } catch (error: any) {
+    console.error('[clerk] Failed to submit showcase post (full error):', error?.message || error, error?.stack ? error.stack.substring(0,500) : '')
     return null
   }
 }

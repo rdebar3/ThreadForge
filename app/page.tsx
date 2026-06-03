@@ -108,7 +108,8 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: submitTitle.trim() || thread.title,
+          title: submitTitle.trim(), // custom/optional title only (may be empty)
+          threadTitle: thread.title, // original for clean backend fallback if no custom
           tweets: thread.tweets,
           images: imagesToSend,
         }),
