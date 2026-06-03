@@ -741,7 +741,7 @@ export interface EnrichedShowcasePost extends ShowcasePost {
  */
 export async function submitShowcasePost(
   userId: string,
-  data: { title: string; tweets: string[]; images?: ShowcasePost['images'] }
+  data: { title: string; tweets: string[]; images?: any[] }
 ): Promise<ShowcasePost | null> {
   try {
     const client = await clerkClient()
@@ -749,20 +749,18 @@ export async function submitShowcasePost(
 
     const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
 
-    // Ensure images array saved correctly: sanitize/accept image objects from generator (url, style, revisedPrompt)
+    // Super defensive image cleaning
     let cleanImages: Array<{ url: string; style: string; revisedPrompt?: string }> = []
     if (Array.isArray(data.images)) {
       cleanImages = data.images
-        .filter((img: any) => img && typeof img.url === 'string' && img.url.length > 0)
+        .filter((img: any) => img && typeof img.url === 'string' && img.url.length > 10)
         .map((img: any) => ({
           url: String(img.url),
-          style: img.style ? String(img.style) : 'auto',
-          revisedPrompt: (img.revisedPrompt || img.revised_prompt) ? String(img.revisedPrompt || img.revised_prompt) : undefined,
+          style: String(img.style || 'cinematic'),
+          revisedPrompt: img.revisedPrompt || img.revised_prompt ? String(img.revisedPrompt || img.revised_prompt) : undefined,
         }))
-        .slice(0, 4) // cap reasonably
+        .slice(0, 4)
     }
-
-    console.log(`[clerk] submitShowcasePost: user=${userId}, titleLen=${(data.title||'').length}, tweets=${(data.tweets||[]).length}, rawImages=${(data.images||[]).length}, cleanImages=${cleanImages.length}`)
 
     const newPost: ShowcasePost = {
       id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -774,26 +772,28 @@ export async function submitShowcasePost(
       userId,
     }
 
-    const updated = [newPost, ...existing].slice(0, MAX_SHOWCASE_PER_USER)
+    const updated = [newPost, ...existing].slice(0, 5)
 
-    // Proper error handling specifically around the Clerk publicMetadata update
-    try {
-      await client.users.updateUserMetadata(userId, {
-        publicMetadata: {
-          ...user.publicMetadata,
-          showcasePosts: updated,
-        },
-      })
-      console.log(`[clerk] submitShowcasePost: Clerk update SUCCESS for postId=${newPost.id}, user=${userId}, imagesSaved=${cleanImages.length}`)
-    } catch (updateErr: any) {
-      console.error(`[clerk] submitShowcasePost: Clerk updateUserMetadata FAILED for user=${userId}:`, updateErr?.message || updateErr, 'status:', updateErr?.status, 'clerkCode:', updateErr?.clerkError?.code)
-      // Do not swallow without return; still return null so caller knows
-      throw updateErr // rethrow so outer can log full, but will be caught below
-    }
+    // Defensive metadata update
+    const safeMetadata = JSON.parse(JSON.stringify({
+      ...user.publicMetadata,
+      showcasePosts: updated,
+    }))
 
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: safeMetadata,
+    })
+
+    console.log(`[clerk] submitShowcasePost SUCCESS → postId=${newPost.id}, images=${cleanImages.length}`)
     return newPost
+
   } catch (error: any) {
-    console.error('[clerk] Failed to submit showcase post (full error):', error?.message || error, error?.stack ? error.stack.substring(0,500) : '')
+    console.error('[clerk] submitShowcasePost FAILED:', {
+      message: error?.message,
+      code: error?.clerkError?.code,
+      status: error?.status,
+      stack: error?.stack?.substring(0, 400)
+    })
     return null
   }
 }
