@@ -749,50 +749,52 @@ export async function submitShowcasePost(
 
     const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
 
-    // Super defensive image cleaning
+    // Extremely defensive image cleaning
     let cleanImages: Array<{ url: string; style: string; revisedPrompt?: string }> = []
     if (Array.isArray(data.images)) {
       cleanImages = data.images
         .filter((img: any) => img && typeof img.url === 'string' && img.url.length > 10)
         .map((img: any) => ({
-          url: String(img.url),
+          url: String(img.url).trim(),
           style: String(img.style || 'cinematic'),
-          revisedPrompt: img.revisedPrompt || img.revised_prompt ? String(img.revisedPrompt || img.revised_prompt) : undefined,
+          revisedPrompt: (img.revisedPrompt || img.revised_prompt) 
+            ? String(img.revisedPrompt || img.revised_prompt) 
+            : undefined,
         }))
         .slice(0, 4)
     }
 
     const newPost: ShowcasePost = {
-      id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
       title: (data.title || 'Untitled Thread').trim().slice(0, 120),
       tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 12) : [],
       images: cleanImages,
       likes: 0,
       createdAt: new Date().toISOString(),
-      userId,
+      userId: userId,
     }
 
-    const updated = [newPost, ...existing].slice(0, 5)
+    const updatedPosts = [newPost, ...existing].slice(0, 5)
 
-    // Defensive metadata update
-    const safeMetadata = JSON.parse(JSON.stringify({
+    // Ultra-safe metadata update
+    const safePublicMetadata = JSON.parse(JSON.stringify({
       ...user.publicMetadata,
-      showcasePosts: updated,
+      showcasePosts: updatedPosts,
     }))
 
     await client.users.updateUserMetadata(userId, {
-      publicMetadata: safeMetadata,
+      publicMetadata: safePublicMetadata,
     })
 
-    console.log(`[clerk] submitShowcasePost SUCCESS → postId=${newPost.id}, images=${cleanImages.length}`)
+    console.log(`[clerk] submitShowcasePost SUCCESS | postId=${newPost.id} | images=${cleanImages.length} | user=${userId}`)
     return newPost
 
   } catch (error: any) {
-    console.error('[clerk] submitShowcasePost FAILED:', {
+    console.error('[clerk] submitShowcasePost CRITICAL FAILURE:', {
       message: error?.message,
-      code: error?.clerkError?.code,
+      clerkCode: error?.clerkError?.code,
       status: error?.status,
-      stack: error?.stack?.substring(0, 400)
+      fullError: error
     })
     return null
   }
