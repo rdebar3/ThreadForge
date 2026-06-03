@@ -1573,41 +1573,45 @@ export default function Page() {
                     const key = `${thread.id}-${i}`
                     const isCopied = copiedTweetKey === key
                     return (
-                      <div key={i} className="group flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 rounded-xl hover:bg-zinc-950/60 px-2 sm:px-3 py-1.5 sm:py-2 -mx-2 sm:-mx-3 transition-colors">
-                        <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
-                          {i + 1}/
-                        </div>
-                        <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0">
-                          {tweet}
-                        </div>
-                        <button
-                          onClick={() => copyTweet(thread.id, i, tweet)}
-                          title="Copy just this single tweet"
-                          className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1"
-                        >
-                          {isCopied ? (
-                            <span className="text-emerald-400 font-medium">Copied!</span>
-                          ) : (
-                            <>
-                              <span>Copy</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16v-4m4 4v4m4-8v8m4-4v-4m-16 8h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
-                              </svg>
-                            </>
-                          )}
-                        </button>
-                        {hasPro && (
+                      <div key={i} className="group rounded-xl hover:bg-zinc-950/60 px-2 sm:px-3 py-1.5 sm:py-2 -mx-2 sm:-mx-3 transition-colors">
+                        {/* Main tweet line: always keeps proper flex row (nowrap on desktop) so emoji suggestions don't break horizontal layout/width */}
+                        <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
+                          <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
+                            {i + 1}/
+                          </div>
+                          <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0">
+                            {tweet}
+                          </div>
                           <button
-                            onClick={() => suggestForTweet(thread.id, i, tweet)}
-                            disabled={suggestLoading[`${thread.id}-${i}`]}
-                            title="Get Emojis & Hashtags for this tweet (Pro)"
-                            className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
+                            onClick={() => copyTweet(thread.id, i, tweet)}
+                            title="Copy just this single tweet"
+                            className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1"
                           >
-                            {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨'}
+                            {isCopied ? (
+                              <span className="text-emerald-400 font-medium">Copied!</span>
+                            ) : (
+                              <>
+                                <span>Copy</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16v-4m4 4v4m4-8v8m4-4v-4m-16 8h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2" />
+                                </svg>
+                              </>
+                            )}
                           </button>
-                        )}
+                          {hasPro && (
+                            <button
+                              onClick={() => suggestForTweet(thread.id, i, tweet)}
+                              disabled={suggestLoading[`${thread.id}-${i}`]}
+                              title="Get Emojis & Hashtags for this tweet (Pro)"
+                              className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 rounded-lg self-start mt-0.5 transition-all disabled:opacity-50"
+                            >
+                              {suggestLoading[`${thread.id}-${i}`] ? '...' : '✨'}
+                            </button>
+                          )}
+                        </div>
+                        {/* Suggestions added cleanly below the tweet row (block, not flex child) - prevents breaking desktop horizontal layout/width when emoji button clicked */}
                         {suggestions[`${thread.id}-${i}`] && (
-                          <div className="w-full text-[10px] sm:text-xs text-violet-300 mt-0.5 sm:mt-1 pl-6 sm:pl-8">
+                          <div className="text-[10px] sm:text-xs text-violet-300 mt-0.5 sm:mt-1 pl-6 sm:pl-8">
                             Emojis: {suggestions[`${thread.id}-${i}`].emojis.join(' ')} &nbsp;&nbsp; Hashtags: {suggestions[`${thread.id}-${i}`].hashtags.join(' ')}
                           </div>
                         )}
