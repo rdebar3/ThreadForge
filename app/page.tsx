@@ -1788,10 +1788,11 @@ export default function Page() {
           onClick={cancelPostPreview}
         >
           <div 
-            className="glass-card border border-white/10 rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="glass-card border border-white/10 rounded-3xl p-0 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            {/* Header - fixed */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-2xl font-semibold tracking-tight">Preview &amp; Edit Thread</h3>
                 <p className="text-sm text-zinc-400">Edit tweets before posting as a reply chain to X. Changes are for this post only.</p>
@@ -1804,7 +1805,8 @@ export default function Page() {
               </button>
             </div>
 
-            <div className="space-y-3 mb-6">
+            {/* Scrollable tweets list */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
               {previewTweets.map((tweet, index) => {
                 const charCount = tweet.length
                 const overLimit = charCount > 280
@@ -1856,41 +1858,44 @@ export default function Page() {
               })}
             </div>
 
-            {/* Actions row */}
-            <div className="flex flex-wrap gap-3 items-center mb-6">
-              <button
-                onClick={() => {
-                  if (showPostPreviewFor !== null) {
-                    const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
-                    if (origThread) handleGenerateImages(origThread)
-                  }
-                }}
-                className="text-sm px-4 py-2 bg-zinc-800 hover:bg-violet-500/20 border border-white/10 rounded-2xl transition flex items-center gap-2"
-              >
-                ✨ Generate Images
-              </button>
-              <div className="text-[10px] text-zinc-500">Images will appear in the thread view below (text-only is posted to X).</div>
-            </div>
+            {/* Sticky footer with actions and confirm button */}
+            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 sticky bottom-0 z-10">
+              {/* Actions row - keep inside footer for visibility */}
+              <div className="flex flex-wrap gap-3 items-center mb-4">
+                <button
+                  onClick={() => {
+                    if (showPostPreviewFor !== null) {
+                      const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
+                      if (origThread) handleGenerateImages(origThread)
+                    }
+                  }}
+                  className="text-sm px-4 py-2 bg-zinc-800 hover:bg-violet-500/20 border border-white/10 rounded-2xl transition flex items-center gap-2"
+                >
+                  ✨ Generate Images
+                </button>
+                <div className="text-[10px] text-zinc-500">Images will appear in the thread view below (text-only is posted to X).</div>
+              </div>
 
-            {/* Big confirm */}
-            <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={confirmPostFromPreview}
-                disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
-                className="flex-1 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow"
-              >
-                {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
-              </button>
-              <button
-                onClick={cancelPostPreview}
-                disabled={isPosting}
-                className="px-8 py-3.5 border border-white/10 text-sm font-medium rounded-2xl hover:bg-white/5 transition disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            </div>
+              {/* Big confirm */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={confirmPostFromPreview}
+                  disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
+                  className="flex-1 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow"
+                >
+                  {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
+                </button>
+                <button
+                  onClick={cancelPostPreview}
+                  disabled={isPosting}
+                  className="px-8 py-3.5 border border-white/10 text-sm font-medium rounded-2xl hover:bg-white/5 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
 
-            <p className="text-center text-[10px] text-zinc-500 mt-3 tracking-[0.5px]">This posts as a reply chain using your connected X account. Edits are preview-only.</p>
+              <p className="text-center text-[10px] text-zinc-500 mt-3 tracking-[0.5px]">This posts as a reply chain using your connected X account. Edits are preview-only.</p>
+            </div>
           </div>
         </div>
       )}
