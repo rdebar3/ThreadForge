@@ -1430,7 +1430,7 @@ export default function Page() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-5 gap-y-3">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
-                    <div className="font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4 break-words">{thread.title}</div>
+                    <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
                     <button

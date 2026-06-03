@@ -67,6 +67,17 @@ body {
   }
 }
 
+/* Fix for thread titles: natural multi-line wrapping, hyphens for long words, prevent one-word-per-line vertical stacking while keeping bold/prominent on desktop+mobile */
+.thread-card .thread-title {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  overflow-wrap: break-word;
+  word-break: normal; /* normal word wrapping at spaces; only break long words via hyphens/overflow */
+  /* ensure it doesn't force excessive height */
+  max-width: 100%;
+}
+
 .tweet {
   font-size: 15px;
   line-height: 1.5;
@@ -414,9 +425,10 @@ body {
 
   /* Title size override if arbitrary classes don't catch all */
   .thread-card [class*="text-[17px]"],
-  .thread-card [class*="text-[21px]"] {
-    font-size: 15px !important;
-    line-height: 1.2;
+  .thread-card [class*="text-[21px]"],
+  .thread-card .thread-title {
+    font-size: 14px !important;
+    line-height: 1.3; /* slightly looser for readability on multi-line titles in very narrow viewports */
   }
 
   .thread-card button {
