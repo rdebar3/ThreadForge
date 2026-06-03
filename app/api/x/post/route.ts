@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX } from '../../../lib/clerk'
+import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX, saveGenerationToHistory } from '../../../lib/clerk'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -25,6 +25,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No tweets to post' }, { status: 400 })
   }
 
+  // Attached images from preview modal (if generated/assigned before Confirm & Post)
+  const images = Array.isArray(body?.images) ? body.images : []
+  const title = typeof body?.title === 'string' ? body.title : 'Posted Thread'
+  const postTopic = typeof body?.topic === 'string' ? body.topic : 'Posted thread'
+
   const accessToken = await getValidXAccessToken(userId)
   if (!accessToken) {
     return NextResponse.json({ error: 'X account not connected. Please connect your X account from the Scheduler page first.', requireConnect: true }, { status: 400 })
@@ -35,6 +40,25 @@ export async function POST(req: NextRequest) {
 
     // Track for Pro+ analytics (increment posted count)
     await incrementPostedCount(userId, 1)
+
+    // Save the (possibly edited) thread + attached images to history so images are persisted with the thread history
+    // This fulfills "when Confirm & Post clicked, include the attached images with the thread (at min save with history)"
+    try {
+      const postedThread = {
+        id: Date.now(),
+        title,
+        tweets,
+        ...(images.length > 0 ? { images } : {}),
+      }
+      await saveGenerationToHistory(userId, {
+        topic: postTopic,
+        threads: [postedThread],
+        timestamp: new Date().toISOString(),
+      })
+    } catch (histErr) {
+      // History save is best-effort; do not fail the post
+      console.error('[x/post] Failed to save posted thread+images to history (non-fatal):', histErr)
+    }
 
     return NextResponse.json({ success: true, postIds })
   } catch (err: any) {

@@ -445,30 +445,40 @@ export default function HistoryPage() {
                           )}
 
                           {/* Display generated images in history - moved to top (right below title / Post to X buttons) */}
-                          {(isProPlus || threadImages[`${record.id}-${thread.id}`]?.length > 0) && (
-                            <div className="mt-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES — {threadImages[`${record.id}-${thread.id}`][0]?.style}</div>
-                                <button onClick={() => {
-                                  const key = `${record.id}-${thread.id}`
-                                  setShowImageModalFor(key)
-                                  setSelectedImageStyle('auto')
-                                  setSelectedImageCount(1)
-                                }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {threadImages[`${record.id}-${thread.id}`].map((img, idx) => (
-                                  <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
-                                    <img src={img.url} alt={`Visual ${idx + 1}`} className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform" />
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
-                                      <button onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Download</button>
-                                      <button onClick={() => copyImageToClipboard(img.url)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Copy</button>
+                          {/* Support images embedded on the thread (saved via preview post confirm) or local client state */}
+                          {(() => {
+                            const embedded = (thread as any).images && Array.isArray((thread as any).images) && (thread as any).images.length > 0
+                              ? (thread as any).images
+                              : null
+                            const localImgs = threadImages[`${record.id}-${thread.id}`] || []
+                            const imgs = embedded || localImgs
+                            const hasImgs = imgs.length > 0
+                            if (!hasImgs) return null
+                            return (
+                              <div className="mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES — {imgs[0]?.style}</div>
+                                  <button onClick={() => {
+                                    const key = `${record.id}-${thread.id}`
+                                    setShowImageModalFor(key)
+                                    setSelectedImageStyle('auto')
+                                    setSelectedImageCount(1)
+                                  }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  {imgs.map((img: any, idx: number) => (
+                                    <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
+                                      <img src={img.url} alt={`Visual ${idx + 1}`} className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform" />
+                                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 flex gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                                        <button onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Download</button>
+                                        <button onClick={() => copyImageToClipboard(img.url)} className="text-[10px] px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white">Copy</button>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )
+                          })()}
 
                           <div className="space-y-3">
                             {thread.tweets.map((tweet, i) => {

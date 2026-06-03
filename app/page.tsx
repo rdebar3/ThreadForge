@@ -8,6 +8,7 @@ interface Thread {
   id: number
   title: string
   tweets: string[]
+  images?: Array<{url: string, style: string, revisedPrompt?: string}>
 }
 
 export default function Page() {
@@ -65,6 +66,9 @@ export default function Page() {
   const [previewImageCount, setPreviewImageCount] = useState(1)
   const [isGeneratingPreviewImages, setIsGeneratingPreviewImages] = useState(false)
   const [previewImageAssignments, setPreviewImageAssignments] = useState<Record<number, number | null>>({})
+
+  // For saving edited thread + images to history on confirm post
+  const [previewTitle, setPreviewTitle] = useState('')
 
   const resultsRef = useRef<HTMLDivElement>(null)
 
@@ -347,6 +351,11 @@ export default function Page() {
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
     if (tweets.length === 0) return
     setPreviewTweets([...tweets]) // editable copy
+    setPreviewTitle(thread.title || 'Thread')
+    // Seed from embedded images on thread if present (so preview sees prior attachments)
+    if (thread.images && thread.images.length > 0) {
+      setThreadImages(prev => ({ ...prev, [thread.id]: thread.images! }))
+    }
     setPreviewImageAssignments({})
     setPreviewImageStyle('auto')
     setPreviewImageCount(1)
@@ -354,7 +363,7 @@ export default function Page() {
   }
 
   // Actual post logic (used by confirm in preview modal)
-  const performPostToX = async (tweetsToPost: string[]) => {
+  const performPostToX = async (tweetsToPost: string[], attachedImages: Array<{url: string, style: string, revisedPrompt?: string}> = [], titleForHistory?: string) => {
     if (tweetsToPost.length === 0) return
 
     setIsPosting(true)
@@ -362,7 +371,12 @@ export default function Page() {
       const res = await fetch('/api/x/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tweets: tweetsToPost }),
+        body: JSON.stringify({
+          tweets: tweetsToPost,
+          images: attachedImages,
+          title: titleForHistory || previewTitle || 'Thread',
+          topic: topic || 'Posted thread'
+        }),
       })
       const data = await res.json()
 
@@ -393,6 +407,7 @@ export default function Page() {
       // Close preview on success
       setShowPostPreviewFor(null)
       setPreviewTweets([])
+      setPreviewTitle('')
       setPreviewImageAssignments({})
       setPreviewImageStyle('auto')
       setPreviewImageCount(1)
@@ -406,7 +421,8 @@ export default function Page() {
 
   async function handleGeneratePreviewImages() {
     if (showPostPreviewFor === null) return
-    const origThread = safeThreads.find(t => t.id === showPostPreviewFor)
+    // Use threads state directly (avoid potential stale closure on safeThreads which is defined later)
+    const origThread = threads.find((t: any) => t.id === showPostPreviewFor) || safeThreads.find(t => t.id === showPostPreviewFor)
     if (!origThread) return
     if (!isProPlus && hasUsedProPlusTrial) {
       showToast('You have used your one-time Pro+ trial for AI Images. Upgrade to unlock permanently.', 'info')
@@ -420,7 +436,7 @@ export default function Page() {
         body: JSON.stringify({
           topic,
           threadId: showPostPreviewFor,
-          title: origThread.title,
+          title: (origThread as any).title || previewTitle || 'Thread',
           tweets: previewTweets,  // use edited preview tweets so prompt matches the preview content
           style: previewImageStyle,
           count: previewImageCount
@@ -437,8 +453,11 @@ export default function Page() {
         }
         return
       }
-      setThreadImages(prev => ({ ...prev, [showPostPreviewFor]: data.images }))
-      showToast(`Generated ${data.images?.length || 4} images for preview!`, 'success')
+      const imgs = data.images || []
+      setThreadImages(prev => ({ ...prev, [showPostPreviewFor]: imgs }))
+      // Also embed images directly into the thread object so it is "saved to the current thread being edited"
+      setThreads(prev => prev.map((t: any) => t.id === showPostPreviewFor ? { ...t, images: imgs } : t ))
+      showToast(`Generated ${imgs.length || 4} images for preview!`, 'success')
       if (data.wasTrial) {
         showToast('Pro+ Trial used! This was your one free use of AI Images.', 'info')
         setShowProPlusTrialBanner(true)
@@ -486,12 +505,15 @@ export default function Page() {
       showToast('No tweets to post', 'error')
       return
     }
-    performPostToX(cleaned)
+    // Collect attached images for this preview thread (generated in modal or prior)
+    const attachedImages = showPostPreviewFor !== null ? (threadImages[showPostPreviewFor] || []) : []
+    performPostToX(cleaned, attachedImages, previewTitle)
   }
 
   const cancelPostPreview = () => {
     setShowPostPreviewFor(null)
     setPreviewTweets([])
+    setPreviewTitle('')
     setPreviewImageAssignments({})
     setPreviewImageStyle('auto')
     setPreviewImageCount(1)
@@ -620,9 +642,12 @@ export default function Page() {
         }
         return
       }
-      setThreadImages(prev => ({ ...prev, [thread.id]: data.images }))
+      const imgs = data.images || []
+      setThreadImages(prev => ({ ...prev, [thread.id]: imgs }))
+      // Embed into thread so images are saved/attached to the thread itself (survives some reloads + saved in history when posted)
+      setThreads(prev => prev.map((t: any) => t.id === thread.id ? { ...t, images: imgs } : t ))
       setShowImageModalFor(null)
-      showToast(`Generated ${data.images?.length || 4} images!`, 'success')
+      showToast(`Generated ${imgs.length || 4} images!`, 'success')
       if (data.wasTrial) {
         showToast('Pro+ Trial used! This was your one free use of AI Images.', 'info')
         setShowProPlusTrialBanner(true)
@@ -746,8 +771,12 @@ export default function Page() {
         id: typeof raw?.id === 'number' ? raw.id : 0,
         title: typeof raw?.title === 'string' ? raw.title : 'Untitled thread',
         tweets: Array.isArray(raw?.tweets) ? raw.tweets : [],
+        images: Array.isArray(raw?.images) ? raw.images : (raw?.images || undefined),
       }))
     : [];
+
+  // Helper: prefer images embedded on the thread object (saved/attached), fallback to parallel threadImages map
+  const getThreadImages = (th: Thread | any) => (th?.images && th.images.length > 0 ? th.images : (threadImages[th?.id] || []))
 
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col overflow-x-hidden">
@@ -1445,14 +1474,14 @@ export default function Page() {
 
                 {/* Display generated images for this thread - moved to top (right below title/buttons) */}
                 {/* Only show when images actually generated (removed isProPlus from condition to avoid accessing [0] of undefined for Pro+ users before generating images) */}
-                {threadImages[thread.id]?.length > 0 && (
+                {getThreadImages(thread).length > 0 && (
                   <div className="mt-3 sm:mt-4">
                     <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <div className="text-[10px] sm:text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {threadImages[thread.id]?.[0]?.style || ''}</div>
+                      <div className="text-[10px] sm:text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {getThreadImages(thread)[0]?.style || ''}</div>
                       <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-[10px] sm:text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                      {(threadImages[thread.id] || []).map((img, idx) => (
+                      {getThreadImages(thread).map((img: any, idx: number) => (
                         <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
                           <img
                             src={img.url}
@@ -1904,11 +1933,11 @@ export default function Page() {
               </div>
 
               {/* Display generated images inside modal */}
-              {showPostPreviewFor !== null && threadImages[showPostPreviewFor]?.length > 0 && (
+              {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                 <div className="mb-4 p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                   <div className="text-xs font-medium text-violet-400 mb-2 tracking-[1.5px]">IMAGES FOR PREVIEW THREAD — assign below to tweets</div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(threadImages[showPostPreviewFor] || []).map((img, idx) => (
+                    {getThreadImages({ id: showPostPreviewFor }).map((img: any, idx: number) => (
                       <div key={idx} className="group relative overflow-hidden rounded border border-white/10 bg-zinc-950/50">
                         <img src={img.url} alt={`Preview image ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
                         <div className="text-[9px] p-1 text-center text-zinc-400 bg-black/50">{img.style}</div>
@@ -1966,7 +1995,7 @@ export default function Page() {
                     </div>
 
                     {/* Assign image to this specific tweet */}
-                    {showPostPreviewFor !== null && threadImages[showPostPreviewFor]?.length > 0 && (
+                    {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                       <div className="mt-2 pt-2 border-t border-white/10">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-zinc-400">Attach image:</span>
@@ -1979,7 +2008,7 @@ export default function Page() {
                             className="text-xs bg-zinc-950 border border-white/10 rounded p-1"
                           >
                             <option value="">None</option>
-                            {(threadImages[showPostPreviewFor] || []).map((img, i) => (
+                            {getThreadImages({ id: showPostPreviewFor }).map((img: any, i: number) => (
                               <option key={i} value={i}>Image {i+1} ({img.style})</option>
                             ))}
                           </select>
@@ -1987,8 +2016,9 @@ export default function Page() {
                         {/* Show attached image preview */}
                         {(() => {
                           const aidx = previewImageAssignments[index]
-                          if (aidx !== null && threadImages[showPostPreviewFor]?.[aidx]) {
-                            const aimg = threadImages[showPostPreviewFor][aidx]
+                          const pimgs = getThreadImages({ id: showPostPreviewFor })
+                          if (aidx !== null && pimgs[aidx]) {
+                            const aimg = pimgs[aidx]
                             return <img src={aimg.url} alt="attached" className="mt-1 w-20 h-20 object-cover rounded border border-white/10" />
                           }
                           return null

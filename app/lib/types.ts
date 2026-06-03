@@ -2,6 +2,7 @@
   id: number;
   title: string;
   tweets: string[];
+  images?: Array<{url: string, style: string, revisedPrompt?: string}>;
 }
 
 export interface GenerationRecord {
