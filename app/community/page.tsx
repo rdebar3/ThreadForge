@@ -191,14 +191,14 @@ export default function CommunityPage() {
               {/* Motivational line for first-time users */}
               <p className="text-emerald-400 text-sm mb-8 font-medium">Your thread could be the first one featured here.</p>
 
-              {/* Prominent CTA - direct to generator for effortless flow */}
+              {/* Prominent CTA - clearly leads to generator then one-click submit flow */}
               <Link 
                 href="/" 
                 className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-100 active:scale-[0.985] transition-all text-base shadow-[0_10px_30px_-10px_rgba(167,139,250,0.4)] w-full sm:w-auto"
               >
-                Create Your First Showcase Thread →
+                Generate a Thread &amp; Submit to Showcase →
               </Link>
-              <p className="mt-3 text-[10px] text-zinc-500 tracking-[1px]">Generate → one click submit. Under 2 minutes.</p>
+              <p className="mt-3 text-[10px] text-zinc-500 tracking-[1px]">Your thread will appear here instantly after submission. Under 2 minutes total.</p>
             </div>
           </div>
         ) : (
@@ -209,8 +209,9 @@ export default function CommunityPage() {
                 <div className="text-xs uppercase tracking-[2px] text-violet-400 mb-1">EARLY CREATORS</div>
                 <h2 className="text-2xl font-semibold tracking-tight">Community Showcase</h2>
               </div>
-              <Link href="/" className="text-xs px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5 text-zinc-300">+ Submit your thread</Link>
+              <Link href="/" className="text-xs px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5 text-zinc-300">+ Submit from Generator</Link>
             </div>
+            <p className="text-[11px] text-emerald-400/80 mb-3 -mt-1">Submissions from the generator appear here instantly. Your thread could be featured next.</p>
 
             {/* Simple sort tabs - Newest | Most Liked (exactly as requested) */}
             <div className="flex items-center gap-2 mb-4">
@@ -237,34 +238,34 @@ export default function CommunityPage() {
                   const previewTweets = post.tweets.slice(0, 3);
                   const mainImage = post.images && post.images[0];
                   return (
-                    <div key={post.id} className="glass-card border border-white/10 rounded-3xl p-5 sm:p-6 max-w-2xl mx-auto">
+                    <div key={post.id} className="glass-card border border-white/10 rounded-3xl p-5 sm:p-6 max-w-2xl mx-auto hover:border-white/20 transition-colors">
                       {/* Header: author + date */}
                       <div className="flex items-center justify-between mb-3 text-xs">
                         <div className="text-violet-400 font-medium">{post.authorName}</div>
                         <div className="text-zinc-500">{timeAgo(post.createdAt)}</div>
                       </div>
 
-                      {/* Title */}
-                      <div className="font-semibold text-[17px] sm:text-[19px] tracking-tight mb-2 pr-2">{post.title}</div>
-
-                      {/* Optional main image (first one) - clean, not overwhelming */}
+                      {/* Optional main image - more prominent visual display for appeal */}
                       {mainImage && (
-                        <div className="mb-3 rounded-2xl overflow-hidden border border-white/10">
+                        <div className="mb-3.5 rounded-2xl overflow-hidden border border-white/10 ring-1 ring-white/5">
                           <img
                             src={mainImage.url}
                             alt={post.title}
-                            className="w-full aspect-[16/9] object-cover"
+                            className="w-full aspect-[16/10] sm:aspect-[16/9] object-cover hover:scale-[1.015] transition-transform duration-300"
                           />
                         </div>
                       )}
 
-                      {/* First 2-3 tweets preview */}
-                      <div className="space-y-1.5 text-[13px] sm:text-[14px] text-zinc-300 leading-snug mb-3">
+                      {/* Title - cleaner, tighter typography */}
+                      <div className="font-semibold text-[17px] sm:text-[20px] tracking-[-0.25px] leading-tight mb-2.5 pr-1 text-white">{post.title}</div>
+
+                      {/* First 2-3 tweets preview - cleaner typography */}
+                      <div className="space-y-1 text-[13px] sm:text-sm text-zinc-300 leading-relaxed mb-3.5">
                         {previewTweets.map((t, i) => (
                           <div key={i} className="line-clamp-2">• {t}</div>
                         ))}
                         {post.tweets.length > 3 && (
-                          <div className="text-[11px] text-zinc-500">+{post.tweets.length - 3} more tweets</div>
+                          <div className="text-[10px] text-zinc-500">+{post.tweets.length - 3} more tweets</div>
                         )}
                       </div>
 
@@ -273,7 +274,7 @@ export default function CommunityPage() {
                         <button
                           onClick={() => handleLike(post)}
                           disabled={likingId === post.id}
-                          className="flex items-center gap-1.5 text-sm px-3 py-1 rounded-full hover:bg-white/5 active:bg-white/10 transition disabled:opacity-60"
+                          className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full hover:bg-white/5 active:bg-white/10 transition disabled:opacity-60"
                           title={post.likedByMe ? 'Unlike' : 'Like this thread'}
                         >
                           <span className="text-base leading-none">{post.likedByMe ? '❤️' : '♡'}</span>

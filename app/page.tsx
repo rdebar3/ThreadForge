@@ -1759,16 +1759,16 @@ export default function Page() {
                   )}
                 </div>
 
-                {/* Prominent "Submit to Community Showcase" - auto shown after generate for first-time effortless flow */}
+                {/* Prominent "Submit to Community Showcase" button - shown after generate for dead-simple first-time submission */}
                 {!submittedToShowcase[thread.id] && (
                   <div className="mt-4 pt-4 border-t border-white/10">
                     <button
                       onClick={() => openSubmitToShowcase(thread)}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-sm font-semibold active:scale-[0.985] transition hover:brightness-105 shadow"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[15px] font-semibold active:scale-[0.985] transition hover:brightness-105 shadow"
                     >
-                      🚀 Submit to Community Showcase
+                      Submit to Community Showcase
                     </button>
-                    <p className="text-center text-[10px] text-zinc-500 mt-1.5 tracking-wide">Join the first creators • 1 click • visible to everyone</p>
+                    <p className="text-center text-[10px] text-zinc-500 mt-1.5 tracking-wide">Your thread will appear instantly after submission • 1 click</p>
                   </div>
                 )}
                 {submittedToShowcase[thread.id] && (
@@ -2114,23 +2114,23 @@ export default function Page() {
           >
             <div className="text-xs tracking-[1.5px] text-violet-400 mb-1">COMMUNITY SHOWCASE</div>
             <h3 className="text-xl font-semibold tracking-tight mb-1">Share this thread?</h3>
-            <p className="text-sm text-zinc-400 mb-4">One click publishes your title + tweets + images to the public feed. Be one of the first 100.</p>
+            <p className="text-sm text-zinc-400 mb-4">Your thread will appear here instantly after submission. One click publishes the tweets + any images to the public feed. Be one of the first 100.</p>
 
             <input
               value={submitTitle}
               onChange={(e) => setSubmitTitle(e.target.value)}
               className="w-full bg-zinc-950 border border-white/10 focus:border-violet-400 rounded-2xl px-4 py-2.5 text-sm mb-4"
-              placeholder="Thread title"
+              placeholder="Optional title (uses thread title if blank)"
               disabled={isSubmittingShowcase}
             />
 
             <div className="flex gap-3">
               <button
                 onClick={confirmSubmitToShowcase}
-                disabled={isSubmittingShowcase || !submitTitle.trim()}
+                disabled={isSubmittingShowcase}
                 className="flex-1 py-3 bg-white text-zinc-950 font-semibold rounded-2xl text-sm disabled:opacity-50 hover:bg-zinc-100 active:scale-[0.985] transition"
               >
-                {isSubmittingShowcase ? 'Submitting…' : 'Confirm & Submit to Showcase'}
+                {isSubmittingShowcase ? 'Submitting…' : 'Submit to Community Showcase'}
               </button>
               <button
                 onClick={() => setShowSubmitFor(null)}
@@ -2140,7 +2140,7 @@ export default function Page() {
                 Cancel
               </button>
             </div>
-            <p className="text-center text-[10px] text-zinc-500 mt-3">Your name appears as the creator. Edits won&apos;t affect the original.</p>
+            <p className="text-center text-[10px] text-zinc-500 mt-3">Optional title. Your name appears as the creator. Appears instantly in the feed.</p>
           </div>
         </div>
       )}
