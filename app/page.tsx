@@ -2367,7 +2367,10 @@ export default function Page() {
               {/* Big clear confirm button */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={confirmPostFromPreview}
+                  onClick={() => {
+                    console.log("Confirm & Post clicked - calling performPostToX");
+                    confirmPostFromPreview();
+                  }}
                   disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
                   className="flex-1 py-5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-500 text-white font-semibold rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:via-violet-700 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_8px_25px_-2px_rgba(124,58,237,0.55)] ring-2 ring-violet-400/60 min-h-[60px] flex items-center justify-center gap-2"
                 >
