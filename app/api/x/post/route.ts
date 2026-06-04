@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX, saveGenerationToHistory } from '../../../lib/clerk'
+import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX } from '../../../lib/clerk'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -10,7 +10,11 @@ export async function POST(req: NextRequest) {
   if (!hasPro) return NextResponse.json({ error: 'Pro required' }, { status: 402 })
 
   let body: any
-  try { body = await req.json() } catch { return NextResponse.json({ error: 'Bad body' }, { status: 400 }) }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Bad body' }, { status: 400 })
+  }
 
   const tweets = Array.isArray(body?.tweets) ? body.tweets : []
   if (tweets.length === 0) return NextResponse.json({ error: 'No tweets' }, { status: 400 })
@@ -22,21 +26,12 @@ export async function POST(req: NextRequest) {
     const postIds = await postThreadToX(accessToken, tweets)
     await incrementPostedCount(userId, 1)
 
-    // Best-effort history save
-    try {
-      await saveGenerationToHistory(userId, {
-        topic: body?.topic || 'Posted Thread',
-        threads: [{ id: Date.now(), title: body?.title || 'Thread', tweets }],
-        timestamp: new Date().toISOString(),
-      })
-    } catch {}
-
     return NextResponse.json({ success: true, postIds })
   } catch (err: any) {
     console.error('Post failed:', err)
     if (err.message === 'CreditsDepleted') {
       return NextResponse.json({ error: 'X credits depleted' }, { status: 429 })
     }
-    return NextResponse.json({ error: 'Failed to post to X' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to post to X. Try again.' }, { status: 500 })
   }
 }
