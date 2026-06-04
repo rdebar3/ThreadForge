@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
-import { saveXAccount } from '../../../../lib/clerk'
-import type { XAccount } from '../../../../lib/types'
-
-const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
-const X_USER_URL = 'https://api.x.com/2/users/me'
+import { exchangeCodeForXTokensAndSave } from '../../../../lib/clerk'
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth()
@@ -47,74 +43,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/scheduler?error=invalid_state', req.url))
   }
 
-  try {
-    // Exchange code for tokens (confidential client)
-    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+  // Delegate the token exchange + profile + save to centralized improved logic in clerk.ts
+  // (fixes duplication and adds detailed logging around the save step)
+  const result = await exchangeCodeForXTokensAndSave(userId, code, codeVerifier, redirectUri)
 
-    const tokenBody = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: redirectUri,
-      code_verifier: codeVerifier,
-    })
-
-    const tokenRes = await fetch(X_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${basicAuth}`,
-      },
-      body: tokenBody.toString(),
-    })
-
-    if (!tokenRes.ok) {
-      const err = await tokenRes.text()
-      console.error('X token exchange failed:', tokenRes.status, err)
-      return NextResponse.redirect(new URL('/scheduler?error=token_exchange', req.url))
-    }
-
-    const tokenData = await tokenRes.json()
-    const accessToken: string = tokenData.access_token
-    const refreshToken: string | undefined = tokenData.refresh_token
-    const expiresIn: number = tokenData.expires_in || 7200
-    const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString()
-
-    // Fetch X profile (username + id)
-    const userRes = await fetch(X_USER_URL, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    })
-
-    if (!userRes.ok) {
-      console.error('Failed to fetch X /users/me after connect')
-      // Still save tokens if possible, but username unknown
-    }
-
-    let xUserId = 'unknown'
-    let username = 'x_user'
-
-    try {
-      const userData = await userRes.json()
-      xUserId = userData?.data?.id || 'unknown'
-      username = userData?.data?.username || 'x_user'
-    } catch {}
-
-    const account: XAccount = {
-      accessToken,
-      refreshToken,
-      expiresAt,
-      xUserId,
-      username,
-      connectedAt: new Date().toISOString(),
-    }
-
-    await saveXAccount(userId, account)
-
-    // Success redirect
-    return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
-  } catch (e: any) {
-    console.error('X callback unexpected error:', e)
-    return NextResponse.redirect(new URL('/scheduler?error=unknown', req.url))
+  if (!result.success) {
+    const errCode = result.error || 'unknown'
+    console.error('[X OAuth Callback] exchange failed with:', errCode)
+    return NextResponse.redirect(new URL(`/scheduler?error=${encodeURIComponent(errCode)}`, req.url))
   }
+
+  // Success redirect
+  return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
 }

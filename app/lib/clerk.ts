@@ -199,6 +199,7 @@ export interface XTokenRefreshResult {
 const X_TOKEN_URL = 'https://api.x.com/2/oauth2/token'
 const X_TWEETS_URL = 'https://api.x.com/2/tweets'
 const X_MEDIA_UPLOAD_URL = 'https://upload.twitter.com/1.1/media/upload.json'
+const X_USER_URL = 'https://api.x.com/2/users/me'
 
 /**
  * Refresh an X access token using the stored refresh_token.
@@ -251,6 +252,99 @@ export async function refreshXToken(refreshToken: string): Promise<XTokenRefresh
 }
 
 /**
+ * Centralized X OAuth code exchange + profile fetch + save.
+ * Replaces duplicated logic from the callback routes. Much better logging to debug "not saving token" issues.
+ */
+export async function exchangeCodeForXTokensAndSave(
+  userId: string,
+  code: string,
+  codeVerifier: string,
+  redirectUri: string
+): Promise<{ success: boolean; error?: string }> {
+  console.log('[X OAuth] exchangeCodeForXTokensAndSave START for user', userId)
+
+  const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
+  const clientSecret = process.env.X_API_SECRET || process.env.X_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    console.error('[X OAuth] Missing X_API_KEY/X_API_SECRET (preferred) or legacy X_CLIENT_*')
+    return { success: false, error: 'config' }
+  }
+
+  try {
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+    const tokenBody = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
+    })
+
+    const tokenRes = await fetch(X_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${basicAuth}`,
+      },
+      body: tokenBody.toString(),
+    })
+
+    if (!tokenRes.ok) {
+      const err = await tokenRes.text()
+      console.error('[X OAuth] Token exchange failed:', tokenRes.status, err)
+      return { success: false, error: 'token_exchange' }
+    }
+
+    const tokenData = await tokenRes.json()
+    const accessToken: string = tokenData.access_token
+    const refreshToken: string | undefined = tokenData.refresh_token
+    const expiresIn: number = tokenData.expires_in || 7200
+    const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString()
+
+    // Fetch X profile (username + id)
+    const userRes = await fetch(X_USER_URL, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!userRes.ok) {
+      console.error('[X OAuth] Failed to fetch X /users/me after token exchange:', userRes.status)
+      // Still proceed to save tokens
+    }
+
+    let xUserId = 'unknown'
+    let username = 'x_user'
+
+    try {
+      const userData = await userRes.json()
+      xUserId = userData?.data?.id || 'unknown'
+      username = userData?.data?.username || 'x_user'
+    } catch (parseErr) {
+      console.error('[X OAuth] Error parsing /users/me response')
+    }
+
+    const account: XAccount = {
+      accessToken,
+      refreshToken,
+      expiresAt,
+      xUserId,
+      username,
+      connectedAt: new Date().toISOString(),
+    }
+
+    await saveXAccount(userId, account)
+
+    console.log('[X OAuth] exchangeCodeForXTokensAndSave SUCCESS for user', userId, '(@' + username + ')')
+    return { success: true }
+  } catch (e: any) {
+    console.error('[X OAuth] Unexpected error in exchangeCodeForXTokensAndSave:', e)
+    return { success: false, error: 'unknown' }
+  }
+}
+
+/**
  * Get the user's connected X account (from privateMetadata).
  */
 export async function getXAccount(userId: string): Promise<XAccount | null> {
@@ -269,20 +363,20 @@ export async function getXAccount(userId: string): Promise<XAccount | null> {
 
 /**
  * Save / update X account connection in privateMetadata.
+ * Improved: uses direct merge (no need to fetch+spread), heavy logging for debugging token save issues.
  */
 export async function saveXAccount(userId: string, account: XAccount): Promise<void> {
   try {
     const client = await clerkClient()
-    const user = await client.users.getUser(userId)
-
+    console.log('[X Account] saveXAccount called for user', userId, 'username=@' + (account?.username || 'unknown'))
     await client.users.updateUserMetadata(userId, {
       privateMetadata: {
-        ...user.privateMetadata,
         xAccount: account,
       },
     })
-  } catch (error) {
-    console.error('Failed to save X account:', error)
+    console.log('[X Account] saveXAccount SUCCESS for user', userId)
+  } catch (error: any) {
+    console.error('[X Account] saveXAccount FAILED for user', userId, ':', error?.message || error, error?.stack?.substring?.(0, 300))
   }
 }
 
