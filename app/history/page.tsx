@@ -31,7 +31,7 @@ export default function HistoryPage() {
 
   // Image generation states (Pro-only, per record+thread key)
   const [showImageModalFor, setShowImageModalFor] = useState<string | null>(null)
-  const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStyle>('elegant')
+  const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStyle>('romantic')
   const [selectedImageCount, setSelectedImageCount] = useState(1)
   const [isGeneratingImages, setIsGeneratingImages] = useState(false)
   const [threadImages, setThreadImages] = useState<Record<string, Array<{url: string, style: string, revisedPrompt?: string}>>>({})
@@ -360,7 +360,7 @@ export default function HistoryPage() {
                                   onClick={() => {
                                     const key = `${record.id}-${thread.id}`
                                     setShowImageModalFor(key)
-                                    setSelectedImageStyle('elegant')
+                                    setSelectedImageStyle('romantic')
                                     setSelectedImageCount(1)
                                   }}
                                   title="Generate 1-4 relevant AI images for this thread (Pro+)"
@@ -373,7 +373,7 @@ export default function HistoryPage() {
                                   onClick={() => {
                                     const key = `${record.id}-${thread.id}`
                                     setShowImageModalFor(key)
-                                    setSelectedImageStyle('elegant')
+                                    setSelectedImageStyle('romantic')
                                     setSelectedImageCount(1)
                                   }}
                                   title="Try AI Images once for free (one-time Pro+ trial)"
@@ -435,7 +435,7 @@ export default function HistoryPage() {
                                   Cancel
                                 </button>
                                 <button
-                                  onClick={() => { setSelectedImageStyle('elegant'); setSelectedImageCount(1); }}
+                                  onClick={() => { setSelectedImageStyle('romantic'); setSelectedImageCount(1); }}
                                   className="text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
                                 >
                                   Auto (1 image)
@@ -461,7 +461,7 @@ export default function HistoryPage() {
                                   <button onClick={() => {
                                     const key = `${record.id}-${thread.id}`
                                     setShowImageModalFor(key)
-                                    setSelectedImageStyle('elegant')
+                                    setSelectedImageStyle('romantic')
                                     setSelectedImageCount(1)
                                   }} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
                                 </div>
