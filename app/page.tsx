@@ -141,7 +141,6 @@ export default function ImagineHer() {
           <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
             <a href="#styles" className="hover:text-white transition">Styles</a>
             <a href="#pricing" className="hover:text-white transition">Pricing</a>
-            <a href="/history" className="hover:text-white transition">Gallery</a>
           </div>
 
           <div className="flex items-center gap-4">
@@ -170,7 +169,6 @@ export default function ImagineHer() {
             <div className="flex flex-col gap-3">
               <a href="#styles" className="py-1">Styles</a>
               <a href="#pricing" className="py-1">Pricing</a>
-              <a href="/history" className="py-1">Gallery</a>
             </div>
           </div>
         )}
