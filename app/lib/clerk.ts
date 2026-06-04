@@ -379,7 +379,7 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
 
 /**
  * Posts a full thread as a connected reply chain on X using the user's access token.
- * Sets reply_settings: 'following' ONLY on the root (first) tweet so replies/comments are enabled by default (followers can reply).
+ * Sets reply_settings: 'everyone' ONLY on the root (first) tweet so the thread is fully open for public replies (anyone can reply).
  * Uses in_reply_to_tweet_id for subsequent tweets in the chain.
  * Supports optional media per tweet via items form (or legacy string[] for text-only callers like cron).
  * Returns array of created tweet IDs.
@@ -407,9 +407,9 @@ export async function postThreadToX(
     }
     if (!inReplyTo) {
       // ROOT tweet only: set reply_settings so the thread allows replies.
-      // 'following' = anyone who follows the poster can reply (best default for public threads).
+      // 'everyone' allows public replies from anyone (fully open by default).
       // Applied ONLY to first tweet in chain (subsequent tweets use in_reply_to instead).
-      payload.reply_settings = 'following'
+      payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
