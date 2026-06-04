@@ -2155,30 +2155,30 @@ export default function Page() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - fixed */}
-            <div className="flex items-center justify-between p-5 sm:p-7 pb-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between p-6 sm:p-8 pb-4 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-3xl sm:text-[28px] font-semibold tracking-[-0.5px]">Preview &amp; Edit Thread</h3>
-                <p className="text-[13px] text-zinc-400 mt-1">Edit tweets, assign images, then confirm to post the full reply chain to X.</p>
+                <p className="text-sm text-zinc-400 mt-1.5">Review and edit your tweets. Attach images where desired. Then confirm to post the full reply chain to X.</p>
               </div>
               <button 
                 onClick={cancelPostPreview}
-                className="text-zinc-400 hover:text-white text-3xl leading-none px-2 py-1 -mr-1 transition-colors"
+                className="text-zinc-400 hover:text-white text-3xl leading-none px-2 py-1 -mr-1 transition-colors hover:bg-white/5 rounded-full w-9 h-9 flex items-center justify-center"
               >
                 ×
               </button>
             </div>
 
             {/* Scrollable tweets list */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-4 scroll-smooth">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 scroll-smooth">
               {/* Display generated images inside modal (if any) - cleaned up preview grid */}
               {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
-                <div className="mb-2 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
-                  <div className="text-[10px] font-medium text-violet-400 mb-2 tracking-[1.5px] flex items-center gap-1.5">ATTACHED IMAGES <span className="text-zinc-500">— click to assign below</span></div>
+                <div className="mb-1 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
+                  <div className="text-[10px] font-medium text-violet-400 mb-2 tracking-[1.5px] flex items-center gap-1.5">ATTACHED IMAGES <span className="text-zinc-500">— tap below to assign to tweets</span></div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     {getThreadImages({ id: showPostPreviewFor }).map((img: any, idx: number) => (
-                      <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/70 ring-1 ring-inset ring-white/5">
+                      <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/70 ring-1 ring-inset ring-white/5 hover:border-violet-400/30 hover:ring-violet-400/20 transition-all">
                         <img src={img.url} alt={`Preview image ${idx + 1}`} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition-transform duration-200" />
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 p-1 text-[9px] text-center text-zinc-300 font-mono tracking-wide">{img.style}</div>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 p-1 text-[9px] text-center text-zinc-300 font-mono tracking-wide group-hover:text-violet-200 transition-colors">{img.style}</div>
                       </div>
                     ))}
                   </div>
@@ -2191,52 +2191,52 @@ export default function Page() {
                 const nearLimit = charCount > 260 && !overLimit
                 const hasImages = (previewImageAssignments[index] || []).length > 0
                 return (
-                  <div key={index} className={`bg-zinc-900/70 border ${hasImages ? 'border-violet-500/30' : 'border-white/10'} rounded-2xl p-4 sm:p-5 transition-colors ${hasImages ? 'ring-1 ring-violet-500/10' : ''}`}>
-                    <div className="flex items-center justify-between mb-2">
+                  <div key={index} className={`bg-zinc-900/70 border ${hasImages ? 'border-violet-500/30' : 'border-white/10'} rounded-2xl p-5 sm:p-6 transition-colors ${hasImages ? 'ring-1 ring-violet-500/10' : ''}`}>
+                    <div className="flex items-center justify-between mb-2.5">
                       <span className="text-xs font-semibold text-violet-400 tracking-[1.5px]">TWEET {index + 1}</span>
-                      <span className={`text-xs tabular-nums font-semibold px-2 py-0.5 rounded-full transition-all ${overLimit ? 'bg-red-500/20 text-red-400' : nearLimit ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-zinc-400'}`}>
+                      <span className={`text-xs tabular-nums font-semibold px-2.5 py-0.5 rounded-full transition-all ${overLimit ? 'bg-red-500/20 text-red-400' : nearLimit ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-zinc-400'}`}>
                         {charCount}/280
                       </span>
                     </div>
                     <textarea
                       value={tweet}
                       onChange={(e) => updatePreviewTweet(index, e.target.value)}
-                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/60' : nearLimit ? 'border-amber-500/40' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3.5 text-[15px] leading-[1.5] min-h-[84px] resize-y outline-none placeholder:text-zinc-500`}
+                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/60' : nearLimit ? 'border-amber-500/40' : 'border-white/10'} focus:border-violet-400 rounded-xl p-4 text-[15px] leading-[1.55] min-h-[88px] resize-y outline-none placeholder:text-zinc-500`}
                       placeholder="Write your tweet..."
                     />
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
                       <button
                         onClick={() => removePreviewTweet(index)}
                         disabled={previewTweets.length <= 1}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 active:bg-red-500/30 disabled:opacity-40 transition min-h-[40px] font-medium"
+                        className="text-xs px-3.5 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 active:bg-red-500/30 disabled:opacity-40 transition min-h-[44px] font-medium"
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, -1)}
                         disabled={index === 0}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[40px]"
+                        className="text-xs px-3.5 py-2 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[44px]"
                       >
                         ↑ Up
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, 1)}
                         disabled={index === previewTweets.length - 1}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[40px]"
+                        className="text-xs px-3.5 py-2 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[44px]"
                       >
-                        Down ↓
+                        ↓ Down
                       </button>
                       <button
                         onClick={addPreviewTweet}
-                        className="ml-auto text-[11px] px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:bg-emerald-500/30 transition min-h-[40px] font-medium"
+                        className="ml-auto text-xs px-3.5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:bg-emerald-500/30 transition min-h-[44px] font-medium"
                       >
-                        + Add tweet
+                        Add tweet
                       </button>
                     </div>
 
                     {/* Assign image to this specific tweet - visual & delightful */}
                     {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="mt-4 pt-3 border-t border-white/10">
                         <div className="text-[10px] text-zinc-400 mb-1.5 tracking-[1px]">ATTACH IMAGES TO THIS TWEET</div>
                         <div className="flex flex-wrap gap-2">
                           {getThreadImages({ id: showPostPreviewFor }).map((img: any, i: number) => {
@@ -2253,7 +2253,7 @@ export default function Page() {
                                     : [...current, i]
                                   setPreviewImageAssignments(prev => ({ ...prev, [index]: next }))
                                 }}
-                                className={`group relative overflow-hidden rounded-lg border transition-all active:scale-[0.985] ${assigned ? 'border-violet-400 ring-1 ring-violet-400/50' : 'border-white/10 hover:border-white/30'}`}
+                                className={`group relative overflow-hidden rounded-lg border transition-all active:scale-[0.97] ${assigned ? 'border-violet-400 ring-1 ring-violet-400/50 shadow-sm' : 'border-white/10 hover:border-violet-400/40 hover:ring-1 hover:ring-violet-400/20'}`}
                                 title={assigned ? 'Click to remove image from this tweet' : 'Click to attach this image to tweet'}
                               >
                                 <img src={img.url} alt={`Image ${i+1}`} className="w-14 h-14 sm:w-16 sm:h-16 object-cover" />
@@ -2278,20 +2278,20 @@ export default function Page() {
             </div>
 
             {/* Sticky footer with actions and confirm button */}
-            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-5 sm:p-6 sticky bottom-0 z-10">
+            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 sm:p-7 sticky bottom-0 z-10">
               {/* Big clear confirm button */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={confirmPostFromPreview}
                   disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
-                  className="flex-1 py-4 bg-white text-zinc-950 font-semibold rounded-2xl text-[15px] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow-[0_4px_16px_-2px_rgba(0,0,0,0.3)] min-h-[56px]"
+                  className="flex-1 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_6px_20px_-2px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/50 min-h-[56px]"
                 >
                   {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
                 </button>
                 <button
                   onClick={cancelPostPreview}
                   disabled={isPosting}
-                  className="w-full sm:w-auto px-7 sm:px-8 py-4 border border-white/15 text-sm font-medium rounded-2xl hover:bg-white/5 active:bg-white/10 transition disabled:opacity-50 min-h-[56px] text-zinc-300"
+                  className="w-full sm:w-auto px-7 sm:px-9 py-4 border border-white/20 text-sm font-medium rounded-2xl hover:bg-white/5 active:bg-white/10 transition disabled:opacity-50 min-h-[56px] text-zinc-200"
                 >
                   Cancel
                 </button>

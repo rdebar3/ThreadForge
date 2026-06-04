@@ -474,19 +474,22 @@ body {
 
 @media (max-width: 640px) {
   .fixed.inset-0 .glass-card {
-    margin: 6px;
+    margin: 4px;
     border-radius: 1rem;
   }
   .fixed.inset-0 .glass-card .flex-1.overflow-y-auto {
-    padding: 16px;
+    padding: 18px;
   }
   /* Strong tap targets inside preview modal */
   .fixed.inset-0 .glass-card button {
     min-height: 44px;
   }
   .fixed.inset-0 .glass-card textarea {
-    min-height: 82px;
-    padding: 12px;
+    min-height: 88px;
+    padding: 14px;
+  }
+  .fixed.inset-0 .glass-card .text-xs {
+    font-size: 11px;
   }
 }
 
