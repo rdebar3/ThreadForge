@@ -484,7 +484,7 @@ export default function Page() {
         : 'Full thread posted successfully to X!'
 
       // Stronger success feedback: clear toast with direct "View on X" link to the actual thread
-      showToast(successMsg, 'success', postUrl ? { label: 'View on X', href: postUrl } : undefined)
+      showToast(successMsg, 'success', postUrl ? { label: 'View Thread on X', href: postUrl } : undefined)
 
       // Record for post-success next actions UI (clear confirmation with buttons)
       if (showPostPreviewFor !== null) {
@@ -1158,7 +1158,7 @@ export default function Page() {
         <div className="max-w-5xl mx-auto px-6 py-2 text-center">
           <div className="text-sm text-zinc-400">
             {isSignedIn && !hasPro ? (
-              <>Free: <span className="text-white font-semibold">{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> generations left today • Upgrade for unlimited</>
+              <>Free: <span className={`font-semibold ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed) === 0 ? 'text-red-400' : 'text-white'}`}>{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> generations left today • Upgrade for unlimited</>
             ) : (
               <>Free: 3 generations per day • Pro ($9): unlimited + core tools • Pro+ ($15): + AI images + scheduler + analytics</>
             )}
@@ -1281,7 +1281,7 @@ export default function Page() {
             <div className="mt-5 text-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-zinc-900 border border-white/10 px-4 py-1.5 text-sm text-zinc-300">
                 <span className="text-emerald-400">●</span>
-                {Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS} free generations left today
+                <span className={Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed) === 0 ? 'text-red-400' : ''}>{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)} / {MAX_FREE_GENERATIONS}</span> free generations left today
               </span>
             </div>
           ) : null}
@@ -1461,7 +1461,7 @@ export default function Page() {
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 rounded-xl transition active:scale-[0.985]"
                     onClick={() => setPostSuccess(null)}
                   >
-                    View on X →
+                    View Thread on X →
                   </a>
                 )}
               </div>
@@ -1488,7 +1488,7 @@ export default function Page() {
                     }}
                     className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-violet-300 active:bg-white/10 transition min-h-[44px]"
                   >
-                    📅 Schedule This Thread
+                    📅 Schedule This One
                   </button>
                 )}
                 <button
@@ -1531,8 +1531,9 @@ export default function Page() {
                       {hasPro && (
                         <button
                           onClick={() => copyToX(thread)}
+                          disabled={isPosting}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px] disabled:opacity-50"
                         >
                           <XIcon />
                           Post to X
@@ -1546,8 +1547,9 @@ export default function Page() {
                             setSelectedImageStyle('auto')
                             setSelectedImageCount(1)
                           }}
+                          disabled={isGeneratingImages}
                           title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-violet-500/30 rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-violet-500/30 rounded-2xl transition-all active:scale-[0.985] min-h-[44px] disabled:opacity-50"
                         >
                           ✨ Generate Images
                         </button>
@@ -1559,8 +1561,9 @@ export default function Page() {
                             setSelectedImageStyle('auto')
                             setSelectedImageCount(1)
                           }}
+                          disabled={isGeneratingImages}
                           title="Try AI Images once for free (one-time Pro+ trial)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985] min-h-[44px] disabled:opacity-50"
                         >
                           ✨ Try Pro+ Images (1-time)
                         </button>
@@ -1755,7 +1758,7 @@ export default function Page() {
                   <div className="mt-4 sm:mt-5">
                     <div className="flex items-center justify-between mb-2 sm:mb-2.5">
                       <div className="text-[10px] sm:text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {getThreadImages(thread)[0]?.style || ''}</div>
-                      <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-[10px] sm:text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
+                      <button disabled={isGeneratingImages} onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-[10px] sm:text-xs text-violet-400 hover:text-violet-300 transition-colors disabled:opacity-50">Regenerate</button>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
                       {getThreadImages(thread).map((img: any, idx: number) => (
@@ -2284,27 +2287,28 @@ export default function Page() {
                     <div className="flex items-center gap-2 mt-3 flex-wrap">
                       <button
                         onClick={() => removePreviewTweet(index)}
-                        disabled={previewTweets.length <= 1}
+                        disabled={previewTweets.length <= 1 || isPosting}
                         className="text-sm px-4 py-2.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 active:bg-red-500/30 disabled:opacity-40 transition min-h-[48px] font-medium border border-red-500/20"
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, -1)}
-                        disabled={index === 0}
+                        disabled={index === 0 || isPosting}
                         className="text-sm px-4 py-2.5 rounded-xl bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[48px] border border-white/10"
                       >
                         ↑ Up
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, 1)}
-                        disabled={index === previewTweets.length - 1}
+                        disabled={index === previewTweets.length - 1 || isPosting}
                         className="text-sm px-4 py-2.5 rounded-xl bg-white/5 text-zinc-300 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition min-h-[48px] border border-white/10"
                       >
                         ↓ Down
                       </button>
                       <button
                         onClick={addPreviewTweet}
+                        disabled={isPosting}
                         className="ml-auto text-sm px-4 py-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 active:bg-emerald-500/30 transition min-h-[48px] font-medium border border-emerald-500/20"
                       >
                         Add tweet
@@ -2322,6 +2326,7 @@ export default function Page() {
                               <button
                                 key={i}
                                 type="button"
+                                disabled={isPosting}
                                 onClick={() => {
                                   const current = previewImageAssignments[index] || []
                                   const isAssigned = current.includes(i)
@@ -2330,7 +2335,7 @@ export default function Page() {
                                     : [...current, i]
                                   setPreviewImageAssignments(prev => ({ ...prev, [index]: next }))
                                 }}
-                                className={`group relative overflow-hidden rounded-xl border transition-all active:scale-[0.96] ${assigned ? 'border-violet-400 ring-2 ring-violet-400/60 shadow' : 'border-white/10 hover:border-violet-400/40 hover:ring-1 hover:ring-violet-400/30'}`}
+                                className={`group relative overflow-hidden rounded-xl border transition-all active:scale-[0.96] ${assigned ? 'border-violet-400 ring-2 ring-violet-400/60 shadow' : 'border-white/10 hover:border-violet-400/40 hover:ring-1 hover:ring-violet-400/30'} disabled:opacity-50`}
                                 title={assigned ? 'Click to remove image from this tweet' : 'Click to attach this image to tweet'}
                               >
                                 <img src={img.url} alt={`Image ${i+1}`} className="w-16 h-16 sm:w-[68px] sm:h-[68px] object-cover" />
