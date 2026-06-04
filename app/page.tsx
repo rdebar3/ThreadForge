@@ -1160,7 +1160,7 @@ export default function Page() {
             {isSignedIn && !hasPro ? (
               <>Free: <span className={`font-semibold ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed) === 0 ? 'text-red-400' : 'text-white'}`}>{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> generations left today • Upgrade for unlimited</>
             ) : (
-              <>Free: 3 generations per day • Pro ($9): unlimited + core tools • Pro+ ($15): + AI images + scheduler + analytics</>
+              <>Free: 3/day • Pro ($9): unlimited + tools • Pro+ ($15 best value): + images + scheduler + analytics. Cancel anytime.</>
             )}
             {!isSignedIn && <button onClick={() => openSignIn()} className="ml-2 underline text-violet-400 hover:text-violet-300">Sign in</button>}
           </div>
@@ -1361,7 +1361,7 @@ export default function Page() {
           <div className="text-center mb-8">
             <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro for unlimited. <span className="text-cyan-400">Pro+ adds AI images + scheduler + analytics</span> <span className="text-[10px] px-1 py-px bg-cyan-500/10 text-cyan-400 rounded">Pro+</span>.</p>
+            <p className="text-zinc-400 max-w-md mx-auto">Pro ($9): unlimited + Post to X, History, priority. <span className="text-cyan-400">Pro+ ($15) best value: adds AI images + scheduler + analytics</span> <span className="text-[10px] px-1 py-px bg-cyan-500/10 text-cyan-400 rounded">Pro+</span>. Full pricing below.</p>
           </div>
 
           {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
@@ -1985,8 +1985,8 @@ export default function Page() {
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-3">PRICING</div>
-          <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Scale as you grow.</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">Free: 3 generations/day. Pro ($9): Unlimited generations + core tools. Pro+ ($15): Everything in Pro + AI Images + Scheduler + Analytics. Clear pricing, no surprises.</p>
+          <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Pro for power. Pro+ for everything.</h2>
+          <p className="text-zinc-400 max-w-md mx-auto">3 generations free every day. Pro ($9) unlocks unlimited + Post to X, History, suggestions &amp; priority. Pro+ ($15) is the clear best value with AI images, scheduler &amp; analytics included. No long contracts. Cancel anytime.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
@@ -1997,18 +1997,18 @@ export default function Page() {
               <div className="flex items-end gap-1">
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$0</span>
               </div>
-              <div className="text-sm text-zinc-500 mt-1">No credit card required</div>
+              <div className="text-sm text-zinc-500 mt-1">No credit card required • Best for testing &amp; casual use</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 5 high-quality thread variants per generation</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Core generator tools included</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 5 high-quality thread variants</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day (resets daily)</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy tweets or full thread</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Core generator tools</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
-              Perfect starting point. Upgrade anytime for more.
+              Perfect for testing the waters. Upgrade to Pro or Pro+ anytime.
             </div>
           </div>
 
@@ -2023,15 +2023,15 @@ export default function Page() {
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$9</span>
                 <span className="text-zinc-400 pb-1">/mo</span>
               </div>
-              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Cancel anytime • No long-term contract</div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Best for serious posters • Cancel anytime • No long-term contract</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Everything in Free, plus:</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Post to X</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> History</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart Suggestions</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Priority access</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> History &amp; templates</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart suggestions + priority</li>
             </ul>
 
             {hasPro && !isProPlus ? (
@@ -2047,9 +2047,9 @@ export default function Page() {
                   onClick={() => handleUpgrade('pro')}
                   className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] min-h-[52px]"
                 >
-                  Upgrade to Pro — $9/mo
+                  Get Pro — $9/mo (Unlimited + Post to X + History)
                 </button>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds.</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. No long contracts.</p>
               </>
             )}
           </div>
@@ -2067,13 +2067,13 @@ export default function Page() {
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$15</span>
                 <span className="text-zinc-400 pb-1">/mo</span>
               </div>
-              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Everything in Pro + AI Images + Scheduler + Analytics (Pro+ only) • Cancel anytime</div>
+              <div className="text-emerald-400 text-sm mt-0.5 font-medium">Best value • Everything in Pro + AI Images + Scheduler + Analytics (Pro+ only) • Cancel anytime</div>
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
               <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (xAI Imagine, 1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> — auto-post to X with best-time suggestions <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> (auto-post at best times) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
             </ul>
 
@@ -2090,15 +2090,15 @@ export default function Page() {
                   onClick={() => handleUpgrade('pro-plus')}
                   className="mt-8 w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] transition-all min-h-[52px]"
                 >
-                  Upgrade to Pro+ — $15/mo
+                  Get Pro+ — $15/mo (Most Popular • Best Value)
                 </button>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler (Pro+ only).</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler + Analytics (Pro+ only).</p>
               </>
             )}
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI Image Generation + Thread Scheduler + Analytics (Pro+ only). Existing Pro users are grandfathered into Pro+.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ = everything in Pro + AI images + scheduler + analytics. Best value. Existing Pro users grandfathered in. Cancel anytime.</p>
 
         <div className="text-center mt-6 space-y-1">
           <p className="text-[11px] text-zinc-400">Early access – we’re building in public.</p>
@@ -2170,7 +2170,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2 text-emerald-300">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free: exactly 3 generations per day (resets daily). Sign in for your count, or upgrade to Pro ($9) for unlimited generations + Post to X + History, or Pro+ ($15) for everything including AI images, scheduler, and analytics.
+              Free: exactly 3 generations per day (resets daily). Sign in for your count, or upgrade to Pro ($9) for unlimited + Post to X, History &amp; priority, or Pro+ ($15) best value with AI images, scheduler + analytics. No long contracts. Cancel anytime.
             </p>
 
             <button 
