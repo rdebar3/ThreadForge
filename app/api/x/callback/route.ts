@@ -46,19 +46,15 @@ export async function GET(req: NextRequest) {
   console.log('[X OAuth Callback] All checks passed, calling exchangeCodeForXTokensAndSave for user', userId)
 
   try {
-    // Delegate to exchange which uses the forced saveXAccount + verify
-    const result = await exchangeCodeForXTokensAndSave(userId, code, codeVerifier, redirectUri)
-
-    if (!result.success) {
-      const errCode = result.error || 'unknown'
-      console.error('[X OAuth Callback] exchangeCodeForXTokensAndSave returned failure:', errCode)
-      throw new Error(`X account token save failed: ${errCode}`)  // throw on failure as per final fix
-    }
+    // Now exchange throws on ANY failure (incl. saveXAccount verify failure).
+    // We await it; if no throw, it succeeded.
+    await exchangeCodeForXTokensAndSave(userId, code, codeVerifier, redirectUri)
 
     console.log('[X OAuth Callback] SUCCESS - X tokens saved, redirecting with connected=1')
     return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
   } catch (e: any) {
     console.error('[X OAuth Callback] error during exchange/save (threw on failure):', e?.message || e)
-    return NextResponse.redirect(new URL('/scheduler?error=unknown', req.url))
+    const errCode = (e?.message || 'unknown').replace(/[^a-z0-9_-]/gi, '_') // sanitize for redirect
+    return NextResponse.redirect(new URL(`/scheduler?error=${encodeURIComponent(errCode)}`, req.url))
   }
 }

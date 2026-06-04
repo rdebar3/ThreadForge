@@ -253,14 +253,15 @@ export async function refreshXToken(refreshToken: string): Promise<XTokenRefresh
 
 /**
  * Centralized X OAuth code exchange + profile fetch + save.
- * Replaces duplicated logic from the callback routes. Much better logging to debug "not saving token" issues.
+ * Improved to THROW on any failure (including saveXAccount verification).
+ * Callers (callback routes) should catch and handle redirect to error.
  */
 export async function exchangeCodeForXTokensAndSave(
   userId: string,
   code: string,
   codeVerifier: string,
   redirectUri: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<void> {
   console.log('[X OAuth] exchangeCodeForXTokensAndSave START for user', userId)
 
   const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
@@ -268,7 +269,7 @@ export async function exchangeCodeForXTokensAndSave(
 
   if (!clientId || !clientSecret) {
     console.error('[X OAuth] Missing X_API_KEY/X_API_SECRET (preferred) or legacy X_CLIENT_*')
-    return { success: false, error: 'config' }
+    throw new Error('config')
   }
 
   try {
@@ -293,7 +294,7 @@ export async function exchangeCodeForXTokensAndSave(
     if (!tokenRes.ok) {
       const err = await tokenRes.text()
       console.error('[X OAuth] Token exchange failed:', tokenRes.status, err)
-      return { success: false, error: 'token_exchange' }
+      throw new Error('token_exchange')
     }
 
     const tokenData = await tokenRes.json()
@@ -337,7 +338,7 @@ export async function exchangeCodeForXTokensAndSave(
     console.log('[X OAuth] About to call saveXAccount for user', userId)
     await saveXAccount(userId, account)
 
-    // Final force: re-verify immediately after saveXAccount (to force throw on failure even if save's internal verify only logged)
+    // Force verification after save (save now also verifies and throws, this is extra belt-and-suspenders)
     const client = await clerkClient()
     const verifyUser = await client.users.getUser(userId)
     const saved = verifyUser.privateMetadata?.xAccount as XAccount | undefined
@@ -347,10 +348,10 @@ export async function exchangeCodeForXTokensAndSave(
     }
 
     console.log('[X OAuth] exchangeCodeForXTokensAndSave SUCCESS for user', userId, '(@' + username + ')')
-    return { success: true }
+    // Success: no return value, just completes. Caller treats lack of throw as success.
   } catch (e: any) {
     console.error('[X OAuth] Unexpected error in exchangeCodeForXTokensAndSave (or from saveXAccount):', e?.message || e)
-    return { success: false, error: 'unknown' }
+    throw e  // re-throw so callback route can catch and redirect to error page
   }
 }
 
@@ -378,27 +379,25 @@ export async function saveXAccount(userId: string, account: XAccount): Promise<v
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
-    const updated = {
-      ... (user.privateMetadata || {}),
-      xAccount: account,
-    }
-
     await client.users.updateUserMetadata(userId, {
-      privateMetadata: updated,
+      privateMetadata: {
+        ...(user.privateMetadata || {}),
+        xAccount: account,
+      },
     })
 
-    // Verify immediately
-    const verify = await client.users.getUser(userId)
-    const saved = verify.privateMetadata?.xAccount as XAccount | undefined
+    // Force verification
+    const verifyUser = await client.users.getUser(userId)
+    const saved = verifyUser.privateMetadata?.xAccount as XAccount | undefined
 
     if (saved?.accessToken) {
-      console.log('[X Account] VERIFIED SUCCESS - token saved for', userId)
+      console.log('[X Account] VERIFIED SUCCESS for', userId)
     } else {
-      console.error('[X Account] VERIFICATION FAILED - token not in metadata')
-      throw new Error('Token save verification failed')
+      console.error('[X Account] VERIFICATION FAILED - token not saved')
+      throw new Error('X token save verification failed')
     }
   } catch (error) {
-    console.error('[X Account] saveXAccount FAILED:', error)
+    console.error('[X Account] save FAILED:', error)
     throw error
   }
 }
