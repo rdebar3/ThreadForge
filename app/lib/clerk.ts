@@ -262,7 +262,7 @@ export async function exchangeCodeForXTokensAndSave(
   codeVerifier: string,
   redirectUri: string
 ): Promise<void> {
-  console.log('[X OAuth] exchangeCodeForXTokensAndSave START for user', userId)
+  console.log('[X OAuth] exchangeCodeForXTokensAndSave START for user', userId, 'redirectUri:', redirectUri)
 
   const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
   const clientSecret = process.env.X_API_SECRET || process.env.X_CLIENT_SECRET
@@ -274,6 +274,8 @@ export async function exchangeCodeForXTokensAndSave(
 
   try {
     const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+
+    console.log('[X OAuth Exchange] Token exchange using redirect_uri:', redirectUri)
 
     const tokenBody = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -293,8 +295,9 @@ export async function exchangeCodeForXTokensAndSave(
 
     if (!tokenRes.ok) {
       const err = await tokenRes.text()
-      console.error('[X OAuth] Token exchange failed:', tokenRes.status, err)
-      throw new Error('token_exchange')
+      console.error('[X OAuth] Token exchange failed:', tokenRes.status, err, 'redirect_uri used:', redirectUri)
+      // Improve error: include more detail if possible, but keep simple for redirect
+      throw new Error(`token_exchange:${tokenRes.status}`)
     }
 
     const tokenData = await tokenRes.json()

@@ -21,12 +21,25 @@ export async function GET(req: NextRequest) {
 
   // Support both common naming: X_API_KEY / X_API_SECRET (preferred) or legacy X_CLIENT_ID / X_CLIENT_SECRET
   const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
-  const redirectUri = process.env.X_REDIRECT_URI || `${req.nextUrl.origin}/api/auth/callback/x`
+
+  // Ensure redirect_uri matches exactly what's registered in X Developer Portal for this Client ID.
+  // Set X_REDIRECT_URI env for your local (http://localhost:3000/...) and production (https://threadforge.space/...) URLs.
+  let redirectUri = process.env.X_REDIRECT_URI
+  if (!redirectUri) {
+    const origin = req.nextUrl.origin
+    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes(':3000')) {
+      redirectUri = 'http://localhost:3000/api/auth/callback/x'
+    } else {
+      redirectUri = 'https://threadforge.space/api/auth/callback/x'
+    }
+  }
 
   if (!clientId) {
     console.error('[X OAuth] Missing X_API_KEY (preferred) or X_CLIENT_ID. Set in .env.local or hosting env. The OAuth authorize will use redirect_uri pointing to /api/auth/callback/x')
     return NextResponse.redirect(new URL('/scheduler?error=config', req.url))
   }
+
+  console.log('[X OAuth Connect] Using redirect_uri for authorize:', redirectUri)
 
   const state = crypto.randomBytes(16).toString('hex')
   const codeVerifier = generateCodeVerifier()
