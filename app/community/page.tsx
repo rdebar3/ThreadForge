@@ -193,10 +193,10 @@ export default function CommunityPage() {
               </div>
 
               <h3 className="text-2xl font-semibold tracking-tight mb-3">The community is just getting started.</h3>
-              <p className="text-zinc-400 mb-4 text-[15px] leading-relaxed">No threads yet — but the first 100 creators who share will define what this space becomes. Be early. Be real.</p>
+              <p className="text-zinc-400 mb-4 text-[15px] leading-relaxed">Be one of the first to share — the early threads here will shape what this space becomes. Your story matters.</p>
 
               {/* Motivational line for first-time users */}
-              <p className="text-emerald-400 text-sm mb-8 font-medium">Your thread could be the first one featured here.</p>
+              <p className="text-emerald-400 text-sm mb-8 font-medium">Your thread could be the first one featured here. Start sharing today!</p>
 
               {/* Prominent CTA - clearly leads to generator then one-click submit flow */}
               <Link 

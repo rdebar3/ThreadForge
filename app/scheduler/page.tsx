@@ -328,7 +328,7 @@ export default function SchedulerPage() {
         </div>
 
         {/* X Connection Card */}
-        <div className="glass-card rounded-3xl border border-white/10 p-6 mb-8">
+        <div id="x-connect" className="glass-card rounded-3xl border border-white/10 p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
             <div>
               <div className="font-semibold mb-1">X Account Connection</div>
@@ -457,11 +457,21 @@ export default function SchedulerPage() {
             <div className="glass-card rounded-2xl border border-white/10 p-8 text-center">
               <div className="text-lg mb-2">📭 No upcoming posts</div>
               <p className="text-sm text-zinc-400 mb-4">
-                Schedule your first thread to see it here. Connect X above, pick a time, and let us post automatically.
+                Schedule your first thread to see it here. Connect your X account above or use the form below to create your first scheduled post.
               </p>
-              <div className="flex justify-center gap-3">
-                <Link href="/" className="text-sm px-4 py-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10">Go to Generator</Link>
-                <button onClick={() => document.getElementById('custom-schedule')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:bg-zinc-900">Use Quick Form</button>
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
+                <button 
+                  onClick={() => document.getElementById('x-connect')?.scrollIntoView({ behavior: 'smooth' })} 
+                  className="text-sm px-6 py-2.5 rounded-2xl bg-white text-zinc-950 font-semibold hover:bg-zinc-100"
+                >
+                  Connect X Account
+                </button>
+                <button 
+                  onClick={() => document.getElementById('custom-schedule')?.scrollIntoView({ behavior: 'smooth' })} 
+                  className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:bg-zinc-900"
+                >
+                  Create First Scheduled Post
+                </button>
               </div>
             </div>
           ) : (

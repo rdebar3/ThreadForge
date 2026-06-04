@@ -301,7 +301,7 @@ export default function HistoryPage() {
         ) : history.length === 0 ? (
           <div className="text-center py-20 bg-zinc-900/60 border border-white/10 rounded-3xl p-8">
             <p className="text-xl text-zinc-300 mb-2">No history yet</p>
-            <p className="text-zinc-400">Generate some threads while signed in as Pro to start building your library.</p>
+            <p className="text-zinc-400">Your generated threads will appear here. Create your first one above!</p>
             <a href="/" className="inline-block mt-6 px-5 py-2 bg-white text-zinc-950 rounded-2xl text-sm font-medium">Start Generating</a>
           </div>
         ) : (

@@ -1220,6 +1220,7 @@ export default function Page() {
           {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) */}
           <div className="text-center mb-3">
             <p className="text-[11px] text-zinc-400">Start by typing any idea above. You get 3 free generations per day — upgrade anytime for unlimited.</p>
+            <p className="text-[10px] text-zinc-500 mt-1">Example: “How I went from 0 to 10k followers in 6 months” — one sentence is enough.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -1231,7 +1232,7 @@ export default function Page() {
                   handleGenerate()
                 }
               }}
-              placeholder="e.g. building in public, cold email outreach, personal branding..."
+              placeholder="e.g. How I went from 0 to 10k followers in 6 months"
               disabled={isGenerating}
               className="flex-1 bg-zinc-950/55 border border-white/10 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/50 focus:shadow-[0_0_0_4px_rgba(124,58,237,0.15),0_0_15px_rgba(124,58,237,0.2)] rounded-2xl px-6 py-4 text-lg placeholder:text-zinc-500 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             />
@@ -1291,6 +1292,9 @@ export default function Page() {
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
             <div className="mt-5">
+              <div className="text-center mb-3">
+                <p className="text-sm text-zinc-300">Type any idea above (one sentence is enough) → Get a full thread + images in seconds</p>
+              </div>
               <div className="text-[10px] text-zinc-400 mb-1.5">Start by typing any idea above • Free: 3 generations/day (resets daily)</div>
               <div className="text-xs text-zinc-500 mb-2 tracking-wider">TRY AN EXAMPLE</div>
               <div className="flex flex-wrap justify-center gap-2">
