@@ -406,9 +406,7 @@ export async function postThreadToX(
       payload.media = { media_ids: item.mediaIds }
     }
     if (!inReplyTo) {
-      // ROOT tweet only: set reply_settings so the thread allows replies.
-      // 'everyone' allows public replies from anyone (fully open by default).
-      // Applied ONLY to first tweet in chain (subsequent tweets use in_reply_to instead).
+      // ROOT TWEET ONLY - allow anyone to reply
       payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
