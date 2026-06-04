@@ -413,6 +413,7 @@ export default function Page() {
 
   // Open preview/edit modal instead of immediate post
   const copyToX = (thread: Thread) => {
+    console.log("Post button clicked (copyToX) for thread:", thread?.id)
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
     if (tweets.length === 0) return
     setPostSuccess(null) // clear previous post success when starting new post flow
@@ -435,10 +436,9 @@ export default function Page() {
     mediaAssignments: Record<number, number[]> = {},
     titleForHistory?: string
   ) => {
-    console.log("performPostToX started");
-    console.log("Post to X performPostToX called for tweets:", tweetsToPost.length);
     if (tweetsToPost.length === 0) return
 
+    console.log("performPostToX started with", tweetsToPost.length, "tweets")
     setIsPosting(true)
     try {
       console.log('[performPostToX] Sending to /api/x/post - image data:', {
@@ -618,7 +618,7 @@ export default function Page() {
   }
 
   const confirmPostFromPreview = () => {
-    console.log("Post to X confirmPostFromPreview called for thread:", showPostPreviewFor);
+    console.log("Preview modal confirm clicked")
     // filter empty + remap image assignments to the *cleaned* tweet indices (supports multiple per tweet via array)
     const cleaned: string[] = []
     const mediaAssignments: Record<number, number[]> = {}
@@ -1513,12 +1513,12 @@ export default function Page() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Post button clicked");
                             console.log(" Post to X clicked for thread:", thread.id);
-                            copyToX(thread);   // This should open the preview modal
+                            copyToX(thread); // opens preview modal
                           }}
+                          disabled={isPosting}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px] cursor-pointer"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px] disabled:opacity-50 cursor-pointer"
                         >
                           <XIcon />
                           Post to X
@@ -2370,12 +2370,11 @@ export default function Page() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
-                    console.log("Preview modal confirm clicked");
                     console.log("Confirm & Post clicked - calling performPostToX");
                     confirmPostFromPreview();
                   }}
                   disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
-                  className="flex-1 py-5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-500 text-white font-semibold rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:via-violet-700 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_8px_25px_-2px_rgba(124,58,237,0.55)] ring-2 ring-violet-400/60 min-h-[60px] flex items-center justify-center gap-2"
+                  className="flex-1 py-5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-500 text-white font-semibold rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:via-violet-700 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_8px_25px_-2px_rgba(124,58,237,0.55)] ring-2 ring-violet-400/60 min-h-[60px] flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isPosting ? (
                     <>

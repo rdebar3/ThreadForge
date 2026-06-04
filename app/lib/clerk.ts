@@ -377,6 +377,12 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
   return String(mediaId)
 }
 
+/**
+ * Posts a full thread as a connected reply chain on X using the user's access token.
+ * reply_settings:'everyone' ONLY on root tweet (public replies).
+ * Supports optional media per tweet (retained for future) but route is text-only for now.
+ * Accepts string[] (text-only) or rich items. Returns array of created tweet IDs.
+ */
 export async function postThreadToX(
   accessToken: string,
   tweetsOrItems: string[] | Array<{ text: string; mediaIds?: string[] }>
@@ -384,7 +390,8 @@ export async function postThreadToX(
   const postedIds: string[] = []
   let inReplyTo: string | null = null
 
-  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && typeof tweetsOrItems[0] === 'string'
+  // Normalize: string[] (legacy/text-only from scheduler/cron or minimal route) or rich {text, mediaIds?}[]
+  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && tweetsOrItems.length > 0 && typeof tweetsOrItems[0] === 'string'
     ? (tweetsOrItems as string[]).map(t => ({ text: t }))
     : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
 
@@ -393,18 +400,17 @@ export async function postThreadToX(
     if (!text) continue
 
     const payload: any = { text }
-
     if (item.mediaIds && item.mediaIds.length > 0) {
       payload.media = { media_ids: item.mediaIds }
     }
-
     if (!inReplyTo) {
+      // ROOT TWEET ONLY - allow anyone to reply
       payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
 
-    const res = await fetch('https://api.x.com/2/tweets', {
+    const res = await fetch(X_TWEETS_URL, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -415,21 +421,38 @@ export async function postThreadToX(
 
     if (!res.ok) {
       const errText = await res.text()
-      if (errText.toLowerCase().includes('credit')) {
+      if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
         throw new Error('CreditsDepleted')
       }
-      throw new Error(`X Error: ${res.status}`)
+      let friendlyError = `X API error ${res.status}: ${errText.substring(0, 180)}`
+      try {
+        const parsed = JSON.parse(errText)
+        if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+          const firstErr = parsed.errors[0]
+          const msg = firstErr.message || firstErr.detail || JSON.stringify(firstErr)
+          friendlyError = `X API error ${res.status}: ${msg}`
+          if (firstErr.code) friendlyError += ` (code: ${firstErr.code})`
+        } else if (parsed.detail) {
+          friendlyError = `X API error ${res.status}: ${parsed.detail}`
+        }
+      } catch (e) {
+        // not JSON
+      }
+      throw new Error(friendlyError)
     }
 
     const json = await res.json()
     const id = json?.data?.id
-    if (!id) throw new Error('No tweet ID from X')
+    if (!id) throw new Error('X returned no tweet id')
 
     postedIds.push(id)
     inReplyTo = id
   }
 
-  if (postedIds.length === 0) throw new Error('No tweets posted')
+  if (postedIds.length === 0) {
+    throw new Error('No tweets were posted')
+  }
+
   return postedIds
 }
 
