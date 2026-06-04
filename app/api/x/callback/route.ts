@@ -43,16 +43,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/scheduler?error=invalid_state', req.url))
   }
 
-  // Delegate the token exchange + profile + save to centralized improved logic in clerk.ts
-  // (fixes duplication and adds detailed logging around the save step)
-  const result = await exchangeCodeForXTokensAndSave(userId, code, codeVerifier, redirectUri)
+  console.log('[X OAuth Callback] All checks passed, calling exchangeCodeForXTokensAndSave for user', userId)
 
-  if (!result.success) {
-    const errCode = result.error || 'unknown'
-    console.error('[X OAuth Callback] exchange failed with:', errCode)
-    return NextResponse.redirect(new URL(`/scheduler?error=${encodeURIComponent(errCode)}`, req.url))
+  try {
+    // Delegate the token exchange + profile + save (with root cause fixes in saveXAccount: verify + throw on fail)
+    const result = await exchangeCodeForXTokensAndSave(userId, code, codeVerifier, redirectUri)
+
+    if (!result.success) {
+      const errCode = result.error || 'unknown'
+      console.error('[X OAuth Callback] exchangeCodeForXTokensAndSave returned failure:', errCode)
+      return NextResponse.redirect(new URL(`/scheduler?error=${encodeURIComponent(errCode)}`, req.url))
+    }
+
+    console.log('[X OAuth Callback] SUCCESS - X tokens saved, redirecting with connected=1')
+    return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
+  } catch (e: any) {
+    console.error('[X OAuth Callback] UNEXPECTED error during exchange/save:', e?.message || e)
+    return NextResponse.redirect(new URL('/scheduler?error=unknown', req.url))
   }
-
-  // Success redirect
-  return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
 }

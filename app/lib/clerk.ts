@@ -334,12 +334,13 @@ export async function exchangeCodeForXTokensAndSave(
       connectedAt: new Date().toISOString(),
     }
 
+    console.log('[X OAuth] About to call saveXAccount (now with verify+throw) for user', userId)
     await saveXAccount(userId, account)
 
     console.log('[X OAuth] exchangeCodeForXTokensAndSave SUCCESS for user', userId, '(@' + username + ')')
     return { success: true }
   } catch (e: any) {
-    console.error('[X OAuth] Unexpected error in exchangeCodeForXTokensAndSave:', e)
+    console.error('[X OAuth] Unexpected error in exchangeCodeForXTokensAndSave (or from saveXAccount):', e?.message || e)
     return { success: false, error: 'unknown' }
   }
 }
@@ -362,21 +363,36 @@ export async function getXAccount(userId: string): Promise<XAccount | null> {
 }
 
 /**
- * Save / update X account connection in privateMetadata.
- * Improved: uses direct merge (no need to fetch+spread), heavy logging for debugging token save issues.
+ * Save / update X account connection (tokens etc) to privateMetadata.
+ * Root cause fix: always fetch+merge explicitly for reliability, heavy logging, verify after save, and THROW on failure so callers (exchange + callback) get proper error instead of silent fail + false success.
  */
 export async function saveXAccount(userId: string, account: XAccount): Promise<void> {
+  console.log('[X Account] saveXAccount START for user', userId, 'username=@' + (account?.username || 'unknown'))
   try {
     const client = await clerkClient()
-    console.log('[X Account] saveXAccount called for user', userId, 'username=@' + (account?.username || 'unknown'))
+    // Fetch current to do explicit merge (more reliable across Clerk versions / eventual consistency)
+    const user = await client.users.getUser(userId)
     await client.users.updateUserMetadata(userId, {
       privateMetadata: {
+        ... (user.privateMetadata || {}),
         xAccount: account,
       },
     })
-    console.log('[X Account] saveXAccount SUCCESS for user', userId)
+    console.log('[X Account] updateUserMetadata completed for user', userId)
+
+    // Verify the save actually persisted (this can catch silent failures)
+    const verifiedUser = await client.users.getUser(userId)
+    const savedAcct = (verifiedUser.privateMetadata as any)?.xAccount
+    if (savedAcct && savedAcct.accessToken) {
+      console.log('[X Account] VERIFIED save: tokens present in privateMetadata for user', userId, 'expiresAt=', savedAcct.expiresAt)
+    } else {
+      console.error('[X Account] VERIFICATION FAILED: xAccount or accessToken missing after updateUserMetadata for', userId)
+      throw new Error('X token save verification failed - not persisted to privateMetadata')
+    }
   } catch (error: any) {
-    console.error('[X Account] saveXAccount FAILED for user', userId, ':', error?.message || error, error?.stack?.substring?.(0, 300))
+    console.error('[X Account] saveXAccount FAILED for user', userId, ':', error?.message || error)
+    if (error?.stack) console.error(error.stack.substring(0, 400))
+    throw error  // re-throw so exchangeCodeForXTokensAndSave and callback route can handle as failure (no more silent success)
   }
 }
 
