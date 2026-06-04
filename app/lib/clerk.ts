@@ -377,10 +377,6 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
   return String(mediaId)
 }
 
-/**
- * Posts a full thread as a connected reply chain on X.
- * Allows anyone to reply. Supports media.
- */
 export async function postThreadToX(
   accessToken: string,
   tweetsOrItems: string[] | Array<{ text: string; mediaIds?: string[] }>
@@ -389,7 +385,7 @@ export async function postThreadToX(
   let inReplyTo: string | null = null
 
   const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && typeof tweetsOrItems[0] === 'string'
-    ? (tweetsOrItems as string[]).map(text => ({ text }))
+    ? (tweetsOrItems as string[]).map(t => ({ text: t }))
     : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
 
   for (const item of items) {
@@ -398,12 +394,12 @@ export async function postThreadToX(
 
     const payload: any = { text }
 
-    if (item.mediaIds?.length) {
+    if (item.mediaIds && item.mediaIds.length > 0) {
       payload.media = { media_ids: item.mediaIds }
     }
 
     if (!inReplyTo) {
-      payload.reply_settings = 'everyone'   // Anyone can reply
+      payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
@@ -419,15 +415,15 @@ export async function postThreadToX(
 
     if (!res.ok) {
       const errText = await res.text()
-      if (errText.includes('CreditsDepleted') || /credit/i.test(errText)) {
+      if (errText.toLowerCase().includes('credit')) {
         throw new Error('CreditsDepleted')
       }
-      throw new Error(`X API error: ${res.status} - ${errText.substring(0, 120)}`)
+      throw new Error(`X Error: ${res.status}`)
     }
 
     const json = await res.json()
     const id = json?.data?.id
-    if (!id) throw new Error('No tweet ID returned from X')
+    if (!id) throw new Error('No tweet ID from X')
 
     postedIds.push(id)
     inReplyTo = id
