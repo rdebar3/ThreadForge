@@ -1011,8 +1011,8 @@ export default function Page() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4 text-sm">
-            <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it works</a>
-            <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use cases</a>
+            <a href="#how" className="text-zinc-400 hover:text-white transition-colors">How it Works</a>
+            <a href="#use-cases" className="text-zinc-400 hover:text-white transition-colors">Use Cases</a>
             <a href="/community" className="text-zinc-400 hover:text-white transition-colors">Community</a>
             <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Pricing</a>
             {isSignedIn && hasPro && (
@@ -1071,14 +1071,14 @@ export default function Page() {
                 className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                How it works
+                How it Works
               </a>
               <a 
                 href="#use-cases" 
                 className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Use cases
+                Use Cases
               </a>
               <a 
                 href="/community" 
@@ -1881,47 +1881,47 @@ export default function Page() {
       <div id="how" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">How ThreadForge Works</h2>
-          <p className="text-zinc-400">Idea to ready-to-post threads in seconds.</p>
+          <p className="text-zinc-400">Idea to 5 ready-to-post threads + images in seconds. No writing required.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {[
             { 
               num: "01",
               title: "Enter your idea", 
-              desc: "Type any topic or lesson. One sentence is enough.",
+              desc: "Any topic, story, or lesson. One sentence is all you need.",
               pro: false
             },
             { 
               num: "02",
               title: "Generate 5 high-quality threads", 
-              desc: "Grok 4.3 creates five distinct threads with strong hooks and closers.",
+              desc: "Grok creates five natural, story-driven threads with strong hooks and arcs.",
               pro: false
             },
             { 
               num: "03",
-              title: "Post to X (Pro) or schedule (Pro+)", 
-              desc: "One click post now (Pro). Schedule auto-post (Pro+ only).",
+              title: "Post to X or schedule", 
+              desc: "Post instantly (Pro). Auto-schedule at best times (Pro+).",
               pro: true,
               tier: 'pro'
             },
             { 
               num: "04",
               title: "Add AI images", 
-              desc: "Generate 1–4 matching visuals instantly (Pro+ exclusive).",
+              desc: "Generate 1–4 matching visuals that make threads stand out (Pro+).",
               pro: true,
               tier: 'pro-plus'
             },
             { 
               num: "05",
-              title: "Save + get smart suggestions", 
-              desc: "Auto-save history. One-click ✨ Enhance adds natural emojis + strategic hashtags (Pro).",
+              title: "Save + one-click enhance", 
+              desc: "Auto-saved to history. ✨ Enhance adds natural emojis + hashtags (Pro).",
               pro: true,
               tier: 'pro'
             }
           ].map((step, index) => (
-            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6 flex gap-4 group">
-              <div className="how-icon w-8 h-8 flex-shrink-0 rounded-xl bg-violet-500 text-white flex items-center justify-center text-xs font-mono font-semibold tracking-tighter">
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-5 sm:p-6 flex gap-4 group">
+              <div className="how-icon w-9 h-9 flex-shrink-0 rounded-xl bg-violet-500 text-white flex items-center justify-center text-sm font-mono font-semibold tracking-tighter">
                 {step.num}
               </div>
               <div className="min-w-0 flex-1">
@@ -1944,37 +1944,37 @@ export default function Page() {
       <div id="use-cases" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Real ways people use ThreadForge</h2>
-          <p className="text-zinc-400">Scenarios where it saves serious time.</p>
+          <p className="text-zinc-400">Proven scenarios where it turns ideas into results — fast.</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-5 md:gap-6">
           {[
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-              title: "Launching a product or side project",
-              desc: "Shipped something? Type one sentence. Get 4 strong launch threads instantly."
+              title: "Product & side project launches",
+              desc: "Ship a launch in minutes. Get 5 high-converting threads that drive traffic, replies, and signups."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17.687a2.25 2.25 0 01-2.25-2.25v-9a2.25 2.25 0 012.25-2.25h4.5a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25H9.663z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21v-3.75" /></svg>,
-              title: "Sharing a lesson or failure",
-              desc: "Turn a real story or win into polished threads without hours of structuring."
+              title: "Sharing lessons, wins & stories",
+              desc: "Turn real experiences into authentic threads that build trust, authority, and real connections."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
-              title: "Growing on X consistently",
-              desc: "Post 3-4x a week without the mental load. Perfect for busy creators."
+              title: "Consistent X growth without burnout",
+              desc: "Post 3–5 times a week with zero writer's block. Stay visible and grow while staying sane."
             },
             {
               icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-              title: "Building in public",
-              desc: "Turn quick notes into professional threads that document your journey."
+              title: "Building in public & personal brand",
+              desc: "Document your journey with professional threads that attract followers, clients, and opportunities."
             }
           ].map((useCase, index) => (
-            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6">
+            <div key={index} className="glass-card bg-zinc-900/60 border border-white/10 rounded-2xl p-6 sm:p-7">
               <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4">
                 {useCase.icon}
               </div>
-              <div className="font-semibold text-lg mb-2 tracking-tight">{useCase.title}</div>
+              <div className="font-semibold text-[17px] sm:text-lg mb-2 tracking-tight">{useCase.title}</div>
               <div className="text-zinc-400 text-[15px] leading-relaxed">{useCase.desc}</div>
             </div>
           ))}
