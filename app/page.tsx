@@ -470,7 +470,7 @@ export default function Page() {
             { label: 'Add X Credits', href: 'https://developer.x.com/en/portal/dashboard' }
           )
         } else {
-          const msg = data.error || 'Something went wrong while posting to X. Please try again in a moment.'
+          const msg = data.error || 'Something went wrong while posting to X. Please try again in a moment. Your work is safe in History.'
           showToast(msg, 'error')
         }
         return
@@ -483,8 +483,8 @@ export default function Page() {
         ? 'Full thread with images posted to X!' 
         : 'Full thread posted successfully to X!'
 
-      // Improved success feedback: clear confirmation (persistent banner with next actions below + toast + auto-open link)
-      showToast(successMsg, 'success')
+      // Stronger success feedback: clear toast with direct "View on X" link to the actual thread
+      showToast(successMsg, 'success', postUrl ? { label: 'View on X', href: postUrl } : undefined)
 
       // Record for post-success next actions UI (clear confirmation with buttons)
       if (showPostPreviewFor !== null) {
@@ -1488,7 +1488,7 @@ export default function Page() {
                     }}
                     className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-violet-300 active:bg-white/10 transition min-h-[44px]"
                   >
-                    📅 Schedule this thread
+                    📅 Schedule This Thread
                   </button>
                 )}
                 <button
@@ -2234,7 +2234,7 @@ export default function Page() {
             {/* Header - fixed */}
             <div className="flex items-center justify-between p-6 sm:p-8 pb-5 border-b border-white/10 flex-shrink-0">
               <div>
-                <h3 className="text-3xl sm:text-[28px] font-semibold tracking-[-0.5px]">Preview &amp; Edit Thread</h3>
+                <h3 className="text-3xl sm:text-[28px] font-semibold tracking-[-0.5px]">Preview &amp; Edit Thread {previewTweets.length > 1 ? `(${previewTweets.length} tweets)` : ''}</h3>
                 <p className="text-sm text-zinc-400 mt-1.5">Review and edit your tweets. Attach images where desired. Then confirm to post the full reply chain to X.</p>
               </div>
               <button 
