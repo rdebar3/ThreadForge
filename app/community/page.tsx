@@ -144,6 +144,13 @@ export default function CommunityPage() {
           <p className="text-lg text-zinc-400 max-w-lg mx-auto">An exclusive space for early members. Share your best threads, get discovered, and help shape the future of the showcase.</p>
         </div>
 
+        {/* Temporary disable banner for submissions (Phase 1.9) */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="glass-card border border-amber-500/40 bg-amber-500/10 rounded-2xl px-6 py-4 text-center">
+            <p className="text-amber-300 text-sm font-medium">Community submissions are temporarily paused while we improve our system. Check back soon!</p>
+          </div>
+        </div>
+
         {/* Conditional: Beautiful empty state (when no posts) OR live functional feed */}
         {sortedPosts.length === 0 && !isLoading ? (
           <div className="max-w-lg mx-auto mb-14 text-center">

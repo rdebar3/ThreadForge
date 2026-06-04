@@ -1760,16 +1760,16 @@ export default function Page() {
                   )}
                 </div>
 
-                {/* Prominent "Submit to Community Showcase" button - shown after generate for dead-simple first-time submission */}
+                {/* Submit to Community Showcase - temporarily disabled */}
                 {!submittedToShowcase[thread.id] && (
                   <div className="mt-4 pt-4 border-t border-white/10">
                     <button
-                      onClick={() => openSubmitToShowcase(thread)}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[15px] font-semibold active:scale-[0.985] transition hover:brightness-105 shadow"
+                      disabled
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 text-[15px] font-semibold cursor-not-allowed opacity-70"
                     >
-                      Submit to Community Showcase
+                      Submit to Community Showcase (Coming Soon)
                     </button>
-                    <p className="text-center text-[10px] text-zinc-500 mt-1.5 tracking-wide">Your thread will appear instantly after submission • 1 click</p>
+                    <p className="text-center text-[10px] text-zinc-500 mt-1.5 tracking-wide">We're upgrading our backend storage. Your threads are safely saved in History.</p>
                   </div>
                 )}
                 {submittedToShowcase[thread.id] && (
