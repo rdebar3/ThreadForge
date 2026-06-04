@@ -4,19 +4,6 @@ import { useState } from 'react'
 import { useUser, UserButton, useClerk } from '@clerk/nextjs'
 import { IMAGE_STYLES, type ImageStyle } from './lib/prompts'
 
-interface Thread {
-  id: number
-  title: string
-  tweets: string[]
-  images?: Array<{url: string, style: string, revisedPrompt?: string}>
-}
-
-'use client'
-
-import { useState } from 'react'
-import { useUser, UserButton, useClerk } from '@clerk/nextjs'
-import { IMAGE_STYLES, type ImageStyle } from './lib/prompts'
-
 interface GeneratedImage {
   url: string
   style: string
@@ -24,6 +11,7 @@ interface GeneratedImage {
 }
 
 const STYLE_LABELS: Record<ImageStyle, string> = {
+  auto: 'Auto',
   realistic: 'Realistic',
   cinematic: 'Cinematic',
   boudoir: 'Boudoir',

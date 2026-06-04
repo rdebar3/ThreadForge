@@ -147,7 +147,7 @@ Exact format:
 // Focus: beauty, elegance, sensuality. Always tasteful, non-explicit, classy.
 // Used by /api/generate-images and main UI.
 // ============================================
-export const IMAGE_STYLES = ['realistic', 'cinematic', 'boudoir', 'lingerie', 'artistic', 'sensual', 'elegant'] as const;
+export const IMAGE_STYLES = ['auto', 'realistic', 'cinematic', 'boudoir', 'lingerie', 'artistic', 'sensual', 'elegant'] as const;
 
 export type ImageStyle = typeof IMAGE_STYLES[number];
 
