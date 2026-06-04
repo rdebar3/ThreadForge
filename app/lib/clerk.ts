@@ -96,10 +96,12 @@ export async function getGenerationHistory(userId: string): Promise<GenerationRe
 
 /**
  * Save a new generation record to the user's history in Clerk publicMetadata.
- * Only call for Pro users. Keeps only the most recent 20 entries.
+ * Only call for Pro users. Keeps only the most recent 10 entries (after cleanup).
  */
 export async function saveGenerationToHistory(userId: string, record: Omit<GenerationRecord, 'id'>): Promise<void> {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
@@ -110,7 +112,7 @@ export async function saveGenerationToHistory(userId: string, record: Omit<Gener
       ...record,
     }
 
-    const updated = [newRecord, ...existing].slice(0, 20)
+    const updated = [newRecord, ...existing].slice(0, MAX_GENERATION_HISTORY)
 
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
@@ -463,7 +465,7 @@ export async function postThreadToX(
 // Scheduled Posts (publicMetadata) - Pro+ only feature
 // ============================================
 
-const MAX_SCHEDULED = 50
+const MAX_SCHEDULED = 10
 
 /**
  * Get all scheduled posts for user (newest first or as stored).
@@ -485,6 +487,8 @@ export async function getScheduledPosts(userId: string): Promise<ScheduledPost[]
  */
 export async function addScheduledPost(userId: string, post: Omit<ScheduledPost, 'id'>): Promise<ScheduledPost | null> {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
@@ -582,10 +586,71 @@ export function filterDuePending(posts: ScheduledPost[]): ScheduledPost[] {
 }
 
 // ============================================
+// Aggressive Metadata Cleanup (to stay under Clerk's ~8KB publicMetadata limit)
+// ============================================
+
+const MAX_GENERATION_HISTORY = 10
+const MAX_SHOWCASE_POSTS = 3
+const MAX_SCHEDULED = 10
+const MAX_TEMPLATES = 10
+
+/**
+ * Aggressively prunes user publicMetadata to prevent 8KB Clerk limit errors (422).
+ * Keeps only the most recent N entries for each category (newest first).
+ * Called before any metadata updates that grow arrays.
+ */
+export async function cleanupUserMetadata(userId: string): Promise<void> {
+  try {
+    const client = await clerkClient()
+    const user = await client.users.getUser(userId)
+    const metadata = { ...(user.publicMetadata || {}) }
+    let changed = false
+
+    // generationHistory - keep most recent
+    const genHistory: GenerationRecord[] = (metadata.generationHistory as GenerationRecord[]) || []
+    if (genHistory.length > MAX_GENERATION_HISTORY) {
+      metadata.generationHistory = genHistory.slice(0, MAX_GENERATION_HISTORY)
+      changed = true
+    }
+
+    // showcasePosts
+    const showcase: ShowcasePost[] = (metadata.showcasePosts as ShowcasePost[]) || []
+    if (showcase.length > MAX_SHOWCASE_POSTS) {
+      metadata.showcasePosts = showcase.slice(0, MAX_SHOWCASE_POSTS)
+      changed = true
+    }
+
+    // scheduledPosts
+    const scheduled: ScheduledPost[] = (metadata.scheduledPosts as ScheduledPost[]) || []
+    if (scheduled.length > MAX_SCHEDULED) {
+      metadata.scheduledPosts = scheduled.slice(0, MAX_SCHEDULED)
+      changed = true
+    }
+
+    // templates
+    const templates: Template[] = (metadata.templates as Template[]) || []
+    if (templates.length > MAX_TEMPLATES) {
+      metadata.templates = templates.slice(0, MAX_TEMPLATES)
+      changed = true
+    }
+
+    if (changed) {
+      await client.users.updateUserMetadata(userId, {
+        publicMetadata: metadata,
+      })
+      console.log('[clerk] cleanupUserMetadata pruned data for user=', userId)
+    }
+  } catch (error) {
+    console.error('Failed to cleanup user metadata:', error)
+    // non-fatal, do not block updates
+  }
+}
+
+// ============================================
 // Saved Templates (Pro users can save private ones, everyone sees library)
 // ============================================
 
-const MAX_TEMPLATES = 30
+const MAX_TEMPLATES = 10
 
 /**
  * Get user's saved private templates from publicMetadata.
@@ -605,6 +670,8 @@ export async function getUserTemplates(userId: string): Promise<Template[]> {
  */
 export async function saveUserTemplate(userId: string, tpl: Omit<Template, 'id' | 'savedAt'>): Promise<Template | null> {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
     const existing: Template[] = (user.publicMetadata?.templates as Template[]) || []
@@ -728,8 +795,6 @@ export async function canUseProPlusFeature(userId: string): Promise<{ allowed: b
 // Aggregated via getUserList for feed (fine for early <100 creators)
 // ============================================
 
-const MAX_SHOWCASE_PER_USER = 5
-
 export interface EnrichedShowcasePost extends ShowcasePost {
   authorName: string
   likedByMe?: boolean
@@ -744,17 +809,14 @@ export async function submitShowcasePost(
   data: { title: string; tweets: string[]; images?: any[] }
 ): Promise<ShowcasePost | null> {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
     console.log('[clerk] submitShowcasePost START | user=', userId, '| titleLen=', data.title?.length || 0)
 
-    let existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
-
-    // Aggressive capping - keep only the 3 most recent showcase posts
-    if (existing.length >= 3) {
-      existing = existing.slice(0, 2); // keep 2 oldest, we'll add new one = max 3
-    }
+    const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
 
     // Defensive image cleaning
     let cleanImages: any[] = []
@@ -766,20 +828,20 @@ export async function submitShowcasePost(
           style: String(img.style || 'cinematic'),
           revisedPrompt: (img.revisedPrompt || img.revised_prompt) ? String(img.revisedPrompt || img.revised_prompt) : undefined,
         }))
-        .slice(0, 2) // even more aggressive for metadata size
+        .slice(0, 2)
     }
 
     const newPost: ShowcasePost = {
       id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
       title: (data.title || 'Untitled Thread').trim().slice(0, 100),
-      tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 8) : [], // shorter tweets too
+      tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 8) : [],
       images: cleanImages,
       likes: 0,
       createdAt: new Date().toISOString(),
       userId: userId,
     }
 
-    const updatedPosts = [newPost, ...existing].slice(0, 3)
+    const updatedPosts = [newPost, ...existing].slice(0, MAX_SHOWCASE_POSTS)
 
     // Ultra safe + minimal metadata update
     const safePublicMetadata = JSON.parse(JSON.stringify({
