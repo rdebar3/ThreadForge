@@ -11,22 +11,21 @@ interface GeneratedImage {
 }
 
 const STYLE_LABELS: Record<ImageStyle, string> = {
-  auto: 'Auto',
   realistic: 'Realistic',
   cinematic: 'Cinematic',
   boudoir: 'Boudoir',
   lingerie: 'Lingerie',
-  artistic: 'Artistic',
+  romantic: 'Romantic',
   sensual: 'Sensual',
   elegant: 'Elegant',
 }
 
 const EXAMPLE_PROMPTS = [
-  "beautiful brunette in black lace lingerie, soft bedroom lighting, elegant pose",
-  "ethereal blonde in sheer silk, golden hour light, artistic boudoir",
-  "sophisticated redhead in vintage lingerie, moody studio, sensual gaze",
-  "elegant woman in delicate lace, luxurious hotel suite, soft window light",
-  "graceful brunette, artistic drapery, warm candlelight, timeless beauty",
+  "my perfect girlfriend with long dark hair, wearing elegant black lace lingerie, soft candlelight in our bedroom, looking at me with love",
+  "beautiful blonde girlfriend in silky robe, golden hour by the window, seductive smile just for me",
+  "my dream girlfriend, red lingerie, intimate pose on silk sheets, warm romantic lighting, she is mine",
+  "elegant brunette girlfriend in delicate white lace, luxurious bed, soft light, tender and seductive",
+  "your perfect AI girlfriend, long wavy hair, sensual black lingerie, romantic bedroom, always ready and beautiful for you",
 ]
 
 export default function ImagineHer() {
@@ -44,7 +43,7 @@ export default function ImagineHer() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const styles = IMAGE_STYLES.filter(s => s !== 'auto') as ImageStyle[]
+  const styles = [...IMAGE_STYLES] as ImageStyle[]
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
@@ -182,20 +181,27 @@ export default function ImagineHer() {
         <div className="max-w-4xl mx-auto px-6 pt-16 pb-10 text-center">
           <div className="inline-block text-[10px] tracking-[4px] text-white/50 mb-3">PREMIUM • TASTEFUL • AI</div>
           <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-4">
-            Create Your Dream Woman
+            Create Your Dream Girlfriend
           </h1>
           <p className="text-xl text-white/70 max-w-md mx-auto">
-            Elegant, seductive, artistic AI boudoir photography.<br />Classy and tasteful. Never explicit.
+            Beautiful, seductive, and always ready for you.
           </p>
+
+          <button 
+            onClick={() => document.getElementById('generator')?.scrollIntoView({ behavior: 'smooth' })}
+            className="mt-8 px-10 py-4 bg-gradient-to-r from-rose-400 to-violet-400 text-zinc-950 font-semibold text-lg rounded-2xl tracking-tight hover:brightness-110 active:scale-[0.985] transition shadow-xl"
+          >
+            Start Creating Your Girlfriend
+          </button>
         </div>
 
         {/* Main Generator */}
-        <div className="max-w-[820px] mx-auto px-6 pb-16">
+        <div id="generator" className="max-w-[820px] mx-auto px-6 pb-16">
           <div className="bg-zinc-900/60 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-3xl shadow-2xl">
             {/* Prompt */}
             <div className="mb-7">
               <div className="flex items-center justify-between mb-2 px-1">
-                <div className="text-xs tracking-[2px] text-white/50">DESCRIBE THE MOMENT</div>
+                <div className="text-xs tracking-[2px] text-white/50">DESCRIBE YOUR PERFECT GIRLFRIEND</div>
                 {isSignedIn && !isPaid && (
                   <div className="text-[10px] text-amber-400/80">Free: 3 generations today</div>
                 )}
@@ -203,7 +209,7 @@ export default function ImagineHer() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="beautiful brunette in black lace lingerie, soft bedroom lighting, elegant pose, sensual gaze..."
+                placeholder="my perfect girlfriend with long dark hair, wearing elegant black lace lingerie, soft candlelight, looking at me lovingly in our bedroom..."
                 className="w-full min-h-[118px] bg-zinc-950/80 border border-white/10 focus:border-white/40 rounded-2xl px-6 py-5 text-[17px] placeholder:text-white/40 resize-y leading-tight"
                 disabled={isGenerating}
               />
@@ -211,7 +217,7 @@ export default function ImagineHer() {
 
             {/* Style Selector - Elegant Pills */}
             <div className="mb-7">
-              <div className="text-xs tracking-[2px] text-white/50 mb-3 px-1">CHOOSE HER STYLE</div>
+              <div className="text-xs tracking-[2px] text-white/50 mb-3 px-1">CHOOSE HER VIBE</div>
               <div className="flex flex-wrap gap-2">
                 {styles.map((s) => {
                   const active = selectedStyle === s
@@ -240,13 +246,13 @@ export default function ImagineHer() {
               className="w-full h-14 bg-gradient-to-r from-rose-400 via-violet-400 to-indigo-400 hover:brightness-105 disabled:brightness-75 text-zinc-950 font-semibold text-lg tracking-[-0.3px] rounded-2xl transition-all flex items-center justify-center gap-3 disabled:cursor-not-allowed active:scale-[0.985] shadow-xl"
             >
               {isGenerating ? (
-                <>Crafting her beauty…</>
+                <>Creating your girlfriend…</>
               ) : (
-                <>Generate 4 Elegant Images</>
+                <>Generate 4 Images</>
               )}
             </button>
 
-            <p className="text-center text-[10px] text-white/40 mt-3 tracking-wider">Always tasteful • Artistic • Never explicit</p>
+            <p className="text-center text-[10px] text-white/40 mt-3 tracking-wider">She is yours • Always beautiful • Only for you</p>
           </div>
         </div>
 
@@ -273,8 +279,8 @@ export default function ImagineHer() {
           <div className="max-w-6xl mx-auto px-6 pb-20">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-y-3">
               <div>
-                <div className="text-3xl font-semibold tracking-[-1px]">Her Portraits</div>
-                <div className="text-white/60 text-sm mt-0.5">4 images • {STYLE_LABELS[selectedStyle]} style • Tasteful &amp; elegant</div>
+                <div className="text-3xl font-semibold tracking-[-1px]">Your Girlfriend</div>
+                <div className="text-white/60 text-sm mt-0.5">4 images of your girlfriend • {STYLE_LABELS[selectedStyle]} vibe • She exists just for you</div>
               </div>
               <div className="flex gap-3">
                 <button
@@ -304,16 +310,28 @@ export default function ImagineHer() {
                   {/* Elegant hover overlay */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black/70 opacity-0 group-hover:opacity-100 transition-all duration-300" />
                   
-                  <button
-                    onClick={() => downloadImage(img.url, i)}
-                    className="absolute bottom-5 right-5 flex items-center gap-2 px-5 py-2 bg-white/95 text-zinc-950 text-xs font-semibold rounded-2xl shadow hover:bg-white active:scale-95 transition opacity-0 group-hover:opacity-100"
-                  >
-                    <span>Download</span>
-                    <span className="text-base leading-none">↓</span>
-                  </button>
+                  <div className="absolute bottom-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      onClick={() => downloadImage(img.url, i)}
+                      className="flex items-center gap-2 px-4 py-1.5 bg-white/95 text-zinc-950 text-xs font-semibold rounded-2xl shadow hover:bg-white active:scale-95"
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (img.revisedPrompt) setPrompt(img.revisedPrompt);
+                        setSelectedStyle(selectedStyle);
+                        // trigger generate more like her
+                        setTimeout(() => handleGenerate(), 100);
+                      }}
+                      className="flex items-center gap-2 px-4 py-1.5 bg-rose-500/90 text-white text-xs font-semibold rounded-2xl shadow hover:bg-rose-500 active:scale-95"
+                    >
+                      Generate More Like Her
+                    </button>
+                  </div>
 
                   {img.revisedPrompt && (
-                    <div className="absolute bottom-5 left-5 max-w-[68%] text-[10px] text-white/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition">
+                    <div className="absolute bottom-5 left-5 max-w-[60%] text-[10px] text-white/80 line-clamp-2 opacity-0 group-hover:opacity-100 transition">
                       {img.revisedPrompt}
                     </div>
                   )}
@@ -333,21 +351,16 @@ export default function ImagineHer() {
             <div className="text-xs tracking-[3px] text-white/50 mb-1">UNLOCK UNLIMITED CREATIVITY</div>
             <div className="text-3xl font-semibold tracking-tight">Simple, elegant pricing</div>
           </div>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="grid md:grid-cols-2 gap-4 text-sm max-w-xl mx-auto">
             <div className="border border-white/10 rounded-3xl p-6">
               <div className="font-medium">Free</div>
               <div className="text-3xl font-semibold mt-1 tracking-tighter">3 <span className="text-base font-normal text-white/50">/ day</span></div>
-              <div className="mt-4 text-white/60 text-xs leading-relaxed">Perfect to explore. 3 beautiful generations every day.</div>
+              <div className="mt-4 text-white/60 text-xs leading-relaxed">Explore the fantasy. Create 3 images of your girlfriend every day.</div>
             </div>
-            <div className="border border-white/10 rounded-3xl p-6 bg-white/5">
-              <div className="font-medium">Pro</div>
-              <div className="text-3xl font-semibold mt-1 tracking-tighter">$9 <span className="text-base font-normal text-white/50">/ mo</span></div>
-              <div className="mt-4 text-white/60 text-xs leading-relaxed">Unlimited generations. Full access to every style. Premium experience.</div>
-            </div>
-            <div className="border border-white/10 rounded-3xl p-6">
-              <div className="font-medium">Unlimited</div>
-              <div className="text-3xl font-semibold mt-1 tracking-tighter">$15 <span className="text-base font-normal text-white/50">/ mo</span></div>
-              <div className="mt-4 text-white/60 text-xs leading-relaxed">Everything in Pro + priority generation + early access to new styles.</div>
+            <div className="border border-rose-400/30 rounded-3xl p-6 bg-rose-950/20">
+              <div className="font-medium text-rose-300">Girlfriend Tier</div>
+              <div className="text-3xl font-semibold mt-1 tracking-tighter text-rose-300">$15 <span className="text-base font-normal text-white/50">/ mo</span></div>
+              <div className="mt-4 text-white/60 text-xs leading-relaxed">Unlimited generations. She is always there for you. Premium, addictive access.</div>
             </div>
           </div>
           <div className="text-center mt-6 text-[10px] text-white/40">Cancel anytime. Powered by Stripe + Clerk.</div>

@@ -3,13 +3,13 @@ import { auth } from '@clerk/nextjs/server'
 import { IMAGE_STYLE_MODIFIERS, IMAGE_STYLES } from '../../lib/prompts'
 import { canGenerateImage, incrementImageGeneration } from '../../lib/clerk'
 
-// Imagine Her - Elegant Boudoir AI Image Generator
-// Generates 4 (or 1-4) tasteful, elegant, seductive boudoir/lingerie/artistic images.
-// - Free users: 3 generations per calendar day (enforced via Clerk metadata + daily reset)
-// - Paid (Pro / Unlimited): unlimited
-// - Heavy logging for debug
-// - xAI Imagine API with elegant base prompt + style modifiers
-// - Always tasteful: "elegant, classy, non-explicit, artistic, sensual but sophisticated"
+// Imagine Her - AI Girlfriend Image Generator
+// Generates 4 images of your perfect, beautiful AI girlfriend.
+// Fantasy: she exists just for you - beautiful, seductive, intimate, loving.
+// Styles: tasteful boudoir, lingerie, romantic, etc. Always classy, artistic, never explicit.
+// - Free: 3 generations/day
+// - Girlfriend Tier ($15/mo): unlimited
+// - xAI images API
 
 const XAI_IMAGE_URL = 'https://api.x.ai/v1/images/generations'
 
@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
       let fullPrompt: string
 
       if (isDirectPrompt) {
-        // Imagine Her elegant boudoir mode - tasteful, classy, sensual
-        const base = `Beautiful elegant woman, tasteful boudoir photography, highly artistic and sensual but fully classy and non-explicit, sophisticated pose, soft luxurious lighting, focus on natural beauty, form, and elegance. Delicate lingerie or artistic drapery, high fashion, premium editorial quality, 8k detail, masterpiece, no text, no logos, no explicit nudity or hardcore elements.`
-        fullPrompt = `${base} ${prompt}. ${modifier}. Ultra high quality, tasteful, elegant, seductive in the most refined way.`
+        // Imagine Her - Your perfect AI girlfriend. Focus on the fantasy: she exists just for you. Beautiful, seductive, intimate, loving, always ready. Tasteful, elegant, classy, artistic, never explicit or hardcore.
+        const base = `Your personal beautiful AI girlfriend, elegant and seductive, intimate boudoir photography, artistic and sensual but fully tasteful and classy, non-explicit, she is looking at you lovingly, soft romantic lighting, luxurious setting, focus on her beauty, curves, and connection to you, high fashion, premium quality, 8k detail, masterpiece, emotional and addictive fantasy, no text, no logos, covered appropriately, elegant lingerie or artistic nude style.`
+        fullPrompt = `${base} ${prompt}. She is your girlfriend. ${modifier}. Ultra high quality, romantic, seductive, intimate, for you.`
       } else {
         // Legacy thread support (kept for now)
         const basePrompt = `High-quality, visually striking image. Cinematic, atmospheric, elegant composition. Minimal or no text.
