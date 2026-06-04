@@ -142,21 +142,23 @@ Exact format:
 }`
 
 // ============================================
-// Pro-only Image Generation (xAI Imagine API)
-// Styles + prompt modifiers used by /api/generate-images
-// and the image UI in page.tsx + history/page.tsx
+// Imagine Her - Elegant Boudoir AI Image Generator
+// Styles + prompt modifiers for tasteful, elegant, seductive boudoir/lingerie/artistic images.
+// Focus: beauty, elegance, sensuality. Always tasteful, non-explicit, classy.
+// Used by /api/generate-images and main UI.
 // ============================================
-export const IMAGE_STYLES = ['auto', 'minimal', 'cinematic', 'meme', 'illustrative', 'realistic', 'abstract'] as const;
+export const IMAGE_STYLES = ['realistic', 'cinematic', 'boudoir', 'lingerie', 'artistic', 'sensual', 'elegant'] as const;
 
 export type ImageStyle = typeof IMAGE_STYLES[number];
 
 export const IMAGE_STYLE_MODIFIERS: Record<string, string> = {
-  auto: '',
-  minimal: 'in a clean, minimalist style, simple composition, elegant, lots of negative space, modern graphic design, high contrast',
-  cinematic: 'in a cinematic style, dramatic lighting, filmic composition, moody atmosphere, high production value, like a movie still',
-  meme: 'in a humorous internet meme style, bold exaggerated, viral meme aesthetic, fun and relatable',
-  illustrative: 'as a beautiful digital illustration, artistic, detailed yet stylized, vibrant colors with sophisticated tone',
-  realistic: 'photorealistic, highly detailed, natural lighting, documentary photography style, lifelike',
-  abstract: 'in an abstract artistic style, symbolic, conceptual, creative non-literal representation, artistic',
+  realistic: 'photorealistic, natural beauty, soft natural window light, elegant woman, tasteful boudoir, high detail skin texture, professional photography, classy and sophisticated, subtle sensuality',
+  cinematic: 'cinematic boudoir photography, dramatic soft lighting, filmic composition, moody elegant atmosphere, high production value, like a high-end fashion film still, tasteful and artistic',
+  boudoir: 'classic elegant boudoir, intimate yet tasteful, soft shadows, luxurious bedroom or studio, elegant pose, beautiful woman in delicate lingerie, focus on form, beauty and sensuality, artistic nude photography style but fully tasteful and covered',
+  lingerie: 'seductive high-fashion lingerie, delicate lace and silk, elegant boudoir setting, beautiful model, soft diffused lighting, tasteful and classy, sensual but sophisticated, no explicit content',
+  artistic: 'fine art boudoir, artistic composition, painterly quality, elegant drapery or lingerie, beautiful woman, soft light, tasteful, sensual, conceptual and elegant, museum-quality photography',
+  sensual: 'sensual elegant woman, alluring gaze, graceful curves, soft warm lighting, luxurious setting, tasteful lingerie or artistic attire, intimate and seductive but always classy and non-explicit, high-end boudoir',
+  elegant: 'ultra elegant high-fashion boudoir, sophisticated woman, refined pose, luxurious fabrics, soft glamorous lighting, timeless beauty, tasteful, sensual, premium editorial photography style',
+  auto: 'elegant tasteful boudoir, artistic sensual photography, beautiful woman, soft lighting, classy composition',
 };
 

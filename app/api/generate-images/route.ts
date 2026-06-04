@@ -1,147 +1,120 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { IMAGE_STYLE_MODIFIERS, IMAGE_STYLES } from '../../lib/prompts'
-import { canUseImageGen, canUseProPlusFeature, markProPlusTrialUsed } from '../../lib/clerk'
+import { canGenerateImage, incrementImageGeneration } from '../../lib/clerk'
 
-// Pro-only endpoint: generates 1-4 relevant images for a generated thread using xAI Imagine API.
-// - Strict hasPro check (returns 402 + requireUpgrade for free users)
-// - In-memory cooldown (~25s) for Pro users
-// - Supports style selection (or auto) via IMAGE_STYLE_MODIFIERS
-// - Graceful demo fallback using picsum if no/invalid XAI_API_KEY
-// - Used by the "✨ Generate Images" button in main generator and /history for Pro users.
-// - xAI images API params: prompt, n (count), resolution (e.g. "1k"), aspect_ratio (e.g. "1:1"). No "size" param (causes 400).
+// Imagine Her - Elegant Boudoir AI Image Generator
+// Generates 4 (or 1-4) tasteful, elegant, seductive boudoir/lingerie/artistic images.
+// - Free users: 3 generations per calendar day (enforced via Clerk metadata + daily reset)
+// - Paid (Pro / Unlimited): unlimited
+// - Heavy logging for debug
+// - xAI Imagine API with elegant base prompt + style modifiers
+// - Always tasteful: "elegant, classy, non-explicit, artistic, sensual but sophisticated"
 
 const XAI_IMAGE_URL = 'https://api.x.ai/v1/images/generations'
 
-// Simple in-memory rate limiter for image generation (Pro users)
+// In-memory cooldown to prevent spam (30s between any gens)
 const lastImageGenerationTime = new Map<string, number>()
-const IMAGE_RATE_LIMIT_SECONDS = 25
+const IMAGE_RATE_LIMIT_SECONDS = 30
 
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth()
 
     if (!userId) {
-      return NextResponse.json(
-        { 
-          error: 'Please sign in to generate images',
-          requireAuth: true 
-        },
-        { status: 401 }
-      )
+      return NextResponse.json({ 
+        error: 'Please sign in to generate images',
+        requireAuth: true 
+      }, { status: 401 })
     }
 
-    const { topic, threadId, title, tweets, style = 'auto', count = 4 } = await req.json()
+    const body = await req.json()
+    const { prompt, style = 'elegant', count = 4, topic, title, tweets } = body
 
-    if (!topic || !title || !Array.isArray(tweets) || tweets.length === 0) {
-      return NextResponse.json({ error: 'Topic, title and tweets are required' }, { status: 400 })
-    }
-
+    // Support both new Imagine Her direct mode and legacy thread mode (for compat during pivot)
+    const isDirectPrompt = typeof prompt === 'string' && prompt.trim().length > 3
     const cleanCount = Math.max(1, Math.min(4, Number(count) || 4))
-    let cleanStyle = typeof style === 'string' ? style : 'auto'
+    let cleanStyle = typeof style === 'string' ? style : 'elegant'
     if (!IMAGE_STYLES.includes(cleanStyle as any)) {
-      cleanStyle = 'auto'
+      cleanStyle = 'elegant'
     }
 
-    // Pro+ check with one-time trial support
-    const featureCheck = await canUseProPlusFeature(userId)
-    if (!featureCheck.allowed) {
+    // Enforce free daily 3 limit + paid unlimited (heavy logging)
+    const limitCheck = await canGenerateImage(userId)
+    if (!limitCheck.allowed) {
+      const msg = limitCheck.reason === 'daily_limit_reached' 
+        ? 'You have reached your free limit of 3 generations today. Upgrade for unlimited.'
+        : 'Image generation limit reached.'
       return NextResponse.json({
-        error: 'Image Generation is a Pro+ feature. You have used your one-time trial.',
+        error: msg,
         requireUpgrade: true,
-        upgradeTo: 'pro-plus'
+        remaining: limitCheck.remaining || 0
       }, { status: 402 })
     }
 
-    const isTrialUse = featureCheck.isTrial
+    console.log(`[generate-images] User ${userId} requesting style=${cleanStyle} count=${cleanCount} directPrompt=${isDirectPrompt}`)
 
-    console.log(`[generate-images] Pro user ${userId} requesting style=${style} count=${count} topicLen=${(topic||'').length}`)
-
-    // Rate limit (check only; only consume on successful generation to respect limits without penalizing transient failures)
+    // Rate limit cooldown (any user)
     const lastTime = lastImageGenerationTime.get(userId) || 0
     const timeSinceLast = (Date.now() - lastTime) / 1000
-
     if (timeSinceLast < IMAGE_RATE_LIMIT_SECONDS) {
       const waitTime = Math.ceil(IMAGE_RATE_LIMIT_SECONDS - timeSinceLast)
-      console.log(`[generate-images] Rate limited for user ${userId}: ${waitTime}s wait`)
+      console.log(`[generate-images] Cooldown for ${userId}: ${waitTime}s`)
       return NextResponse.json({
-        error: `Please wait ${waitTime} second${waitTime === 1 ? '' : 's'} before generating more images.`,
+        error: `Please wait ${waitTime}s before generating more images.`,
         rateLimited: true,
         waitSeconds: waitTime,
       }, { status: 429 })
     }
 
-    console.log(`[generate-images] Rate limit passed for ${userId}, proceeding with generation`)
-
     const apiKey = process.env.XAI_API_KEY?.trim()
-
     let images: Array<{ url: string; style: string; revisedPrompt?: string }> = []
 
     if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
-      console.warn(`[generate-images] No valid XAI_API_KEY (len=${(apiKey||'').length}) — returning demo images for ${userId}`)
-      // Demo placeholders (relevant-ish using picsum with seed)
-      let demoStyle = cleanStyle
-      if (demoStyle === 'auto' || !IMAGE_STYLE_MODIFIERS[demoStyle]) {
-        const nonAuto = Object.keys(IMAGE_STYLE_MODIFIERS).filter(k => k !== 'auto')
-        demoStyle = nonAuto[Math.floor(Math.random() * nonAuto.length)]
-      }
-      const seedBase = (threadId || 1) * 7
+      console.warn(`[generate-images] No valid XAI_API_KEY — demo images for ${userId}`)
+      const demoStyle = cleanStyle
       images = Array.from({ length: cleanCount }, (_, i) => ({
-        url: `https://picsum.photos/id/${(seedBase + i) % 100 + 10}/1024/1024`,
+        url: `https://picsum.photos/id/${(i + 30) % 100 + 20}/1024/1024`,
         style: demoStyle,
-        revisedPrompt: 'Demo placeholder image (Pro feature requires valid XAI_API_KEY)'
+        revisedPrompt: 'Demo image — add XAI_API_KEY for real elegant boudoir generations'
       }))
-      // Consume rate limit only on success (demo always succeeds here)
       lastImageGenerationTime.set(userId, Date.now())
+      await incrementImageGeneration(userId)
     } else {
-      console.log(`[generate-images] Using real xAI for user ${userId}`)
-      // Resolve style (auto picks one at random for this generation)
+      console.log(`[generate-images] Real xAI Imagine for ${userId}`)
+
       let resolvedStyle = cleanStyle
-      if (resolvedStyle === 'auto' || !IMAGE_STYLE_MODIFIERS[resolvedStyle]) {
-        const nonAuto = Object.keys(IMAGE_STYLE_MODIFIERS).filter(k => k !== 'auto')
-        resolvedStyle = nonAuto[Math.floor(Math.random() * nonAuto.length)]
+      const modifier = IMAGE_STYLE_MODIFIERS[resolvedStyle] || IMAGE_STYLE_MODIFIERS['elegant'] || ''
+
+      let fullPrompt: string
+
+      if (isDirectPrompt) {
+        // Imagine Her elegant boudoir mode - tasteful, classy, sensual
+        const base = `Beautiful elegant woman, tasteful boudoir photography, highly artistic and sensual but fully classy and non-explicit, sophisticated pose, soft luxurious lighting, focus on natural beauty, form, and elegance. Delicate lingerie or artistic drapery, high fashion, premium editorial quality, 8k detail, masterpiece, no text, no logos, no explicit nudity or hardcore elements.`
+        fullPrompt = `${base} ${prompt}. ${modifier}. Ultra high quality, tasteful, elegant, seductive in the most refined way.`
+      } else {
+        // Legacy thread support (kept for now)
+        const basePrompt = `High-quality, visually striking image. Cinematic, atmospheric, elegant composition. Minimal or no text.
+Topic: ${topic || ''}
+Title: ${title || ''}
+${Array.isArray(tweets) ? tweets.slice(0, 3).map((t: string) => (t || '').replace(/^\d+\/\s*/, '').substring(0, 60)).join(' • ') : ''}
+Style: ${resolvedStyle} ${modifier}`
+        fullPrompt = basePrompt
       }
-      const modifier = IMAGE_STYLE_MODIFIERS[resolvedStyle] || ''
 
-      const basePrompt = `High-quality, visually striking social media image designed as a companion for an X thread. 
-
-Cinematic scene, atmospheric lighting, minimal text (strongly prefer zero text overlays or at most 0-2 small words if absolutely necessary), symbolic, metaphorical, or abstract visuals preferred over literal depictions. No heavy typography, no cluttered text, no quotes, no logos.
-
-Topic: ${topic}
-Thread title: ${title}
-
-Key visual concepts only (do not include full sentences or long text):
-${tweets.slice(0, 3).map((t: string) => t.replace(/^\d+\/\s*/, '').substring(0, 80)).join(' • ')}
-
-Style: ${resolvedStyle}${modifier ? ' - ' + modifier : ''}
-
-Create a beautiful, eye-catching, premium cinematic image that captures the emotion and core idea of this thread with atmospheric depth, high visual impact, and professional quality. 
-- Strongly avoid any text overlays; use pure visual storytelling, symbolism, scenes, metaphors, or aesthetic representation.
-- Clean, modern, cinematic composition
-- Perfect for X/Twitter (square format, high visual impact)
-- Focus on mood, light, and symbolic elements`
-
-      const fullPrompt = basePrompt
-
-      // xAI images request body (no "size" - causes 400; use "resolution" + optional "aspect_ratio")
       const xaiRequestBody = {
         prompt: fullPrompt,
         n: cleanCount,
-        resolution: '1k', // 1k resolution (xAI equivalent to ~1024x1024)
-        aspect_ratio: '1:1', // square default; can be made configurable later
+        resolution: '1k',
+        aspect_ratio: '1:1',
       }
 
-      // Defensive fetch with timeout and key re-check
-      if (!apiKey || apiKey.length < 40 || !apiKey.startsWith('xai-')) {
-        console.warn(`[generate-images] Key became invalid before real call for ${userId}`)
-        return NextResponse.json({ error: 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', canRetry: false }, { status: 500 })
-      }
+      console.log(`[generate-images] xAI prompt (first 200): ${fullPrompt.substring(0,200)}...`)
 
-      let imageRes;
+      let imageRes
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(new Error('xAI request timeout')), 30000); // 30s timeout to prevent hangs/502
-
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 35000)
         imageRes = await fetch(XAI_IMAGE_URL, {
           method: 'POST',
           headers: {
@@ -150,38 +123,24 @@ Create a beautiful, eye-catching, premium cinematic image that captures the emot
           },
           body: JSON.stringify(xaiRequestBody),
           signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-      } catch (fetchError: any) {
-        console.error(`[generate-images] Fetch error to xAI for ${userId}:`, fetchError?.message || fetchError, 'requestBody:', JSON.stringify(xaiRequestBody));
-        // Do not set rate limit on network/timeout error
-        return NextResponse.json({
-          error: 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.',
-          canRetry: true
-        }, { status: 500 });
+        })
+        clearTimeout(timeoutId)
+      } catch (fetchErr: any) {
+        console.error('[generate-images] xAI fetch error', fetchErr)
+        return NextResponse.json({ error: 'Temporary generation issue. Please try again.', canRetry: true }, { status: 500 })
       }
 
       if (!imageRes.ok) {
         const errorText = await imageRes.text()
-        console.error(`[generate-images] xAI Imagine API error for ${userId}: status=${imageRes.status} body=${errorText.substring(0,300)} requestBodySent=${JSON.stringify(xaiRequestBody)}`)
-        // Do not consume rate limit on provider failure. Return proper error (avoid 502 where possible for client UX)
-        const isRateLimited = imageRes.status === 429
-        return NextResponse.json({
-          error: isRateLimited ? 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.' : 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.',
-          canRetry: true,
-          rateLimited: isRateLimited
-        }, { status: isRateLimited ? 429 : 500 })
+        console.error('[generate-images] xAI error', imageRes.status, errorText.substring(0,200))
+        const isRate = imageRes.status === 429
+        return NextResponse.json({ 
+          error: isRate ? 'High demand — please wait 30s and try again.' : 'Image generation temporarily unavailable.',
+          canRetry: true 
+        }, { status: isRate ? 429 : 500 })
       }
 
-      let imageData;
-      try {
-        imageData = await imageRes.json();
-      } catch (parseError: any) {
-        console.error(`[generate-images] JSON parse error from xAI for ${userId}:`, parseError?.message);
-        return NextResponse.json({ error: 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', canRetry: true }, { status: 500 });
-      }
-
+      const imageData = await imageRes.json()
       images = (imageData.data || []).slice(0, cleanCount).map((item: any) => ({
         url: item.url,
         revisedPrompt: item.revised_prompt,
@@ -189,40 +148,17 @@ Create a beautiful, eye-catching, premium cinematic image that captures the emot
       }))
 
       if (images.length === 0) {
-        console.error(`[generate-images] xAI returned empty images for ${userId}`)
-        return NextResponse.json({ error: 'Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', canRetry: true }, { status: 500 })
+        return NextResponse.json({ error: 'No images returned. Try a different prompt.', canRetry: true }, { status: 500 })
       }
 
-      // Consume rate limit ONLY on successful real generation
       lastImageGenerationTime.set(userId, Date.now())
-      console.log(`[generate-images] xAI success for ${userId}: ${images.length} images, style=${resolvedStyle}`)
+      await incrementImageGeneration(userId)
+      console.log(`[generate-images] Success for ${userId}: ${images.length} images`)
     }
 
-    if (images.length === 0) {
-      console.error(`[generate-images] No images after processing for ${userId}`)
-      return NextResponse.json({ error: 'Failed to prepare images. Please try again.', canRetry: true }, { status: 500 })
-    }
-
-    console.log(`[generate-images] Success for ${userId}: returning ${images.length} images`)
-    const displayStyle = (cleanStyle === 'auto' ? 'auto (randomized to ' + (images[0]?.style || 'default') + ')' : cleanStyle)
-
-    // If this was a trial use, mark it consumed now (after successful generation)
-    if (isTrialUse) {
-      await markProPlusTrialUsed(userId)
-      console.log(`[generate-images] Marked one-time Pro+ trial as used for ${userId}`)
-    }
-
-    return NextResponse.json({ 
-      images, 
-      style: displayStyle,
-      wasTrial: isTrialUse
-    })
-
-  } catch (error) {
-    console.error('[generate-images] Uncaught error:', error)
-    return NextResponse.json({
-      error: "Something went wrong while generating images. Please try again.",
-      canRetry: true
-    }, { status: 500 })
+    return NextResponse.json({ images, style: cleanStyle })
+  } catch (error: any) {
+    console.error('[generate-images] Unexpected error', error)
+    return NextResponse.json({ error: 'Something went wrong generating images. Please try again.' }, { status: 500 })
   }
 }

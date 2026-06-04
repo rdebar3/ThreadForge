@@ -463,6 +463,84 @@ export async function getValidXAccessToken(userId: string): Promise<string | nul
   return null
 }
 
+// ============================================
+// Imagine Her - Image Generation Usage (Free 3/day, Paid unlimited)
+// Heavy logging + force daily reset via Clerk publicMetadata
+// ============================================
+
+export interface ImageUsage {
+  count: number;
+  date: string; // YYYY-MM-DD
+}
+
+export async function getImageUsage(userId: string): Promise<ImageUsage> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const usage = (user.publicMetadata?.imageUsage as ImageUsage) || { count: 0, date: '' };
+    return usage;
+  } catch (error) {
+    console.error('[Image Usage] Failed to get usage for', userId, error);
+    return { count: 0, date: '' };
+  }
+}
+
+export async function canGenerateImage(userId: string): Promise<{ allowed: boolean; remaining?: number; reason?: string }> {
+  try {
+    const plan = await getUserPlan(userId);
+    if (plan === 'pro' || plan === 'pro-plus') {
+      console.log('[Image Usage] Paid user', userId, 'unlimited access');
+      return { allowed: true };
+    }
+
+    // Free users: 3 generations per calendar day
+    const usage = await getImageUsage(userId);
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (usage.date !== today) {
+      console.log('[Image Usage] New day for free user', userId, '- reset available');
+      return { allowed: true, remaining: 3 };
+    }
+
+    const remaining = Math.max(0, 3 - usage.count);
+    if (remaining <= 0) {
+      console.log('[Image Usage] Daily limit reached for free user', userId);
+      return { allowed: false, remaining: 0, reason: 'daily_limit_reached' };
+    }
+
+    console.log('[Image Usage] Free user', userId, 'remaining:', remaining);
+    return { allowed: true, remaining };
+  } catch (error) {
+    console.error('[Image Usage] canGenerateImage error for', userId, error);
+    return { allowed: false, reason: 'error' };
+  }
+}
+
+export async function incrementImageGeneration(userId: string): Promise<void> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const today = new Date().toISOString().slice(0, 10);
+    let usage: ImageUsage = (user.publicMetadata?.imageUsage as ImageUsage) || { count: 0, date: '' };
+
+    if (usage.date !== today) {
+      usage = { count: 1, date: today };
+    } else {
+      usage = { count: usage.count + 1, date: today };
+    }
+
+    await client.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...user.publicMetadata,
+        imageUsage: usage,
+      },
+    });
+    console.log('[Image Usage] Incremented for', userId, 'now', usage.count, 'on', today);
+  } catch (error) {
+    console.error('[Image Usage] Failed to increment for', userId, error);
+  }
+}
+
 /**
  * Uploads an image (from URL) to X for use in tweets.
  * Downloads the image bytes server-side, then POSTs multipart to X's media upload endpoint

@@ -3,8 +3,8 @@ import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ThreadForge - Turn Any Topic Into Viral X Threads',
-  description: 'Generate high-quality, ready-to-post Twitter/X threads in seconds. Free tier: 3 generations/day. Pro: $9/mo for unlimited.',
+  title: 'Imagine Her | Elegant Boudoir AI Image Generator',
+  description: 'Create beautiful, tasteful, elegant boudoir and lingerie photography with AI. Classy, seductive, artistic images. Free 3 generations/day. Pro $9/mo, Unlimited $15/mo.',
   icons: {
     icon: '/favicon.ico',
   },
