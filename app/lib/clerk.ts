@@ -465,8 +465,6 @@ export async function postThreadToX(
 // Scheduled Posts (publicMetadata) - Pro+ only feature
 // ============================================
 
-const MAX_SCHEDULED = 10
-
 /**
  * Get all scheduled posts for user (newest first or as stored).
  */
@@ -649,8 +647,6 @@ export async function cleanupUserMetadata(userId: string): Promise<void> {
 // ============================================
 // Saved Templates (Pro users can save private ones, everyone sees library)
 // ============================================
-
-const MAX_TEMPLATES = 10
 
 /**
  * Get user's saved private templates from publicMetadata.
