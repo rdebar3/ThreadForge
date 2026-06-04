@@ -1175,7 +1175,7 @@ export default function Page() {
       </div>
 
       {/* Hero - Stronger, more dynamic and premium */}
-      <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
+      <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-20 text-center">
         
         {/* Rich, more dynamic dark background with subtle glowing orbs + faint grid for premium life and depth */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -1239,9 +1239,9 @@ export default function Page() {
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
           <div className={`glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all ${isGenerating ? 'opacity-70 pointer-events-none' : ''}`}>
-          {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) */}
+          {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) - added urgency + benefits */}
           <div className="text-center mb-3">
-            <p className="text-[11px] text-zinc-400">You get 3 free generations per day — upgrade anytime for unlimited.</p>
+            <p className="text-[11px] text-emerald-400 font-medium">3 free generations today • 5 full threads every time • No card needed</p>
             <p className="text-[10px] text-zinc-500 mt-1">Example: “How I went from 0 to 10k followers in 6 months” — one sentence is enough.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -1261,7 +1261,7 @@ export default function Page() {
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="group w-full sm:w-auto px-8 sm:px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 sm:min-w-[220px] text-base shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30 min-h-[52px]"
+              className="group w-full sm:w-auto px-8 sm:px-10 py-5 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 sm:min-w-[240px] text-lg shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35),0_0_30px_rgba(167,139,250,0.3)] hover:shadow-[0_0_70px_rgba(167,139,250,0.9),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-2 ring-violet-400/40 min-h-[56px]"
             >
               {isGenerating ? (
                 <>
@@ -1269,9 +1269,17 @@ export default function Page() {
                   <span>Generating your threads…</span>
                 </>
               ) : (
-                <>Start Generating Threads <span className="group-hover:translate-x-1 transition text-lg">→</span></>
+                <>Start Generating 5 Threads Now <span className="group-hover:translate-x-1 transition text-lg">→</span></>
               )}
             </button>
+          </div>
+
+          <div className="mt-3 text-center text-[10px] text-zinc-500 flex items-center justify-center gap-2 flex-wrap">
+            <span>✓ 5 story-driven threads</span>
+            <span className="hidden sm:inline">•</span>
+            <span>✓ AI images (Pro+)</span>
+            <span className="hidden sm:inline">•</span>
+            <span>✓ 1-click post (Pro)</span>
           </div>
 
           {isGenerating && (
@@ -1366,57 +1374,6 @@ export default function Page() {
       <div className="max-w-5xl mx-auto px-6 text-center border-t border-white/10 py-3">
         <p className="text-sm text-zinc-400">No templates. No hype. Just real threads that get posted.</p>
       </div>
-
-      {/* Pro vs Pro+ Features Showcase - split cards, only visible before generating (clear tier value prop) */}
-      {!threads.length && (
-        <div className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
-          <div className="text-center mb-8">
-            <div className="inline-block text-[10px] font-mono tracking-[3px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">PRO &amp; PRO+</div>
-            <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Pro vs Pro+</h2>
-            <p className="text-zinc-400 max-w-md mx-auto">Pro ($9): unlimited + Post to X, History, priority. <span className="text-cyan-400">Pro+ ($15) best value: adds AI images + scheduler + analytics</span> <span className="text-[10px] px-1 py-px bg-cyan-500/10 text-cyan-400 rounded">Pro+</span>. Full pricing below.</p>
-          </div>
-
-          {/* Split Pro vs Pro+ feature cards for clear tier differentiation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Pro Card - clean, solid foundation */}
-            <div className="premium-pricing-card premium-pro-card glass-card bg-zinc-900/60 border border-white/10 rounded-3xl p-8 flex flex-col">
-              <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-semibold mb-2">PRO — $9/mo</div>
-              <div className="premium-tier-title text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
-              <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Unlimited generations</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Post to X</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> History</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Smart Suggestions</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Priority access</li>
-              </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features for daily posting. No AI images or Scheduler</div>
-            </div>
-
-            {/* Pro+ Card - high-impact AI premium pop */}
-            <div className="premium-pricing-card premium-pro-plus-card glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
-              <div className="premium-badge absolute -top-3 right-6 px-4 py-1 text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_18px_rgba(167,139,250,0.65)] ring-1 ring-violet-400/40">★ MOST POPULAR</div>
-              
-              <div className="uppercase text-cyan-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">IMAGES + SCHEDULER + ANALYTICS</span></div>
-              
-              <div className="premium-tier-title text-2xl font-semibold tracking-[-0.5px] mb-4 text-white">Pro + AI Images + Scheduler + Analytics (Pro+ only)</div>
-              
-              <ul className="space-y-3.5 text-[14px] text-zinc-200 mb-auto">
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> <strong>Everything in Pro</strong></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><span className="scheduler-modern"><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
-              </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting + insights</div>
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <a href="#pricing" className="text-sm font-medium inline-flex items-center gap-1.5 text-violet-400 hover:text-cyan-400 transition-all pro-sparkle">
-              See full Pro / Pro+ pricing &amp; upgrade <span aria-hidden>→</span>
-            </a>
-          </div>
-        </div>
-      )}
 
       {/* Demo Mode Notice - only visible in development */}
       {demoMode && threads.length > 0 && process.env.NODE_ENV === 'development' && (
@@ -1890,8 +1847,8 @@ export default function Page() {
       )}
 
       {/* How it Works - 5 clear steps */}
-      <div id="how" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
-        <div className="text-center mb-10">
+      <div id="how" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">How ThreadForge Works</h2>
           <p className="text-zinc-400">Idea to 5 ready-to-post threads + images in seconds. No writing required.</p>
         </div>
@@ -1953,8 +1910,8 @@ export default function Page() {
       </div>
 
       {/* Real-World Use Cases - icons + premium hover cards */}
-      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
-        <div className="text-center mb-10">
+      <div id="use-cases" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-semibold tracking-tight mb-2 animate-[fadeInUp_0.5s_ease-out]">Real ways people use ThreadForge</h2>
           <p className="text-zinc-400">Proven scenarios where it turns ideas into results — fast.</p>
         </div>
@@ -1993,16 +1950,9 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Soft community / showcase teaser (submissions paused but feed + discovery live for early creators) */}
-      <div className="max-w-5xl mx-auto px-6 text-center -mt-4 pb-6">
-        <p className="text-xs text-zinc-500">
-          <a href="/community" className="hover:text-zinc-300 transition underline">Join the growing community of early creators sharing their best threads.</a>
-        </p>
-      </div>
-
       {/* Pricing - 3-Tier: Free / Pro ($9) / Pro+ ($15) with Image Gen Pro+ only */}
-      <div id="pricing" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
-        <div className="text-center mb-10">
+      <div id="pricing" className="max-w-5xl mx-auto px-6 py-20 border-t border-zinc-800">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-3">PRICING</div>
           <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Pro for power. Pro+ for everything.</h2>
           <p className="text-zinc-400 max-w-md mx-auto">Free: full generator with 3/day. Pro ($9): unlimited generations + Post to X + priority. Pro+ ($15 best value): + AI images, scheduler &amp; analytics. No long contracts. Cancel anytime.</p>
@@ -2128,6 +2078,13 @@ export default function Page() {
         <div className="text-center mt-6">
           <p className="text-[11px] text-zinc-400">Early access — we’re building in public with the first users. Real results coming.</p>
         </div>
+      </div>
+
+      {/* Final trust / community teaser at end of flow (honest social proof) */}
+      <div className="max-w-5xl mx-auto px-6 text-center pb-8">
+        <p className="text-xs text-zinc-500">
+          <a href="/community" className="hover:text-zinc-300 transition underline">Join the growing community of early creators sharing their best threads.</a>
+        </p>
       </div>
 
       {/* Footer */}
