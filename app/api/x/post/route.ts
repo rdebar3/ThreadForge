@@ -4,13 +4,14 @@ import { getValidXAccessToken, isPro, incrementPostedCount, postThreadToX } from
 
 export async function POST(req: NextRequest) {
   console.log('[x/post] API called')
+
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const hasPro = await isPro(userId)
   if (!hasPro) return NextResponse.json({ error: 'Pro required' }, { status: 402 })
 
-  let body
+  let body: any
   try {
     body = await req.json()
   } catch {
@@ -30,6 +31,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, postIds })
   } catch (err: any) {
     console.error('[x/post] Failed:', err)
+    if (err.message === 'CreditsDepleted') {
+      return NextResponse.json({ error: 'X credits depleted' }, { status: 429 })
+    }
     return NextResponse.json({ error: 'Failed to post to X' }, { status: 500 })
   }
 }
