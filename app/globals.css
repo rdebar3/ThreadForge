@@ -68,13 +68,13 @@ body {
   }
 }
 
-/* Fix for thread titles: natural multi-line wrapping, hyphens for long words, prevent one-word-per-line vertical stacking while keeping bold/prominent on desktop+mobile */
+/* Fix for thread titles: natural multi-line wrapping WITHOUT awkward hyphens. Use break-words for clean breaks at word boundaries, no forced hyphenation. */
 .thread-card .thread-title {
-  hyphens: auto;
-  -webkit-hyphens: auto;
-  -ms-hyphens: auto;
+  hyphens: none;
+  -webkit-hyphens: none;
+  -ms-hyphens: none;
   overflow-wrap: break-word;
-  word-break: normal; /* normal word wrapping at spaces; only break long words via hyphens/overflow */
+  word-break: normal; /* prefer breaking at spaces/words, not mid-word hyphens */
   /* ensure it doesn't force excessive height */
   max-width: 100%;
 }
@@ -82,6 +82,15 @@ body {
 .tweet {
   font-size: 15px;
   line-height: 1.5;
+}
+
+/* Prevent awkward hyphenation in tweet bodies for natural readability */
+.thread-card .flex-1.text-\[14px\] ,
+.thread-card .flex-1.text-\[15px\] {
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .copy-button {
@@ -491,6 +500,17 @@ body {
   .fixed.inset-0 .glass-card .text-xs {
     font-size: 11px;
   }
+}
+
+/* Global: prevent awkward mid-word hyphenation for natural text flow in titles/tweets (desktop + mobile) */
+.thread-title,
+.flex-1.break-words,
+textarea {
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  -ms-hyphens: none !important;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 

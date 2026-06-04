@@ -1515,7 +1515,7 @@ export default function Page() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 md:mb-6 gap-y-3">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1.5">THREAD {thread.id}</div>
-                    <div className="thread-title font-semibold text-[17px] sm:text-[22px] leading-[1.15] pr-2 sm:pr-4 text-white/95">{thread.title}</div>
+                    <div className="thread-title font-semibold text-[17px] sm:text-[22px] leading-[1.15] pr-2 sm:pr-4 text-white/95 break-words">{thread.title}</div>
                   </div>
                   <div className="relative">
                     <div className="flex flex-wrap gap-2.5 sm:gap-3 items-center">
@@ -1811,7 +1811,7 @@ export default function Page() {
                           <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none tracking-[0.5px]">
                             {i + 1}/
                           </div>
-                          <div className="flex-1 text-[14px] sm:text-[15px] leading-[1.55] text-zinc-100 min-w-0 break-words">
+                          <div className="flex-1 text-[14px] sm:text-[15px] leading-[1.55] text-zinc-100 min-w-0 break-words hyphens-none">
                             {tweet}
                             {appliedEmoji && <span className="ml-1 text-base opacity-75 align-middle">{appliedEmoji}</span>}
                           </div>
