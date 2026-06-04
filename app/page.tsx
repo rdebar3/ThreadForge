@@ -1508,10 +1508,13 @@ export default function Page() {
                       )}
                       {hasPro && (
                         <button
-                          onClick={() => copyToX(thread)}
-                          disabled={isPosting}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log("Post to X clicked");
+                            copyToX(thread);
+                          }}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px] disabled:opacity-50"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px]"
                         >
                           <XIcon />
                           Post to X
