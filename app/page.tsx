@@ -1396,7 +1396,7 @@ export default function Page() {
       {/* Your Generated Threads */}
       {safeThreads.length > 0 && (
         <div ref={resultsRef} className="max-w-5xl lg:max-w-6xl mx-auto px-4 md:px-6 pb-20">
-          <div className="flex items-center justify-between mb-4 md:mb-6 flex-wrap gap-y-2 sm:gap-y-3">
+          <div className="flex items-center justify-between mb-5 md:mb-7 flex-wrap gap-y-2 sm:gap-y-3">
             <div>
               <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Your Generated Threads</h2>
               <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5">Copy • Post (Pro) • Schedule (Pro+) • Tap to copy</p>
@@ -1429,15 +1429,15 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 md:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-5 gap-y-3">
+          <div className="space-y-7 md:space-y-8">
+            {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 md:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden animate-[fadeInStagger_0.45s_ease-out]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 md:mb-6 gap-y-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1">THREAD {thread.id}</div>
-                    <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
+                    <div className="text-xs font-medium text-violet-400 tracking-[1.5px] mb-1.5">THREAD {thread.id}</div>
+                    <div className="thread-title font-semibold text-[17px] sm:text-[22px] leading-[1.15] pr-2 sm:pr-4 text-white/95">{thread.title}</div>
                   </div>
                   <div className="relative">
-                    <div className="flex flex-wrap gap-2 sm:gap-2 items-center">
+                    <div className="flex flex-wrap gap-2.5 sm:gap-3 items-center">
                       <button
                         onClick={() => copyThread(thread)}
                         title="Copy the entire thread (all tweets) to your clipboard"
@@ -1460,7 +1460,7 @@ export default function Page() {
                         <button
                           onClick={() => copyToX(thread)}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow ring-1 ring-violet-400/50 min-h-[44px]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px]"
                         >
                           <XIcon />
                           Post to X
@@ -1574,7 +1574,7 @@ export default function Page() {
 
                 {/* Image choice panel (shown when Generate Images clicked for this thread) - moved near top */}
                 {(isProPlus || !hasUsedProPlusTrial) && showImageModalFor === thread.id && (
-                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                  <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">CHOOSE STYLE &amp; COUNT (Pro+ or one-time trial)</div>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       {IMAGE_STYLES.map((s) => (
@@ -1625,7 +1625,7 @@ export default function Page() {
 
                 {/* Schedule picker (Pro+ only) - appears when Schedule clicked */}
                 {(isProPlus || !hasUsedProPlusTrial) && showScheduleFor === thread.id && (
-                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                  <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">SCHEDULE THREAD TO POST AUTOMATICALLY (Pro+ or one-time trial)</div>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <input
@@ -1657,7 +1657,7 @@ export default function Page() {
 
                 {/* AI Rewriter panel (Pro+ only) */}
                 {isProPlus && showRewriteFor === thread.id && (
-                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
+                  <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-zinc-900/70 border border-white/10 rounded-2xl">
                     <div className="text-[10px] sm:text-xs font-medium text-violet-400 mb-1.5 sm:mb-2 tracking-[1.5px]">AI REWRITE THREAD (Grok 4.3) — Pro+</div>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                       {REWRITE_OPTIONS.map(opt => (
@@ -1675,29 +1675,31 @@ export default function Page() {
                 {/* Display generated images for this thread - moved to top (right below title/buttons) */}
                 {/* Only show when images actually generated (removed isProPlus from condition to avoid accessing [0] of undefined for Pro+ users before generating images) */}
                 {getThreadImages(thread).length > 0 && (
-                  <div className="mt-3 sm:mt-4">
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div className="mt-4 sm:mt-5">
+                    <div className="flex items-center justify-between mb-2 sm:mb-2.5">
                       <div className="text-[10px] sm:text-xs font-medium text-violet-400 tracking-[1.5px]">IMAGES FOR THIS THREAD — {getThreadImages(thread)[0]?.style || ''}</div>
                       <button onClick={() => { setShowImageModalFor(thread.id); setSelectedImageStyle('auto'); setSelectedImageCount(1); }} className="text-[10px] sm:text-xs text-violet-400 hover:text-violet-300 transition-colors">Regenerate</button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
                       {getThreadImages(thread).map((img: any, idx: number) => (
-                        <div key={idx} className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-950/50">
+                        <div key={idx} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/60 shadow-sm">
                           <img
                             src={img.url}
                             alt={`Visual ${idx + 1} for ${thread.title}`}
-                            className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform"
+                            className="w-full aspect-video object-cover group-hover:scale-[1.03] transition-all duration-300 ease-out"
+                            loading="lazy"
                           />
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 sm:p-2 flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-all">
+                          <div className="absolute inset-0 ring-1 ring-inset ring-white/5 group-hover:ring-violet-400/20 transition-all rounded-2xl" />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-1.5 sm:p-2 flex gap-1 justify-end opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200">
                             <button
                               onClick={() => downloadImage(img.url, `thread-${thread.id}-${img.style}-${idx + 1}.jpg`)}
-                              className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                              className="text-[9px] sm:text-[10px] px-2 py-0.5 bg-white/95 text-black rounded-md font-medium hover:bg-white active:scale-[0.985] transition-all shadow-sm"
                             >
                               Download
                             </button>
                             <button
                               onClick={() => copyImageToClipboard(img.url)}
-                              className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 bg-white/90 text-black rounded font-medium hover:bg-white transition-colors"
+                              className="text-[9px] sm:text-[10px] px-2 py-0.5 bg-white/95 text-black rounded-md font-medium hover:bg-white active:scale-[0.985] transition-all shadow-sm"
                             >
                               Copy
                             </button>
@@ -1708,19 +1710,19 @@ export default function Page() {
                   </div>
                 )}
 
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-2.5 sm:space-y-3.5 pt-1">
                   {thread.tweets.map((tweet, i) => {
                     const key = `${thread.id}-${i}`
                     const isCopied = copiedTweetKey === key
                     const appliedEmoji = threadEmojis[thread.id]?.[i]
                     return (
-                      <div key={i} className="group rounded-xl hover:bg-zinc-950/60 px-2 sm:px-3 py-1.5 sm:py-2 -mx-2 sm:-mx-3 transition-colors">
+                      <div key={i} className="group rounded-xl hover:bg-zinc-950/70 px-2 sm:px-3 py-1.5 sm:py-2.5 -mx-2 sm:-mx-3 transition-colors">
                         {/* Main tweet line: always keeps proper flex row (nowrap on desktop) — emojis added naturally by ✨ Enhance */}
                         <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
-                          <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
+                          <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none tracking-[0.5px]">
                             {i + 1}/
                           </div>
-                          <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0 break-words">
+                          <div className="flex-1 text-[14px] sm:text-[15px] leading-[1.55] text-zinc-100 min-w-0 break-words">
                             {tweet}
                             {appliedEmoji && <span className="ml-1 text-base opacity-75 align-middle">{appliedEmoji}</span>}
                           </div>
@@ -1747,7 +1749,7 @@ export default function Page() {
 
                   {/* Hashtags applied cleanly at bottom of thread (small, premium, no layout break) */}
                   {threadHashtags[thread.id]?.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-white/10 text-[10px] sm:text-xs text-violet-400 flex flex-wrap gap-x-2 gap-y-0.5 pl-1">
+                    <div className="mt-3 pt-2.5 border-t border-white/10 text-[10px] sm:text-xs text-violet-400 flex flex-wrap gap-x-2.5 gap-y-0.5 pl-1">
                       {threadHashtags[thread.id].map((h, idx) => (
                         <span key={idx} className="hover:text-violet-300 transition-colors cursor-default">{h}</span>
                       ))}
@@ -1757,7 +1759,7 @@ export default function Page() {
 
                 {/* Submit to Community Showcase - temporarily disabled */}
                 {!submittedToShowcase[thread.id] && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="mt-5 pt-4 border-t border-white/10">
                     <button
                       disabled
                       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 text-[15px] font-semibold cursor-not-allowed opacity-70 min-h-[48px]"
@@ -1768,7 +1770,7 @@ export default function Page() {
                   </div>
                 )}
                 {submittedToShowcase[thread.id] && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="mt-5 pt-4 border-t border-white/10">
                     <a
                       href="/community"
                       className="block w-full text-center py-2.5 rounded-2xl border border-emerald-500/40 text-emerald-400 text-xs font-medium hover:bg-emerald-500/10"
