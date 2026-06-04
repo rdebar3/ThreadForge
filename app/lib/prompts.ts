@@ -147,7 +147,7 @@ Exact format:
 // Focus: beauty, elegance, sensuality. Always tasteful, non-explicit, classy.
 // Used by /api/generate-images and main UI.
 // ============================================
-export const IMAGE_STYLES = ['realistic', 'cinematic', 'boudoir', 'lingerie', 'romantic', 'sensual', 'elegant'] as const;
+export const IMAGE_STYLES = ['realistic', 'cinematic', 'boudoir', 'lingerie', 'romantic', 'sensual'] as const;
 
 export type ImageStyle = typeof IMAGE_STYLES[number];
 
@@ -158,7 +158,5 @@ export const IMAGE_STYLE_MODIFIERS: Record<string, string> = {
   lingerie: 'seductive high-fashion lingerie, delicate lace and silk, elegant boudoir setting, beautiful model, soft diffused lighting, tasteful and classy, sensual but sophisticated, no explicit content',
   romantic: 'romantic candlelit boudoir, soft rose petals, intimate elegant setting, beautiful girlfriend, flowing silk and lace, warm golden lighting, tender and seductive pose, ultra classy and emotional',
   sensual: 'sensual elegant woman, alluring gaze, graceful curves, soft warm lighting, luxurious setting, tasteful lingerie or artistic attire, intimate and seductive but always classy and non-explicit, high-end boudoir',
-  elegant: 'ultra elegant high-fashion boudoir, sophisticated woman, refined pose, luxurious fabrics, soft glamorous lighting, timeless beauty, tasteful, sensual, premium editorial photography style',
-  auto: 'elegant tasteful boudoir, artistic sensual photography, beautiful woman, soft lighting, classy composition',
 };
 
