@@ -181,13 +181,12 @@ export default function ImagineHer() {
         {/* Hero */}
         <div className="max-w-4xl mx-auto px-6 pt-16 pb-10 text-center">
           <div className="inline-block text-[10px] tracking-[4px] text-white/50 mb-3">PREMIUM • TASTEFUL • AI</div>
-          <h1 className="text-7xl md:text-[82px] font-semibold tracking-[-4.5px] leading-[0.9] mb-4">
-            Imagine<br />Her
+          <h1 className="text-6xl md:text-7xl font-semibold tracking-tighter mb-4">
+            Create Your Dream Woman
           </h1>
-          <p className="text-2xl text-white/70 max-w-lg mx-auto">
-            Elegant boudoir photography,<br />crafted by AI.
+          <p className="text-xl text-white/70 max-w-md mx-auto">
+            Elegant, seductive, artistic AI boudoir photography.<br />Classy and tasteful. Never explicit.
           </p>
-          <div className="mt-6 text-sm text-white/50">Classy. Seductive. Timeless.</div>
         </div>
 
         {/* Main Generator */}
