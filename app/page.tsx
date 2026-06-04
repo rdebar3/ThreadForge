@@ -435,6 +435,7 @@ export default function Page() {
     mediaAssignments: Record<number, number[]> = {},
     titleForHistory?: string
   ) => {
+    console.log("Post to X performPostToX called for tweets:", tweetsToPost.length);
     if (tweetsToPost.length === 0) return
 
     setIsPosting(true)
@@ -616,6 +617,7 @@ export default function Page() {
   }
 
   const confirmPostFromPreview = () => {
+    console.log("Post to X confirmPostFromPreview called for thread:", showPostPreviewFor);
     // filter empty + remap image assignments to the *cleaned* tweet indices (supports multiple per tweet via array)
     const cleaned: string[] = []
     const mediaAssignments: Record<number, number[]> = {}
@@ -1510,11 +1512,11 @@ export default function Page() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Post to X clicked");
-                            copyToX(thread);
+                            console.log(" Post to X clicked for thread:", thread.id);
+                            copyToX(thread);   // This should open the preview modal
                           }}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow-[0_4px_14px_-1px_rgba(124,58,237,0.45)] ring-1 ring-violet-400/60 hover:ring-violet-300/70 min-h-[44px] cursor-pointer"
                         >
                           <XIcon />
                           Post to X
