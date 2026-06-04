@@ -1218,7 +1218,7 @@ export default function Page() {
         </div>
 
         <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-6 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
-          Turn any idea into ready-to-post X threads + images in seconds.
+          Turn ideas into ready-to-post X threads + images in seconds.
         </h1>
         
         <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-4 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
@@ -1226,7 +1226,7 @@ export default function Page() {
         </p>
 
         <p className="text-sm text-zinc-500 mb-6 max-w-[520px] mx-auto">
-          Built for creators, founders, and indie hackers who post consistently.
+          Built for creators who turn ideas into threads that actually get posted on X.
         </p>
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
@@ -1318,8 +1318,8 @@ export default function Page() {
                 <p className="text-sm text-zinc-300">Type any idea above (one sentence is enough) → Get a full thread + images in seconds</p>
               </div>
               <div className="text-[10px] text-zinc-400 mb-1.5">Start by typing any idea above • Free: 3 generations/day (resets daily)</div>
-              <div className="text-xs text-zinc-500 mb-2 tracking-wider">TRY AN EXAMPLE</div>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="text-[11px] text-zinc-500 mb-3 tracking-wider">TRY AN EXAMPLE</div>
+              <div className="flex flex-wrap justify-center gap-3">
                 {exampleTopics.map((example, i) => (
                   <button
                     key={i}
@@ -1328,7 +1328,7 @@ export default function Page() {
                       setTimeout(() => handleGenerate(), 40)
                     }}
                     disabled={isGenerating}
-                    className="text-sm px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/60 hover:shadow-[0_0_22px_rgba(167,139,250,0.45)] text-zinc-300 hover:text-white transition-all active:scale-[0.985] disabled:opacity-50"
+                    className="text-sm px-5 py-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-violet-500/60 hover:shadow-[0_0_22px_rgba(167,139,250,0.45)] text-zinc-200 hover:text-white font-medium transition-all active:scale-[0.985] disabled:opacity-50"
                   >
                     {example}
                   </button>
@@ -2001,14 +2001,14 @@ export default function Page() {
             </div>
 
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 5 high-quality thread variants per generation</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 4 high-quality thread variants</li>
               <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy individual tweets or full thread</li>
-              <li className="flex items-start gap-3 text-zinc-400"><span className="mt-1.5">•</span> Upgrade for unlimited + Pro / Pro+ features</li>
+              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Core generator tools included</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
-              No credit card required. Upgrade anytime.
+              Perfect starting point. Upgrade anytime for more.
             </div>
           </div>
 
