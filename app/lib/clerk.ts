@@ -508,33 +508,23 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
   return String(mediaId)
 }
 
-/**
- * Clean simple version: Posts a thread (string[]) as a reply chain on X.
- * reply_settings: 'everyone' only on the root tweet.
- * Text only (no media for this clean reset of Post to X).
- * Used by both /api/x/post (manual) and scheduler cron.
- */
-export async function postThreadToX(
-  accessToken: string,
-  tweets: string[]
-): Promise<string[]> {
+export async function postThreadToX(accessToken: string, tweets: string[]): Promise<string[]> {
   const postedIds: string[] = []
   let inReplyTo: string | null = null
 
-  for (const raw of tweets) {
-    const text = (raw || '').trim().slice(0, 280)
-    if (!text) continue
+  for (const text of tweets) {
+    const cleanText = text.trim().slice(0, 280)
+    if (!cleanText) continue
 
-    const payload: any = { text }
+    const payload: any = { text: cleanText }
 
     if (!inReplyTo) {
-      // ROOT TWEET ONLY - public replies allowed
       payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
 
-    const res = await fetch(X_TWEETS_URL, {
+    const res = await fetch('https://api.x.com/2/tweets', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -545,23 +535,15 @@ export async function postThreadToX(
 
     if (!res.ok) {
       const errText = await res.text()
-      console.error('[postThreadToX] X error', res.status, errText.substring(0, 300))
-      if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
-        throw new Error('CreditsDepleted')
-      }
-      throw new Error(`X API error ${res.status}: ${errText.substring(0, 200)}`)
+      throw new Error(`X Error ${res.status}`)
     }
 
     const json = await res.json()
     const id = json?.data?.id
-    if (!id) throw new Error('X returned no tweet id')
+    if (!id) throw new Error('No tweet ID')
 
     postedIds.push(id)
     inReplyTo = id
-  }
-
-  if (postedIds.length === 0) {
-    throw new Error('No tweets were posted')
   }
 
   return postedIds
