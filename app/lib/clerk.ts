@@ -7,6 +7,8 @@ import type { GenerationRecord, Thread, XAccount, ScheduledPost, Template, Showc
  */
 export async function incrementUserGenerations(userId: string, count: number = 1) {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
@@ -587,17 +589,19 @@ export function filterDuePending(posts: ScheduledPost[]): ScheduledPost[] {
 // Aggressive Metadata Cleanup (to stay under Clerk's ~8KB publicMetadata limit)
 // ============================================
 
-const MAX_GENERATION_HISTORY = 10
+const MAX_GENERATION_HISTORY = 5
 const MAX_SHOWCASE_POSTS = 3
-const MAX_SCHEDULED = 10
-const MAX_TEMPLATES = 10
+const MAX_SCHEDULED = 5
+const MAX_TEMPLATES = 5
 
 /**
  * Aggressively prunes user publicMetadata to prevent 8KB Clerk limit errors (422).
  * Keeps only the most recent N entries for each category (newest first).
- * Called before any metadata updates that grow arrays.
+ * Also prunes any other large arrays in publicMetadata.
+ * Called before any metadata updates.
  */
 export async function cleanupUserMetadata(userId: string): Promise<void> {
+  console.log(`[clerk] cleanupUserMetadata running for user ${userId} - pruning old data`)
   try {
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
@@ -630,6 +634,16 @@ export async function cleanupUserMetadata(userId: string): Promise<void> {
     if (templates.length > MAX_TEMPLATES) {
       metadata.templates = templates.slice(0, MAX_TEMPLATES)
       changed = true
+    }
+
+    // Prune ANY other large arrays in publicMetadata (nuclear option)
+    for (const key of Object.keys(metadata)) {
+      if (key === 'generationHistory' || key === 'showcasePosts' || key === 'scheduledPosts' || key === 'templates') continue;
+      const val = metadata[key];
+      if (Array.isArray(val) && val.length > 5) {
+        metadata[key] = val.slice(0, 5); // keep most recent 5 for unknown arrays
+        changed = true;
+      }
     }
 
     if (changed) {
@@ -718,6 +732,8 @@ export async function deleteUserTemplate(userId: string, templateId: string): Pr
  */
 export async function incrementPostedCount(userId: string, by: number = 1) {
   try {
+    await cleanupUserMetadata(userId)
+
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
     const current = (user.publicMetadata?.postedCount as number) || 0
