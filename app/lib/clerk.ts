@@ -378,33 +378,26 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
 }
 
 /**
- * Posts a full thread as a connected reply chain on X using the user's access token.
- * reply_settings:'everyone' ONLY on root tweet (public replies).
- * Supports optional media per tweet (retained for future) but route is text-only for now.
- * Accepts string[] (text-only) or rich items. Returns array of created tweet IDs.
+ * Clean simple version: Posts a thread (string[]) as a reply chain on X.
+ * reply_settings: 'everyone' only on the root tweet.
+ * Text only (no media for this clean reset of Post to X).
+ * Used by both /api/x/post (manual) and scheduler cron.
  */
 export async function postThreadToX(
   accessToken: string,
-  tweetsOrItems: string[] | Array<{ text: string; mediaIds?: string[] }>
+  tweets: string[]
 ): Promise<string[]> {
   const postedIds: string[] = []
   let inReplyTo: string | null = null
 
-  // Normalize: string[] (legacy/text-only from scheduler/cron or minimal route) or rich {text, mediaIds?}[]
-  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && tweetsOrItems.length > 0 && typeof tweetsOrItems[0] === 'string'
-    ? (tweetsOrItems as string[]).map(t => ({ text: t }))
-    : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
-
-  for (const item of items) {
-    const text = (item.text || '').trim().slice(0, 280)
+  for (const raw of tweets) {
+    const text = (raw || '').trim().slice(0, 280)
     if (!text) continue
 
     const payload: any = { text }
-    if (item.mediaIds && item.mediaIds.length > 0) {
-      payload.media = { media_ids: item.mediaIds }
-    }
+
     if (!inReplyTo) {
-      // ROOT TWEET ONLY - allow anyone to reply
+      // ROOT TWEET ONLY - public replies allowed
       payload.reply_settings = 'everyone'
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
@@ -421,24 +414,11 @@ export async function postThreadToX(
 
     if (!res.ok) {
       const errText = await res.text()
+      console.error('[postThreadToX] X error', res.status, errText.substring(0, 300))
       if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
         throw new Error('CreditsDepleted')
       }
-      let friendlyError = `X API error ${res.status}: ${errText.substring(0, 180)}`
-      try {
-        const parsed = JSON.parse(errText)
-        if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
-          const firstErr = parsed.errors[0]
-          const msg = firstErr.message || firstErr.detail || JSON.stringify(firstErr)
-          friendlyError = `X API error ${res.status}: ${msg}`
-          if (firstErr.code) friendlyError += ` (code: ${firstErr.code})`
-        } else if (parsed.detail) {
-          friendlyError = `X API error ${res.status}: ${parsed.detail}`
-        }
-      } catch (e) {
-        // not JSON
-      }
-      throw new Error(friendlyError)
+      throw new Error(`X API error ${res.status}: ${errText.substring(0, 200)}`)
     }
 
     const json = await res.json()
