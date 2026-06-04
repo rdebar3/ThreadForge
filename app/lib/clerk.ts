@@ -379,10 +379,8 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
 
 /**
  * Posts a full thread as a connected reply chain on X using the user's access token.
- * Sets reply_settings: 'everyone' ONLY on the root (first) tweet so the thread is fully open for public replies (anyone can reply).
- * Uses in_reply_to_tweet_id for subsequent tweets in the chain.
- * Supports optional media per tweet via items form (or legacy string[] for text-only callers like cron).
- * Returns array of created tweet IDs.
+ * Sets reply_settings: 'everyone' on the root tweet so anyone can reply.
+ * Supports media per tweet.
  */
 export async function postThreadToX(
   accessToken: string,
@@ -391,8 +389,7 @@ export async function postThreadToX(
   const postedIds: string[] = []
   let inReplyTo: string | null = null
 
-  // Normalize input: support legacy string[] (text only, e.g. cron/scheduler) and new richer form for images
-  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && tweetsOrItems.length > 0 && typeof tweetsOrItems[0] === 'string'
+  const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && typeof tweetsOrItems[0] === 'string'
     ? (tweetsOrItems as string[]).map(t => ({ text: t }))
     : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
 
@@ -401,13 +398,13 @@ export async function postThreadToX(
     if (!text) continue
 
     const payload: any = { text }
+
     if (item.mediaIds && item.mediaIds.length > 0) {
-      // Attach media (images) to this specific tweet in the chain. X supports 1-4 per tweet.
       payload.media = { media_ids: item.mediaIds }
     }
+
     if (!inReplyTo) {
-      // ROOT TWEET ONLY - allow anyone to reply
-      payload.reply_settings = 'everyone'
+      payload.reply_settings = 'everyone'  // Anyone can reply
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
@@ -423,28 +420,10 @@ export async function postThreadToX(
 
     if (!res.ok) {
       const errText = await res.text()
-      if (errText.includes('CreditsDepleted') || /credits? ?deplet/i.test(errText) || errText.toLowerCase().includes('credit')) {
+      if (errText.includes('CreditsDepleted') || /credit/i.test(errText)) {
         throw new Error('CreditsDepleted')
       }
-      // Better error handling: try to parse X API JSON error response for clearer messages
-      let friendlyError = `X API error ${res.status}: ${errText.substring(0, 180)}`
-      try {
-        const parsed = JSON.parse(errText)
-        if (parsed.errors && Array.isArray(parsed.errors) && parsed.errors.length > 0) {
-          const firstErr = parsed.errors[0]
-          const msg = firstErr.message || firstErr.detail || JSON.stringify(firstErr)
-          friendlyError = `X API error ${res.status}: ${msg}`
-          // Also surface specific codes like invalid reply_settings etc.
-          if (firstErr.code) {
-            friendlyError += ` (code: ${firstErr.code})`
-          }
-        } else if (parsed.detail) {
-          friendlyError = `X API error ${res.status}: ${parsed.detail}`
-        }
-      } catch (e) {
-        // not JSON, use raw text (already truncated)
-      }
-      throw new Error(friendlyError)
+      throw new Error(`X API error ${res.status}: ${errText.substring(0, 150)}`)
     }
 
     const json = await res.json()
