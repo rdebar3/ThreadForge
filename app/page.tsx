@@ -1167,6 +1167,13 @@ export default function Page() {
         </div>
       </div>
 
+      {/* Early access honest messaging (subtle, top of page, humble) */}
+      <div className="border-b border-white/10 bg-zinc-950/40">
+        <div className="max-w-5xl mx-auto px-6 py-1.5 text-center">
+          <p className="text-[11px] text-zinc-400">Early access — we’re building in public with the first users. Real results coming.</p>
+        </div>
+      </div>
+
       {/* Hero - Stronger, more dynamic and premium */}
       <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
         
@@ -1353,6 +1360,11 @@ export default function Page() {
         <p className="text-sm text-zinc-500 mt-6 mb-4 animate-[fadeInUp_0.6s_ease-out_0.35s_both]">
           No hype. Just real threads from creators who post consistently on X every day.
         </p>
+      </div>
+
+      {/* Simple honest Trust Bar near hero (lightweight, premium, no fakes) */}
+      <div className="max-w-5xl mx-auto px-6 text-center border-t border-white/10 py-3">
+        <p className="text-sm text-zinc-400">No templates. No hype. Just real threads that get posted.</p>
       </div>
 
       {/* Pro vs Pro+ Features Showcase - split cards, only visible before generating (clear tier value prop) */}
@@ -1981,6 +1993,13 @@ export default function Page() {
         </div>
       </div>
 
+      {/* Soft community / showcase teaser (submissions paused but feed + discovery live for early creators) */}
+      <div className="max-w-5xl mx-auto px-6 text-center -mt-4 pb-6">
+        <p className="text-xs text-zinc-500">
+          <a href="/community" className="hover:text-zinc-300 transition underline">Join the growing community of early creators sharing their best threads.</a>
+        </p>
+      </div>
+
       {/* Pricing - 3-Tier: Free / Pro ($9) / Pro+ ($15) with Image Gen Pro+ only */}
       <div id="pricing" className="max-w-5xl mx-auto px-6 py-24 border-t border-zinc-800">
         <div className="text-center mb-10">
@@ -2106,9 +2125,8 @@ export default function Page() {
 
         <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI images + scheduler + analytics. Best value for most creators. Existing Pro users are grandfathered. Cancel anytime.</p>
 
-        <div className="text-center mt-6 space-y-1">
-          <p className="text-[11px] text-zinc-400">Early access – we’re building in public.</p>
-          <p className="text-[10px] text-zinc-500">Join the first creators using ThreadForge. No fake testimonials. Real tool. Real results coming.</p>
+        <div className="text-center mt-6">
+          <p className="text-[11px] text-zinc-400">Early access — we’re building in public with the first users. Real results coming.</p>
         </div>
       </div>
 
