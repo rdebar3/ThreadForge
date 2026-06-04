@@ -373,28 +373,29 @@ export async function getXAccount(userId: string): Promise<XAccount | null> {
 
 export async function saveXAccount(userId: string, account: XAccount): Promise<void> {
   try {
-    console.log('[X Account] saveXAccount START for user', userId, 'username:', account.username)
+    console.log('[X Account] saveXAccount START for', userId, 'username:', account.username)
 
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
-    const updatedPrivateMetadata = {
+    const updated = {
       ... (user.privateMetadata || {}),
       xAccount: account,
     }
 
     await client.users.updateUserMetadata(userId, {
-      privateMetadata: updatedPrivateMetadata,
+      privateMetadata: updated,
     })
 
     // Verify immediately
-    const verifyUser = await client.users.getUser(userId)
-    const saved = verifyUser.privateMetadata?.xAccount as XAccount | undefined
+    const verify = await client.users.getUser(userId)
+    const saved = verify.privateMetadata?.xAccount as XAccount | undefined
 
-    if (saved && saved.accessToken) {
+    if (saved?.accessToken) {
       console.log('[X Account] VERIFIED SUCCESS - token saved for', userId)
     } else {
-      console.error('[X Account] VERIFICATION FAILED - token not persisted')
+      console.error('[X Account] VERIFICATION FAILED - token not in metadata')
+      throw new Error('Token save verification failed')
     }
   } catch (error) {
     console.error('[X Account] saveXAccount FAILED:', error)
