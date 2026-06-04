@@ -1231,7 +1231,7 @@ export default function Page() {
 
         {/* Generator - wrapped in premium glass container for strong visual depth and focal impact (cleaner now without redundant preview) */}
         <div className="max-w-2xl mx-auto">
-          <div className="glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all">
+          <div className={`glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all ${isGenerating ? 'opacity-70 pointer-events-none' : ''}`}>
           {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) */}
           <div className="text-center mb-3">
             <p className="text-[11px] text-zinc-400">Start by typing any idea above. You get 3 free generations per day — upgrade anytime for unlimited.</p>
@@ -1266,6 +1266,13 @@ export default function Page() {
               )}
             </button>
           </div>
+
+          {isGenerating && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-violet-400">
+              <Spinner />
+              <span>Generating high-quality threads…</span>
+            </div>
+          )}
 
           {/* Visible usage counter / priority indicator - bigger, more prominent Pro+ badge */}
           {isSignedIn && hasPro ? (
@@ -1445,58 +1452,60 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Post success banner with clear next actions for reliable flow */}
+          {/* Post success banner with clear next actions for reliable flow - premium glass style */}
           {postSuccess && (
-            <div className="mb-6 p-4 sm:p-5 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <div className="font-semibold text-emerald-300 flex items-center gap-2">✓ Thread posted successfully to X!</div>
-                  <p className="text-sm text-emerald-400/80 mt-0.5">Your thread is now live. Choose a next step below.</p>
+            <div className="mb-6 glass-card border border-emerald-500/40 bg-emerald-500/5 rounded-2xl p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl mt-0.5">✅</div>
+                <div className="flex-1">
+                  <div className="font-semibold text-emerald-300 text-lg">Thread posted successfully to X!</div>
+                  <p className="text-sm text-emerald-400/80 mt-1">Your thread is now live on X. What's next?</p>
+
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                    {postSuccess.postUrl && (
+                      <a 
+                        href={postSuccess.postUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl transition active:scale-[0.985] shadow min-h-[48px]"
+                        onClick={() => setPostSuccess(null)}
+                      >
+                        View Thread on X →
+                      </a>
+                    )}
+                    <button
+                      onClick={() => {
+                        setThreads([])
+                        setTopic('')
+                        setPostSuccess(null)
+                        setTimeout(() => {
+                          const input = document.querySelector('input[type="text"]') as HTMLInputElement
+                          input?.focus()
+                        }, 50)
+                      }}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-medium border border-white/20 hover:bg-white/5 text-zinc-200 rounded-2xl transition active:scale-[0.985] min-h-[48px]"
+                    >
+                      Generate Another Thread
+                    </button>
+                    {hasPro && (
+                      <button
+                        onClick={() => {
+                          setShowScheduleFor(postSuccess.threadId)
+                          setPostSuccess(null)
+                        }}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-medium border border-white/20 hover:bg-white/5 text-violet-300 rounded-2xl transition active:scale-[0.985] min-h-[48px]"
+                      >
+                        📅 Schedule This One
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setPostSuccess(null)}
+                      className="inline-flex items-center justify-center px-4 py-3 text-sm text-zinc-400 hover:text-zinc-200 transition min-h-[48px]"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
-                {postSuccess.postUrl && (
-                  <a 
-                    href={postSuccess.postUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 rounded-xl transition active:scale-[0.985]"
-                    onClick={() => setPostSuccess(null)}
-                  >
-                    View Thread on X →
-                  </a>
-                )}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  onClick={() => {
-                    setThreads([])
-                    setTopic('')
-                    setPostSuccess(null)
-                    setTimeout(() => {
-                      const input = document.querySelector('input[type="text"]') as HTMLInputElement
-                      input?.focus()
-                    }, 50)
-                  }}
-                  className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 active:bg-white/10 transition min-h-[44px]"
-                >
-                  Generate Another Thread
-                </button>
-                {hasPro && (
-                  <button
-                    onClick={() => {
-                      setShowScheduleFor(postSuccess.threadId)
-                      setPostSuccess(null)
-                    }}
-                    className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-violet-300 active:bg-white/10 transition min-h-[44px]"
-                  >
-                    📅 Schedule This One
-                  </button>
-                )}
-                <button
-                  onClick={() => setPostSuccess(null)}
-                  className="text-sm px-3 py-2 rounded-xl text-zinc-400 hover:text-zinc-300 transition min-h-[40px]"
-                >
-                  Dismiss
-                </button>
               </div>
             </div>
           )}
@@ -1683,7 +1692,7 @@ export default function Page() {
                         {isGeneratingImages ? (
                           <>
                             <Spinner />
-                            Generating…
+                            Generating images…
                           </>
                         ) : 'Generate Images'}
                       </button>
@@ -2156,24 +2165,24 @@ export default function Page() {
           onClick={() => setShowAuthPrompt(false)}
         >
           <div 
-            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 max-w-md w-full"
+            className="glass-card border border-white/10 rounded-3xl p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-semibold mb-2">You've reached your free limit</h3>
+            <h3 className="text-2xl font-semibold mb-2 text-emerald-300">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
               Free: exactly 3 generations per day (resets daily). Sign in for your count, or upgrade to Pro ($9) for unlimited generations + Post to X + History, or Pro+ ($15) for everything including AI images, scheduler, and analytics.
             </p>
 
             <button 
               onClick={() => { openSignIn(); setShowAuthPrompt(false); }}
-              className="w-full py-4 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors text-lg"
+              className="w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold rounded-2xl hover:from-violet-600 hover:to-indigo-600 transition-all text-lg min-h-[52px] shadow active:scale-[0.985]"
             >
               Sign in to continue free
             </button>
 
             <button 
               onClick={() => setShowAuthPrompt(false)}
-              className="w-full mt-3 text-sm text-zinc-400 hover:text-white"
+              className="w-full mt-3 text-sm text-zinc-400 hover:text-white transition"
             >
               Maybe later
             </button>
@@ -2249,7 +2258,15 @@ export default function Page() {
             </div>
 
             {/* Scrollable tweets list */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 scroll-smooth">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 scroll-smooth relative">
+              {isPosting && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-t-3xl">
+                  <div className="flex items-center gap-3 text-emerald-400">
+                    <Spinner />
+                    <span className="font-medium">Posting your thread to X…</span>
+                  </div>
+                </div>
+              )}
               {/* Display generated images inside modal (if any) - cleaned up preview grid */}
               {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                 <div className="mb-2 p-4 bg-zinc-900/60 border border-white/10 rounded-2xl">
