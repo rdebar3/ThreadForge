@@ -18,7 +18,7 @@ export default function AnalyticsPage() {
         <div className="glass-card max-w-md text-center p-10 border border-white/10 rounded-3xl">
           <h1 className="text-3xl font-semibold mb-3">Analytics (Pro+)</h1>
           <p className="text-zinc-400 mb-6">Insights, reach estimates, and best-time recommendations are available for Pro+ subscribers.</p>
-          <a href="#pricing" className="inline-block px-8 py-3 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-2xl font-semibold">Upgrade to Pro+</a>
+          <a href="#pricing" className="inline-block px-8 py-3 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-2xl font-semibold min-h-[48px]">Upgrade to Pro+</a>
           <div className="mt-4"><Link href="/" className="text-sm text-violet-400">Back home</Link></div>
         </div>
       </div>
@@ -27,7 +27,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/" className="text-sm text-zinc-400">← Home</Link>
           <span className="text-zinc-600">/</span>

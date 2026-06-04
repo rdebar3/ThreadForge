@@ -952,7 +952,7 @@ export default function Page() {
 
       {/* Navbar - Slightly more premium with enhanced glass */}
       <nav className="border-b border-white/10 bg-zinc-950/85 backdrop-blur-2xl sticky top-0 z-50 shadow-sm">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Premium ThreadForge Logo - modern violet/indigo with subtle thread/AI motif */}
             <div className="flex items-center gap-3">
@@ -1027,7 +1027,7 @@ export default function Page() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => openSignIn()}
-                  className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                  className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors min-h-[40px]"
                 >
                   Sign in
                 </button>
@@ -1038,7 +1038,7 @@ export default function Page() {
           {/* Mobile Hamburger */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-zinc-400 hover:text-white"
+            className="md:hidden p-2 text-zinc-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -1050,31 +1050,31 @@ export default function Page() {
 
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl px-6 py-4 flex flex-col gap-3 text-sm">
+            <div className="md:hidden border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl px-4 py-4 flex flex-col gap-1 text-sm">
               <a 
                 href="#how" 
-                className="text-zinc-400 hover:text-white py-1"
+                className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 How it works
               </a>
               <a 
                 href="#use-cases" 
-                className="text-zinc-400 hover:text-white py-1"
+                className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Use cases
               </a>
               <a 
                 href="/community" 
-                className="text-zinc-400 hover:text-white py-1"
+                className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Community
               </a>
               <a 
                 href="#pricing" 
-                className="text-zinc-400 hover:text-white py-1"
+                className="text-zinc-400 hover:text-white py-2 px-2 -mx-2 rounded hover:bg-white/5 active:bg-white/10 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
@@ -1239,7 +1239,7 @@ export default function Page() {
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="group px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 min-w-[220px] text-[15px] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30"
+              className="group w-full sm:w-auto px-8 sm:px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 sm:min-w-[200px] text-[15px] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30 min-h-[52px]"
             >
               {isGenerating ? (
                 <>
@@ -1417,12 +1417,12 @@ export default function Page() {
                     input?.focus()
                   }, 50)
                 }}
-                className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
+                className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all min-h-[44px]"
               >
                 New topic
               </button>
               {hasPro && (
-                <a href="/history" className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle">
+                <a href="/history" className="text-xs sm:text-sm md:text-sm px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all pro-sparkle min-h-[44px]">
                   View History
                 </a>
               )}
@@ -1437,11 +1437,11 @@ export default function Page() {
                     <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
                   </div>
                   <div className="relative">
-                    <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 md:gap-3 items-center">
+                    <div className="flex flex-wrap gap-2 sm:gap-2 items-center">
                       <button
                         onClick={() => copyThread(thread)}
                         title="Copy the entire thread (all tweets) to your clipboard"
-                        className="copy-button flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                        className="copy-button flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                       >
                         <CopyIcon />
                         <span>{copiedThreadId === thread.id ? 'Copied!' : 'Copy All'}</span>
@@ -1451,7 +1451,7 @@ export default function Page() {
                           onClick={() => enhanceThread(thread)}
                           disabled={suggestLoading[`${thread.id}-enhance`]}
                           title="One-click smart enhance: auto-add 1 natural emoji per tweet + 2-4 strategic hashtags (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                         >
                           ✨ Enhance
                         </button>
@@ -1460,7 +1460,7 @@ export default function Page() {
                         <button
                           onClick={() => copyToX(thread)}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow ring-1 ring-violet-400/50"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow ring-1 ring-violet-400/50 min-h-[44px]"
                         >
                           <XIcon />
                           Post to X
@@ -1475,7 +1475,7 @@ export default function Page() {
                             setSelectedImageCount(1)
                           }}
                           title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-violet-500/30 rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-violet-500/30 rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                         >
                           ✨ Generate Images
                         </button>
@@ -1488,7 +1488,7 @@ export default function Page() {
                             setSelectedImageCount(1)
                           }}
                           title="Try AI Images once for free (one-time Pro+ trial)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                         >
                           ✨ Try Pro+ Images (1-time)
                         </button>
@@ -1496,9 +1496,8 @@ export default function Page() {
                         <a
                           href="#pricing"
                           title="Image Generation requires Pro+ (trial used)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all min-h-[44px]"
                         >
-                          Upgrade to Pro+ for AI Images
                         </a>
                       ) : null}
 
@@ -1511,7 +1510,7 @@ export default function Page() {
                             setScheduleTime('')
                           }}
                           title="Schedule this full thread to post automatically to X (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                         >
                           📅 Schedule
                         </button>
@@ -1523,7 +1522,7 @@ export default function Page() {
                             setScheduleTime('')
                           }}
                           title="Try Scheduler once for free (one-time Pro+ trial)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/40 rounded-2xl transition-all active:scale-[0.985] min-h-[44px]"
                         >
                           📅 Try Pro+ Scheduler (1-time)
                         </button>
@@ -1531,7 +1530,7 @@ export default function Page() {
                         <a
                           href="#pricing"
                           title="Thread Scheduler requires Pro+ (trial used)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-semibold bg-zinc-800 hover:bg-amber-500/10 hover:text-amber-400 border border-amber-500/30 rounded-2xl transition-all min-h-[44px]"
                         >
                           Schedule (Pro+)
                         </a>
@@ -1542,7 +1541,7 @@ export default function Page() {
                         <button
                           onClick={() => setShowMoreFor(showMoreFor === thread.id ? null : thread.id)}
                           title="More actions (Save Template, Rewrite)"
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium bg-zinc-800/70 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
+                          className="flex items-center gap-1 px-2.5 py-2 text-[10px] font-medium bg-zinc-800/70 hover:bg-white/10 border border-white/10 rounded-2xl transition-all min-h-[40px]"
                         >
                           ⋯ More
                         </button>
@@ -1604,13 +1603,13 @@ export default function Page() {
                       <button
                         onClick={() => handleGenerateImages(thread)}
                         disabled={isGeneratingImages}
-                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all min-h-[44px]"
                       >
                         {isGeneratingImages ? 'Generating...' : 'Generate Images'}
                       </button>
                       <button
                         onClick={() => setShowImageModalFor(null)}
-                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-all min-h-[44px]"
                       >
                         Cancel
                       </button>
@@ -1639,13 +1638,13 @@ export default function Page() {
                       <button
                         onClick={() => handleSchedule(thread)}
                         disabled={!scheduleTime || isScheduling}
-                        className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-xs sm:text-sm font-semibold text-white transition"
+                        className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-xs sm:text-sm font-semibold text-white transition min-h-[44px]"
                       >
                         {isScheduling ? 'Scheduling...' : 'Confirm Schedule'}
                       </button>
                       <button
                         onClick={() => { setShowScheduleFor(null); setScheduleTime('') }}
-                        className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition min-h-[44px]"
                       >
                         Cancel
                       </button>
@@ -1667,8 +1666,8 @@ export default function Page() {
                     </div>
                     <input value={rewriteCustom} onChange={e=>setRewriteCustom(e.target.value)} placeholder="Or custom instructions (e.g. more storytelling, add data)" className="w-full mb-2 sm:mb-3 bg-zinc-950 border border-white/10 rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm" />
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      <button onClick={() => handleRewriteThread(thread)} disabled={isRewriting} className="px-3 sm:px-5 py-1.5 sm:py-2 bg-violet-500 rounded-2xl text-xs sm:text-sm font-semibold disabled:opacity-60">{isRewriting ? 'Rewriting...' : 'Apply Rewrite'}</button>
-                      <button onClick={() => setShowRewriteFor(null)} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-800 rounded-2xl text-xs sm:text-sm">Cancel</button>
+                      <button onClick={() => handleRewriteThread(thread)} disabled={isRewriting} className="px-3 sm:px-5 py-2 sm:py-2.5 bg-violet-500 rounded-2xl text-xs sm:text-sm font-semibold disabled:opacity-60 min-h-[44px]">{isRewriting ? 'Rewriting...' : 'Apply Rewrite'}</button>
+                      <button onClick={() => setShowRewriteFor(null)} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-zinc-800 rounded-2xl text-xs sm:text-sm min-h-[44px]">Cancel</button>
                     </div>
                   </div>
                 )}
@@ -1721,14 +1720,14 @@ export default function Page() {
                           <div className="text-zinc-500 font-mono text-xs sm:text-sm w-6 sm:w-8 flex-shrink-0 pt-0.5 select-none">
                             {i + 1}/
                           </div>
-                          <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0">
+                          <div className="flex-1 text-[14px] sm:text-[15px] leading-relaxed text-zinc-100 min-w-0 break-words">
                             {tweet}
                             {appliedEmoji && <span className="ml-1 text-base opacity-75 align-middle">{appliedEmoji}</span>}
                           </div>
                           <button
                             onClick={() => copyTweet(thread.id, i, tweet)}
                             title="Copy just this single tweet"
-                            className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1"
+                            className="opacity-0 group-hover:opacity-100 text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-lg self-start mt-0.5 transition-all text-zinc-400 hover:text-white flex items-center gap-1 min-h-[36px]"
                           >
                             {isCopied ? (
                               <span className="text-emerald-400 font-medium">Copied!</span>
@@ -1761,7 +1760,7 @@ export default function Page() {
                   <div className="mt-4 pt-4 border-t border-white/10">
                     <button
                       disabled
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 text-[15px] font-semibold cursor-not-allowed opacity-70"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-zinc-800 text-zinc-400 text-[15px] font-semibold cursor-not-allowed opacity-70 min-h-[48px]"
                     >
                       Submit to Community Showcase (Coming Soon)
                     </button>
@@ -1955,7 +1954,7 @@ export default function Page() {
               <>
                 <button
                   onClick={() => handleUpgrade('pro')}
-                  className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)]"
+                  className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] min-h-[52px]"
                 >
                   Upgrade to Pro — $9/mo
                 </button>
@@ -1998,7 +1997,7 @@ export default function Page() {
               <>
                 <button
                   onClick={() => handleUpgrade('pro-plus')}
-                  className="mt-8 w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] transition-all"
+                  className="mt-8 w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] transition-all min-h-[52px]"
                 >
                   Upgrade to Pro+ — $15/mo
                 </button>
@@ -2117,23 +2116,23 @@ export default function Page() {
             <input
               value={submitTitle}
               onChange={(e) => setSubmitTitle(e.target.value)}
-              className="w-full bg-zinc-950 border border-white/10 focus:border-violet-400 rounded-2xl px-4 py-2.5 text-sm mb-4"
+              className="w-full bg-zinc-950 border border-white/10 focus:border-violet-400 rounded-2xl px-4 py-3 text-sm mb-4 min-h-[48px]"
               placeholder="Optional title (uses thread title if blank)"
               disabled={isSubmittingShowcase}
             />
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={confirmSubmitToShowcase}
                 disabled={isSubmittingShowcase}
-                className="flex-1 py-3 bg-white text-zinc-950 font-semibold rounded-2xl text-sm disabled:opacity-50 hover:bg-zinc-100 active:scale-[0.985] transition"
+                className="flex-1 py-3 bg-white text-zinc-950 font-semibold rounded-2xl text-sm disabled:opacity-50 hover:bg-zinc-100 active:scale-[0.985] transition min-h-[48px]"
               >
                 {isSubmittingShowcase ? 'Submitting…' : 'Submit to Community Showcase'}
               </button>
               <button
                 onClick={() => setShowSubmitFor(null)}
                 disabled={isSubmittingShowcase}
-                className="px-5 py-3 border border-white/10 rounded-2xl text-sm hover:bg-white/5 disabled:opacity-50"
+                className="px-5 py-3 border border-white/10 rounded-2xl text-sm hover:bg-white/5 disabled:opacity-50 min-h-[48px]"
               >
                 Cancel
               </button>
@@ -2154,7 +2153,7 @@ export default function Page() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - fixed */}
-            <div className="flex items-center justify-between p-6 pb-3 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-2xl font-semibold tracking-tight">Preview &amp; Edit Thread</h3>
                 <p className="text-[13px] text-zinc-400 mt-0.5">Edit any tweet. Assign images if attached. Then confirm to post as reply chain.</p>
@@ -2168,12 +2167,12 @@ export default function Page() {
             </div>
 
             {/* Scrollable tweets list */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
               {/* Display generated images inside modal (if any) - simplified */}
               {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                 <div className="mb-4 p-3 bg-zinc-900/70 border border-white/10 rounded-2xl">
                   <div className="text-[10px] font-medium text-violet-400 mb-1.5 tracking-[1.5px]">ATTACHED IMAGES — assign below per tweet</div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {getThreadImages({ id: showPostPreviewFor }).map((img: any, idx: number) => (
                       <div key={idx} className="group relative overflow-hidden rounded border border-white/10 bg-zinc-950/50">
                         <img src={img.url} alt={`Preview image ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
@@ -2198,34 +2197,34 @@ export default function Page() {
                     <textarea
                       value={tweet}
                       onChange={(e) => updatePreviewTweet(index, e.target.value)}
-                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/50' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3.5 text-[14px] leading-relaxed min-h-[68px] resize-y outline-none`}
+                      className={`w-full bg-zinc-950 border ${overLimit ? 'border-red-500/50' : 'border-white/10'} focus:border-violet-400 rounded-xl p-3.5 text-[14px] leading-relaxed min-h-[80px] resize-y outline-none`}
                       placeholder="Write your tweet..."
                     />
                     <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                       <button
                         onClick={() => removePreviewTweet(index)}
                         disabled={previewTweets.length <= 1}
-                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition min-h-[28px]"
+                        className="text-[11px] px-3.5 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40 transition min-h-[44px]"
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, -1)}
                         disabled={index === 0}
-                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[28px]"
+                        className="text-[11px] px-3.5 py-2 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[44px]"
                       >
                         ↑ Move up
                       </button>
                       <button
                         onClick={() => movePreviewTweet(index, 1)}
                         disabled={index === previewTweets.length - 1}
-                        className="text-[10px] px-2.5 py-1.5 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[28px]"
+                        className="text-[11px] px-3.5 py-2 rounded-lg bg-white/5 text-zinc-300 hover:bg-white/10 disabled:opacity-40 transition min-h-[44px]"
                       >
                         ↓ Move down
                       </button>
                       <button
                         onClick={addPreviewTweet}
-                        className="ml-auto text-[10px] px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition min-h-[28px]"
+                        className="ml-auto text-[11px] px-3.5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition min-h-[44px]"
                       >
                         + Add tweet
                       </button>
@@ -2234,17 +2233,17 @@ export default function Page() {
                     {/* Assign image to this specific tweet */}
                     {showPostPreviewFor !== null && getThreadImages({ id: showPostPreviewFor }).length > 0 && (
                       <div className="mt-2 pt-2 border-t border-white/10">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-zinc-400">Attach to this tweet:</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] text-zinc-400">Attach to this tweet:</span>
                           <select
                             multiple
-                            size={Math.min(4, getThreadImages({ id: showPostPreviewFor }).length || 1)}
+                            size={Math.min(3, getThreadImages({ id: showPostPreviewFor }).length || 1)}
                             value={(previewImageAssignments[index] || []).map(String)}
                             onChange={(e) => {
                               const vals = Array.from(e.target.selectedOptions, opt => parseInt(opt.value, 10)).filter(n => !isNaN(n))
                               setPreviewImageAssignments(prev => ({ ...prev, [index]: vals }))
                             }}
-                            className="text-xs bg-zinc-950 border border-white/10 rounded p-1"
+                            className="text-xs bg-zinc-950 border border-white/10 rounded px-2 py-1 min-h-[40px]"
                           >
                             {getThreadImages({ id: showPostPreviewFor }).map((img: any, i: number) => (
                               <option key={i} value={i}>Image {i+1} ({img.style})</option>
@@ -2274,20 +2273,20 @@ export default function Page() {
             </div>
 
             {/* Sticky footer with actions and confirm button */}
-            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-6 sticky bottom-0 z-10">
+            <div className="flex-shrink-0 border-t border-white/10 bg-zinc-900/95 backdrop-blur p-4 sm:p-6 sticky bottom-0 z-10">
               {/* Big clear confirm button */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={confirmPostFromPreview}
                   disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
-                  className="flex-1 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow"
+                  className="flex-1 py-3.5 bg-white text-zinc-950 font-semibold rounded-2xl text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 active:scale-[0.985] transition-all shadow min-h-[52px]"
                 >
                   {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
                 </button>
                 <button
                   onClick={cancelPostPreview}
                   disabled={isPosting}
-                  className="px-8 py-3.5 border border-white/10 text-sm font-medium rounded-2xl hover:bg-white/5 transition disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3.5 border border-white/10 text-sm font-medium rounded-2xl hover:bg-white/5 transition disabled:opacity-50 min-h-[48px]"
                 >
                   Cancel
                 </button>

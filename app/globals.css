@@ -403,9 +403,9 @@ body {
     line-height: 1.45;
   }
 
-  /* Ensure all buttons in thread results are accessible (min tap target) without forcing width */
+  /* Ensure all buttons in thread results are accessible (min tap target ~44px) without forcing width */
   .thread-card button {
-    min-height: 34px;
+    min-height: 44px;
     white-space: nowrap;
   }
 
@@ -432,10 +432,10 @@ body {
   }
 
   .thread-card button {
-    min-height: 32px;
+    min-height: 40px;
     font-size: 11px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
 
@@ -446,7 +446,7 @@ body {
   }
 
   .thread-card button {
-    min-height: 36px;
+    min-height: 40px;
   }
 }
 
@@ -460,19 +460,25 @@ body {
 @media (max-width: 640px) {
   .fixed.inset-0 .glass-card {
     max-height: 94vh !important;
-    margin: 8px;
+    margin: 4px;
     border-radius: 1rem;
   }
   .fixed.inset-0 .glass-card .flex-1.overflow-y-auto {
-    padding: 12px;
+    padding: 14px;
   }
-  /* Larger tap targets inside preview modal on phones */
+  /* Larger tap targets inside preview modal on phones - aim ~44px */
   .fixed.inset-0 .glass-card button {
-    min-height: 36px;
+    min-height: 44px;
   }
   .fixed.inset-0 .glass-card textarea {
     font-size: 15px;
     min-height: 80px;
+    padding: 12px;
+  }
+  /* Improve select for image assignment on mobile */
+  .fixed.inset-0 .glass-card select {
+    min-height: 40px;
+    font-size: 13px;
   }
 }
 

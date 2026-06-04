@@ -304,12 +304,12 @@ export default function SchedulerPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
       {/* Top nav */}
       <div className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="font-semibold tracking-tighter text-xl">ThreadForge</Link>
-            <span className="text-xs px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">PRO+</span>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/" className="font-semibold tracking-tighter text-lg sm:text-xl">ThreadForge</Link>
+            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">PRO+</span>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap justify-end">
             <Link href="/" className="text-zinc-400 hover:text-white">Generator</Link>
             <Link href="/history" className="text-zinc-400 hover:text-white">History</Link>
             <span className="text-white">Scheduler</span>
@@ -341,7 +341,7 @@ export default function SchedulerPage() {
                 <button
                   onClick={connectX}
                   disabled={isConnecting}
-                  className="px-6 py-2.5 rounded-2xl bg-white text-zinc-950 font-semibold hover:bg-zinc-100 disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-2xl bg-white text-zinc-950 font-semibold hover:bg-zinc-100 disabled:opacity-50 flex items-center gap-2 min-h-[44px]"
                 >
                   {isConnecting ? 'Connecting…' : 'Connect X Account'}
                 </button>
@@ -352,7 +352,7 @@ export default function SchedulerPage() {
                   </div>
                   <button
                     onClick={disconnectX}
-                    className="px-5 py-2.5 rounded-2xl border border-white/10 hover:bg-zinc-900 text-sm"
+                    className="px-5 py-2.5 rounded-2xl border border-white/10 hover:bg-zinc-900 text-sm min-h-[44px]"
                   >
                     Disconnect
                   </button>
@@ -376,7 +376,7 @@ export default function SchedulerPage() {
               <button
                 key={idx}
                 onClick={() => applySuggestion(sug.value)}
-                className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 hover:text-violet-200 transition active:scale-[0.985] flex items-center gap-1.5"
+                className="text-sm px-4 py-2 rounded-2xl border border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 hover:text-violet-200 transition active:scale-[0.985] flex items-center gap-1.5 min-h-[40px]"
               >
                 <span>🕒</span> {sug.label}
               </button>

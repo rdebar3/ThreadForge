@@ -121,12 +121,12 @@ export default function CommunityPage() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
       {/* Simple premium top nav - consistent with site */}
       <div className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="font-semibold tracking-tighter text-xl">ThreadForge</Link>
-            <span className="text-xs px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">Community</span>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/" className="font-semibold tracking-tighter text-lg sm:text-xl">ThreadForge</Link>
+            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20">Community</span>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm flex-wrap justify-end">
             <Link href="/" className="text-zinc-400 hover:text-white">Generator</Link>
             <Link href="/history" className="text-zinc-400 hover:text-white">History</Link>
             <Link href="/scheduler" className="text-zinc-400 hover:text-white">Scheduler</Link>
@@ -154,10 +154,10 @@ export default function CommunityPage() {
         {/* Conditional: Beautiful empty state (when no posts) OR live functional feed */}
         {sortedPosts.length === 0 && !isLoading ? (
           <div className="max-w-lg mx-auto mb-14 text-center">
-            <div className="glass-card rounded-3xl border border-white/10 p-10 relative overflow-hidden">
+            <div className="glass-card rounded-3xl border border-white/10 p-6 sm:p-8 md:p-10 relative overflow-hidden">
               {/* Subtle premium glowing thread / creators visual (kept exactly as inspiring empty) */}
               <div className="flex justify-center mb-6">
-                <div className="relative w-28 h-28">
+                <div className="relative w-20 sm:w-28 h-20 sm:h-28">
                   <div className="absolute inset-0 rounded-full bg-violet-500/10 blur-2xl" />
                   <svg 
                     width="112" 
@@ -216,7 +216,7 @@ export default function CommunityPage() {
                 <div className="text-xs uppercase tracking-[2px] text-violet-400 mb-1">EARLY CREATORS</div>
                 <h2 className="text-2xl font-semibold tracking-tight">Community Showcase</h2>
               </div>
-              <Link href="/" className="text-xs px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5 text-zinc-300">+ Submit from Generator</Link>
+              <Link href="/" className="text-xs px-3 py-2 rounded-full border border-white/10 hover:bg-white/5 text-zinc-300 min-h-[36px] inline-flex items-center">+ Submit from Generator</Link>
             </div>
             <p className="text-[11px] text-emerald-400/80 mb-3 -mt-1">Submissions from the generator appear here instantly. Your thread could be featured next.</p>
 
@@ -224,13 +224,13 @@ export default function CommunityPage() {
             <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => setSortMode('newest')}
-                className={`text-xs px-4 py-1.5 rounded-full border transition ${sortMode === 'newest' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+                className={`text-xs px-4 py-2 rounded-full border transition min-h-[40px] ${sortMode === 'newest' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
               >
                 Newest
               </button>
               <button
                 onClick={() => setSortMode('liked')}
-                className={`text-xs px-4 py-1.5 rounded-full border transition ${sortMode === 'liked' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
+                className={`text-xs px-4 py-2 rounded-full border transition min-h-[40px] ${sortMode === 'liked' ? 'bg-white text-zinc-950 border-white' : 'border-white/10 text-zinc-400 hover:text-white'}`}
               >
                 Most Liked
               </button>
@@ -245,7 +245,7 @@ export default function CommunityPage() {
                   const previewTweets = post.tweets.slice(0, 3);
                   const mainImage = post.images && post.images[0];
                   return (
-                    <div key={post.id} className="glass-card border border-white/10 rounded-3xl p-5 sm:p-6 max-w-2xl mx-auto hover:border-white/20 transition-colors">
+                    <div key={post.id} className="glass-card border border-white/10 rounded-3xl p-4 sm:p-5 md:p-6 max-w-2xl mx-auto hover:border-white/20 transition-colors">
                       {/* Header: author + date */}
                       <div className="flex items-center justify-between mb-3 text-xs">
                         <div className="text-violet-400 font-medium">{post.authorName}</div>
@@ -264,7 +264,7 @@ export default function CommunityPage() {
                       )}
 
                       {/* Title - cleaner, tighter typography */}
-                      <div className="font-semibold text-[17px] sm:text-[20px] tracking-[-0.25px] leading-tight mb-2.5 pr-1 text-white">{post.title}</div>
+                      <div className="font-semibold text-[16px] sm:text-[19px] tracking-[-0.25px] leading-tight mb-2.5 pr-1 text-white break-words">{post.title}</div>
 
                       {/* First 2-3 tweets preview - cleaner typography */}
                       <div className="space-y-1 text-[13px] sm:text-sm text-zinc-300 leading-relaxed mb-3.5">
@@ -281,7 +281,7 @@ export default function CommunityPage() {
                         <button
                           onClick={() => handleLike(post)}
                           disabled={likingId === post.id}
-                          className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full hover:bg-white/5 active:bg-white/10 transition disabled:opacity-60"
+                          className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-full hover:bg-white/5 active:bg-white/10 transition disabled:opacity-60 min-h-[44px]"
                           title={post.likedByMe ? 'Unlike' : 'Like this thread'}
                         >
                           <span className="text-base leading-none">{post.likedByMe ? '❤️' : '♡'}</span>
@@ -317,7 +317,7 @@ export default function CommunityPage() {
               { icon: "🏆", title: "Earn recognition", desc: "Founding creators will be highlighted as the community grows. Real reputation, no fakes." },
               { icon: "🔗", title: "Connect with peers", desc: "Meet other serious builders. This is not a vanity wall — it's a workshop for growth." },
             ].map((b, i) => (
-              <div key={i} className="glass-card border border-white/10 rounded-2xl p-5 text-center">
+              <div key={i} className="glass-card border border-white/10 rounded-2xl p-4 sm:p-5 text-center">
                 <div className="text-2xl mb-2.5">{b.icon}</div>
                 <div className="font-semibold text-[15px] mb-1.5 tracking-tight">{b.title}</div>
                 <p className="text-sm text-zinc-400 leading-snug">{b.desc}</p>

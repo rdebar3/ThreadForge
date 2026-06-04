@@ -235,7 +235,7 @@ export default function HistoryPage() {
           <p className="text-zinc-400 mb-6">Sign in to view your Pro generation history.</p>
           <button 
             onClick={() => openSignIn()}
-            className="px-6 py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors"
+            className="px-6 py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors min-h-[48px]"
           >
             Sign in
           </button>
@@ -254,7 +254,7 @@ export default function HistoryPage() {
           </p>
           <button
             onClick={handleUpgrade}
-            className="w-full py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors mb-3"
+            className="w-full py-3 bg-white text-zinc-950 font-semibold rounded-2xl hover:bg-zinc-200 transition-colors mb-3 min-h-[48px]"
           >
             Upgrade to Pro — $9/mo
           </button>
@@ -267,12 +267,12 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
       <nav className="border-b border-white/10 bg-zinc-950/90 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <a href="/" className="font-semibold text-2xl tracking-tighter">ThreadForge</a>
-            <span className="text-zinc-500">/ History</span>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a href="/" className="font-semibold text-xl sm:text-2xl tracking-tighter">ThreadForge</a>
+            <span className="text-zinc-500 text-sm sm:text-base">/ History</span>
           </div>
-          <a href="/" className="text-sm text-zinc-400 hover:text-white">← Back to Generator</a>
+          <a href="/" className="text-xs sm:text-sm text-zinc-400 hover:text-white">← Back to Generator</a>
         </div>
       </nav>
 
