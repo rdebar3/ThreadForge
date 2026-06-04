@@ -32,6 +32,6 @@ export async function POST(req: NextRequest) {
     if (err.message === 'CreditsDepleted') {
       return NextResponse.json({ error: 'X credits depleted' }, { status: 429 })
     }
-    return NextResponse.json({ error: 'Failed to post to X. Try again.' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to post to X' }, { status: 500 })
   }
 }
