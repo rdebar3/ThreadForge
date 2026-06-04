@@ -68,6 +68,9 @@ export default function Page() {
   const [previewTweets, setPreviewTweets] = useState<string[]>([])
   const [isPosting, setIsPosting] = useState(false)
 
+  // Post success feedback for clear next actions after reliable post
+  const [postSuccess, setPostSuccess] = useState<null | { threadId: number; postUrl: string | null; mediaAttached: boolean }>(null)
+
   // Preview-specific image generation states (to not conflict with main panel)
   const [previewImageStyle, setPreviewImageStyle] = useState<ImageStyle>('auto')
   const [previewImageCount, setPreviewImageCount] = useState(1)
@@ -317,6 +320,7 @@ export default function Page() {
       const data = await res.json()
       setThreads(data.threads || [])
       setDemoMode(!!data.demoMode)
+      setPostSuccess(null) // clear any previous post success banner on new generation
 
       // Reshuffle example topics
       setExampleTopics(getRandomExamples(5, previousExamples))
@@ -411,6 +415,7 @@ export default function Page() {
   const copyToX = (thread: Thread) => {
     const tweets = Array.isArray(thread?.tweets) ? thread.tweets : []
     if (tweets.length === 0) return
+    setPostSuccess(null) // clear previous post success when starting new post flow
     setPreviewTweets([...tweets]) // editable copy
     setPreviewTitle(thread.title || 'Thread')
     // Seed from embedded images on thread if present (so preview sees prior attachments)
@@ -473,12 +478,22 @@ export default function Page() {
 
       const firstPostId = data.postIds && data.postIds.length > 0 ? data.postIds[0] : null
       const mediaAttached = !!data.mediaAttached
-      const successMsg = mediaAttached ? 'Full thread with images posted to X!' : 'Full thread posted successfully!'
-      showToast(successMsg, 'success', firstPostId ? { label: 'View on X', href: `https://x.com/i/web/status/${firstPostId}` } : undefined)
+      const postUrl = firstPostId ? `https://x.com/i/web/status/${firstPostId}` : null
+      const successMsg = mediaAttached 
+        ? 'Full thread with images posted to X!' 
+        : 'Full thread posted successfully to X!'
 
-      // Open the first post in X for confirmation (and action link in toast)
-      if (firstPostId) {
-        window.open(`https://x.com/i/web/status/${firstPostId}`, '_blank')
+      // Improved success feedback: clear confirmation (persistent banner with next actions below + toast + auto-open link)
+      showToast(successMsg, 'success')
+
+      // Record for post-success next actions UI (clear confirmation with buttons)
+      if (showPostPreviewFor !== null) {
+        setPostSuccess({ threadId: showPostPreviewFor, postUrl, mediaAttached })
+      }
+
+      // Open the first post in X for immediate confirmation
+      if (postUrl) {
+        window.open(postUrl, '_blank')
       }
 
       // Close preview on success
@@ -540,7 +555,7 @@ export default function Page() {
         setShowProPlusTrialBanner(true)
       }
     } catch (e) {
-      showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
+      showToast('Image generation failed temporarily. Check your connection or try a shorter thread in a moment.', 'error')
     } finally {
       setIsGeneratingPreviewImages(false)
     }
@@ -814,7 +829,7 @@ export default function Page() {
         setShowProPlusTrialBanner(true)
       }
     } catch (e) {
-      showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
+      showToast('Image generation failed temporarily. Check your connection or try a shorter thread in a moment.', 'error')
     } finally {
       setIsGeneratingImages(false)
     }
@@ -1244,7 +1259,7 @@ export default function Page() {
               {isGenerating ? (
                 <>
                   <Spinner />
-                  <span>Generating...</span>
+                  <span>Generating your threads…</span>
                 </>
               ) : (
                 <>Start Generating <span className="group-hover:translate-x-1 transition text-lg">→</span></>
@@ -1412,6 +1427,7 @@ export default function Page() {
                   setShowScheduleFor(null)
                   setScheduleTime('')
                   setIsScheduling(false)
+                  setPostSuccess(null)
                   setTimeout(() => {
                     const input = document.querySelector('input[type="text"]') as HTMLInputElement
                     input?.focus()
@@ -1428,6 +1444,62 @@ export default function Page() {
               )}
             </div>
           </div>
+
+          {/* Post success banner with clear next actions for reliable flow */}
+          {postSuccess && (
+            <div className="mb-6 p-4 sm:p-5 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-emerald-300 flex items-center gap-2">✓ Thread posted successfully to X!</div>
+                  <p className="text-sm text-emerald-400/80 mt-0.5">Your thread is now live. Choose a next step below.</p>
+                </div>
+                {postSuccess.postUrl && (
+                  <a 
+                    href={postSuccess.postUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 rounded-xl transition active:scale-[0.985]"
+                    onClick={() => setPostSuccess(null)}
+                  >
+                    View on X →
+                  </a>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    setThreads([])
+                    setTopic('')
+                    setPostSuccess(null)
+                    setTimeout(() => {
+                      const input = document.querySelector('input[type="text"]') as HTMLInputElement
+                      input?.focus()
+                    }, 50)
+                  }}
+                  className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 active:bg-white/10 transition min-h-[44px]"
+                >
+                  Generate Another Thread
+                </button>
+                {hasPro && (
+                  <button
+                    onClick={() => {
+                      setShowScheduleFor(postSuccess.threadId)
+                      setPostSuccess(null)
+                    }}
+                    className="text-sm px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-violet-300 active:bg-white/10 transition min-h-[44px]"
+                  >
+                    📅 Schedule this thread
+                  </button>
+                )}
+                <button
+                  onClick={() => setPostSuccess(null)}
+                  className="text-sm px-3 py-2 rounded-xl text-zinc-400 hover:text-zinc-300 transition min-h-[40px]"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-7 md:space-y-8">
             {safeThreads.map((thread) => ( <div key={thread.id} className="bg-zinc-900/70 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 md:p-6 thread-card hover:border-white/20 hover:bg-zinc-900/90 transition-all group shadow-xl max-w-full overflow-hidden animate-[fadeInStagger_0.45s_ease-out]">
@@ -1603,9 +1675,14 @@ export default function Page() {
                       <button
                         onClick={() => handleGenerateImages(thread)}
                         disabled={isGeneratingImages}
-                        className="text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all min-h-[44px]"
+                        className="text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 bg-violet-500 hover:bg-violet-600 rounded-2xl text-white disabled:opacity-50 transition-all min-h-[44px] flex items-center gap-1.5"
                       >
-                        {isGeneratingImages ? 'Generating...' : 'Generate Images'}
+                        {isGeneratingImages ? (
+                          <>
+                            <Spinner />
+                            Generating…
+                          </>
+                        ) : 'Generate Images'}
                       </button>
                       <button
                         onClick={() => setShowImageModalFor(null)}
@@ -2284,9 +2361,14 @@ export default function Page() {
                 <button
                   onClick={confirmPostFromPreview}
                   disabled={isPosting || previewTweets.filter(t => t.trim().length > 0).length === 0}
-                  className="flex-1 py-5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-500 text-white font-semibold rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:via-violet-700 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_8px_25px_-2px_rgba(124,58,237,0.55)] ring-2 ring-violet-400/60 min-h-[60px]"
+                  className="flex-1 py-5 bg-gradient-to-r from-violet-500 via-violet-600 to-indigo-500 text-white font-semibold rounded-2xl text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-600 hover:via-violet-700 hover:to-indigo-600 active:scale-[0.985] transition-all shadow-[0_8px_25px_-2px_rgba(124,58,237,0.55)] ring-2 ring-violet-400/60 min-h-[60px] flex items-center justify-center gap-2"
                 >
-                  {isPosting ? 'Posting to X…' : 'Confirm & Post to X'}
+                  {isPosting ? (
+                    <>
+                      <Spinner />
+                      Posting to X…
+                    </>
+                  ) : 'Confirm & Post to X'}
                 </button>
                 <button
                   onClick={cancelPostPreview}
