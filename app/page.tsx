@@ -1433,7 +1433,7 @@ export default function Page() {
                     <div className="thread-title font-semibold text-[17px] sm:text-[21px] leading-tight pr-2 sm:pr-4">{thread.title}</div>
                   </div>
                   <div className="relative">
-                    <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 md:gap-2.5">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 md:gap-3 items-center">
                       <button
                         onClick={() => copyThread(thread)}
                         title="Copy the entire thread (all tweets) to your clipboard"
@@ -1456,7 +1456,7 @@ export default function Page() {
                         <button
                           onClick={() => copyToX(thread)}
                           title="Post full thread to X as reply chain (Pro)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 rounded-2xl transition-all active:scale-[0.985] shadow ring-1 ring-violet-400/50"
                         >
                           <XIcon />
                           Post to X
@@ -1471,7 +1471,7 @@ export default function Page() {
                             setSelectedImageCount(1)
                           }}
                           title="Generate 1-4 relevant AI images for this thread (Pro+)"
-                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white rounded-2xl transition-all active:scale-[0.985]"
+                          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-violet-500 hover:text-white border border-violet-500/30 rounded-2xl transition-all active:scale-[0.985]"
                         >
                           ✨ Generate Images
                         </button>
