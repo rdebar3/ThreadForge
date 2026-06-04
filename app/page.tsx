@@ -1234,7 +1234,7 @@ export default function Page() {
           <div className={`glass-card bg-zinc-900/55 backdrop-blur-[32px] border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_28px_40px_-12px_rgb(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.1),0_0_35px_rgba(124,58,237,0.15),inset_0_2px_3px_rgba(255,255,255,0.06),inset_0_-1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_40px_55px_-15px_rgb(0,0,0,0.55),0_0_0_1px_rgba(167,139,250,0.3),0_0_50px_rgba(124,58,237,0.22),inset_0_2px_3px_rgba(255,255,255,0.08)] hover:border-violet-400/40 transition-all ${isGenerating ? 'opacity-70 pointer-events-none' : ''}`}>
           {/* Subtle 1-2 line onboarding guidance for first-time users (generator area) */}
           <div className="text-center mb-3">
-            <p className="text-[11px] text-zinc-400">Start by typing any idea above. You get 3 free generations per day — upgrade anytime for unlimited.</p>
+            <p className="text-[11px] text-zinc-400">You get 3 free generations per day — upgrade anytime for unlimited.</p>
             <p className="text-[10px] text-zinc-500 mt-1">Example: “How I went from 0 to 10k followers in 6 months” — one sentence is enough.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -1295,7 +1295,7 @@ export default function Page() {
 
           {/* One-time Pro+ Trial banner for non-Pro+ users */}
           {!isProPlus && !hasUsedProPlusTrial && (
-            <div className="mt-4 text-center">
+            <div className="mt-5 text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/40 px-4 py-1.5 text-xs font-medium text-amber-300">
                 ✨ Pro+ Trial Available — Use AI Images or Scheduler once for free (one-time only)
               </div>
@@ -1304,7 +1304,7 @@ export default function Page() {
 
           {/* Pro+ Trial Activated banner (shown after using in this session) */}
           {showProPlusTrialBanner && (
-            <div className="mt-4 text-center">
+            <div className="mt-5 text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/40 px-4 py-1.5 text-xs font-medium text-emerald-300">
                 ✓ Pro+ Trial Activated — This was your one free use. Upgrade for unlimited.
               </div>
@@ -1313,9 +1313,9 @@ export default function Page() {
 
           {/* Example topic chips - More fun & prominent */}
           {!threads.length && (
-            <div className="mt-5">
+            <div className="mt-6">
               <div className="text-center mb-3">
-                <p className="text-sm text-zinc-300">Type any idea above (one sentence is enough) → Get a full thread + images in seconds</p>
+                <p className="text-sm text-zinc-300">One sentence is enough → Get a full thread + images in seconds</p>
               </div>
               <div className="text-[10px] text-zinc-400 mb-1.5">Start by typing any idea above • Free: 3 generations/day (resets daily)</div>
               <div className="text-[11px] text-zinc-500 mb-3 tracking-wider">TRY AN EXAMPLE</div>
@@ -1894,8 +1894,8 @@ export default function Page() {
             },
             { 
               num: "02",
-              title: "Generate 4 high-quality threads", 
-              desc: "Grok 4.3 creates four distinct threads with strong hooks and closers.",
+              title: "Generate 5 high-quality threads", 
+              desc: "Grok 4.3 creates five distinct threads with strong hooks and closers.",
               pro: false
             },
             { 
