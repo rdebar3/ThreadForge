@@ -1218,11 +1218,11 @@ export default function Page() {
         </div>
 
         <h1 className="text-6xl md:text-7xl lg:text-[78px] font-semibold tracking-[-4.8px] mb-6 leading-[0.9] animate-[fadeInUp_0.6s_ease-out_0.1s_both] [text-shadow:0_2px_12px_rgba(0,0,0,0.5),0_0_25px_rgba(124,58,237,0.2),0_0_40px_rgba(124,58,237,0.1)]">
-          Turn any idea into ready-to-post X threads + AI images — in seconds.
+          Turn any idea into ready-to-post X threads + images in seconds.
         </h1>
         
         <p className="text-xl md:text-[21px] text-zinc-400 max-w-[620px] mx-auto mb-4 leading-tight animate-[fadeInUp_0.6s_ease-out_0.25s_both]">
-          From any idea to 4 polished threads with matching images — ready to post in seconds. No fluff. Just results.
+          Type any idea. Get 5 ready-to-post threads with matching AI images in seconds. No fluff. Just results.
         </p>
 
         <p className="text-sm text-zinc-500 mb-6 max-w-[520px] mx-auto">
@@ -1254,7 +1254,7 @@ export default function Page() {
             <button
               onClick={handleGenerate}
               disabled={!topic.trim() || isGenerating}
-              className="group w-full sm:w-auto px-8 sm:px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 sm:min-w-[200px] text-[15px] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30 min-h-[52px]"
+              className="group w-full sm:w-auto px-8 sm:px-10 py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 active:from-violet-700 active:to-indigo-700 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap flex items-center justify-center gap-3 sm:min-w-[220px] text-base shadow-[0_4px_20px_-2px_rgba(0,0,0,0.35)] hover:shadow-[0_0_60px_rgba(167,139,250,0.8),0_15px_35px_-4px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-[0.985] ring-1 ring-violet-400/30 min-h-[52px]"
             >
               {isGenerating ? (
                 <>
@@ -1262,7 +1262,7 @@ export default function Page() {
                   <span>Generating your threads…</span>
                 </>
               ) : (
-                <>Start Generating <span className="group-hover:translate-x-1 transition text-lg">→</span></>
+                <>Start Generating Threads <span className="group-hover:translate-x-1 transition text-lg">→</span></>
               )}
             </button>
           </div>
@@ -1351,7 +1351,7 @@ export default function Page() {
 
         {/* Trust line below the generator */}
         <p className="text-sm text-zinc-500 mt-6 mb-4 animate-[fadeInUp_0.6s_ease-out_0.35s_both]">
-          Used daily by indie hackers, SaaS founders, and creators growing on X.
+          No hype. Just real threads from creators who post consistently on X every day.
         </p>
       </div>
 
