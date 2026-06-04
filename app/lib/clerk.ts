@@ -378,9 +378,8 @@ export async function uploadMediaToX(accessToken: string, imageUrl: string): Pro
 }
 
 /**
- * Posts a full thread as a connected reply chain on X using the user's access token.
- * Sets reply_settings: 'everyone' on the root tweet so anyone can reply.
- * Supports media per tweet.
+ * Posts a full thread as a connected reply chain on X.
+ * Allows anyone to reply. Supports media.
  */
 export async function postThreadToX(
   accessToken: string,
@@ -390,7 +389,7 @@ export async function postThreadToX(
   let inReplyTo: string | null = null
 
   const items: Array<{ text: string; mediaIds?: string[] }> = Array.isArray(tweetsOrItems) && typeof tweetsOrItems[0] === 'string'
-    ? (tweetsOrItems as string[]).map(t => ({ text: t }))
+    ? (tweetsOrItems as string[]).map(text => ({ text }))
     : (tweetsOrItems as Array<{ text: string; mediaIds?: string[] }>)
 
   for (const item of items) {
@@ -399,17 +398,17 @@ export async function postThreadToX(
 
     const payload: any = { text }
 
-    if (item.mediaIds && item.mediaIds.length > 0) {
+    if (item.mediaIds?.length) {
       payload.media = { media_ids: item.mediaIds }
     }
 
     if (!inReplyTo) {
-      payload.reply_settings = 'everyone'  // Anyone can reply
+      payload.reply_settings = 'everyone'   // Anyone can reply
     } else {
       payload.reply = { in_reply_to_tweet_id: inReplyTo }
     }
 
-    const res = await fetch(X_TWEETS_URL, {
+    const res = await fetch('https://api.x.com/2/tweets', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -423,21 +422,18 @@ export async function postThreadToX(
       if (errText.includes('CreditsDepleted') || /credit/i.test(errText)) {
         throw new Error('CreditsDepleted')
       }
-      throw new Error(`X API error ${res.status}: ${errText.substring(0, 150)}`)
+      throw new Error(`X API error: ${res.status} - ${errText.substring(0, 120)}`)
     }
 
     const json = await res.json()
     const id = json?.data?.id
-    if (!id) throw new Error('X returned no tweet id')
+    if (!id) throw new Error('No tweet ID returned from X')
 
     postedIds.push(id)
     inReplyTo = id
   }
 
-  if (postedIds.length === 0) {
-    throw new Error('No tweets were posted')
-  }
-
+  if (postedIds.length === 0) throw new Error('No tweets posted')
   return postedIds
 }
 
