@@ -169,7 +169,7 @@ Chosen angles for the four threads (use each once, make them feel like they come
 
 Write exactly 4 high-quality, distinct X threads on this topic at the same quality level as the reference examples above.
 
-Each thread must feel developed and substantial (generally 6–9 tweets), not thin or underdeveloped. Strong hooks, real escalation, and genuinely strong closers are required.
+Each thread must be exactly 5 tweets (use natural 1/, 2/, 3/, 4/, 5/ numbering). Make them strongly story-driven with a clear personal narrative arc (setup → tension → insight → resolution). Use a natural, conversational, raw voice like a real person telling a story — not marketing copy. Shorter, punchier lines (most tweets under 200 characters). Strong opening hook. Authentic tone with slight edge, honesty, vulnerability where it fits.
 
 Make the four threads feel like they were written by four different humans with different relationships to the topic. Different voices, different heat levels, different rhythms. Force real differentiation.
 
@@ -366,8 +366,7 @@ function generateMockThreads(topic: string): Thread[] {
         `2/ The "beginner friendly" advice is actually keeping most people stuck.`,
         `3/ Real progress requires doing the hard, uncomfortable version early.`,
         `4/ Comfort is the enemy of growth in this game.`,
-        `5/ If it feels easy, you're probably not doing it right yet.`,
-        `6/ The people who win embrace the discomfort early.`
+        `5/ If it feels easy, you're probably not doing it right yet.`
       ]
     }
   ]
@@ -401,7 +400,7 @@ For EACH thread independently, apply these strict rules:
 - Keep the core angle and intended voice exactly as-is, but make the execution dramatically better.
 - Sharpen the hook until it has real stopping power.
 - Improve rhythm and flow. Remove any stiff, safe, generic, or AI-sounding lines.
-- If the thread feels short or underdeveloped, expand it with more specific texture.
+- Ensure the thread is exactly 5 tweets. If short, expand it with more specific texture, story details, or escalation to reach exactly 5 (no padding).
 - The closer is the most important part — make it significantly stronger and more memorable.
 - Rewrite weak or generic titles.
 - Kill any remaining generic language or content-writer phrasing.
