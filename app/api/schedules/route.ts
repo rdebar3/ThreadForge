@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!created) {
-      return NextResponse.json({ error: 'Failed to save schedule' }, { status: 500 })
+      return NextResponse.json({ error: 'We couldn’t complete that action right now. Your work is safe in History.' }, { status: 500 })
     }
 
     // Mark trial consumed on successful schedule
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, scheduledPost: created, wasTrial: isTrialUse })
   } catch (e: any) {
     console.error('Schedule POST error:', e)
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    return NextResponse.json({ error: 'We couldn’t complete that action right now. Your work is safe in History.' }, { status: 400 })
   }
 }
 
@@ -106,7 +106,7 @@ export async function DELETE(req: NextRequest) {
 
   const ok = await removeScheduledPost(userId, id)
   if (!ok) {
-    return NextResponse.json({ error: 'Failed to cancel' }, { status: 500 })
+    return NextResponse.json({ error: 'We couldn’t complete that action right now. Your work is safe in History.' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

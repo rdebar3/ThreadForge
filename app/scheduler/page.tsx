@@ -69,7 +69,7 @@ export default function SchedulerPage() {
         if (res.status === 402 || res.status === 403) {
           setError('Pro+ subscription required for Thread Scheduler.')
         } else {
-          setError(data.error || 'Failed to load schedules')
+          setError(data.error || 'We couldn’t complete that action right now. Your work is safe in History.')
         }
         return
       }
@@ -77,7 +77,7 @@ export default function SchedulerPage() {
       // X account status is not returned by schedules; we can infer from any posted or keep separate.
       // For simplicity we optimistically clear on disconnect and set after connect via query.
     } catch (e) {
-      setError('Failed to load your schedule queue.')
+      setError('We couldn’t complete that action right now. Your work is safe in History.')
     } finally {
       setLoading(false)
     }
@@ -115,10 +115,10 @@ export default function SchedulerPage() {
     const err = params.get('error')
     if (err) {
       const friendly = err === 'config'
-        ? 'X OAuth is not configured (missing X_API_KEY / X_API_SECRET env vars). Ensure X app Callback URL is https://threadforge.space/api/auth/callback/x and envs set in Vercel/.env.local. See .env.example.'
+        ? 'X connection issue. Reconnect your account from Scheduler.'
         : err === 'invalid_state'
-        ? 'Security check failed. Please try connecting again.'
-        : 'Failed to connect X account. ' + err
+        ? 'Something went wrong. Please try again in a moment.'
+        : 'We couldn’t complete that action right now. Your work is safe in History.'
       showToast(friendly, 'error')
       window.history.replaceState({}, '', '/scheduler')
     }
@@ -142,10 +142,10 @@ export default function SchedulerPage() {
         setXAccount(null)
         showToast('X account disconnected.', 'info')
       } else {
-        showToast('Failed to disconnect.', 'error')
+        showToast('We couldn’t complete that action right now. Your work is safe in History.', 'error')
       }
     } catch {
-      showToast('Disconnect failed.', 'error')
+      showToast('We couldn’t complete that action right now. Your work is safe in History.', 'error')
     }
   }
 
@@ -218,7 +218,7 @@ export default function SchedulerPage() {
         if (data.requireUpgrade) {
           showToast('Subscribe to Pro+ on the homepage to use the scheduler.', 'info')
         } else {
-          showToast(data.error || 'Failed to schedule', 'error')
+          showToast(data.error || 'We couldn’t complete that action right now. Your work is safe in History.', 'error')
         }
         return
       }
@@ -231,7 +231,7 @@ export default function SchedulerPage() {
       // keep the time or clear
       await fetchSchedules()
     } catch (e) {
-      showToast('Network error while scheduling.', 'error')
+      showToast('We couldn’t complete that action right now. Your work is safe in History.', 'error')
     } finally {
       setIsScheduling(false)
     }
@@ -245,7 +245,7 @@ export default function SchedulerPage() {
         showToast('Schedule canceled.', 'info')
         await fetchSchedules()
       } else {
-        showToast('Failed to cancel schedule.', 'error')
+        showToast('We couldn’t complete that action right now. Your work is safe in History.', 'error')
       }
     } catch {
       showToast('Cancel request failed.', 'error')
@@ -543,14 +543,18 @@ export default function SchedulerPage() {
         </div>
       </div>
 
-      {/* Toast */}
+      {/* Toast - consistent reusable error/success display */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] px-5 py-3 rounded-2xl text-sm shadow-xl border flex items-center gap-2 ${
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] px-5 py-3 rounded-2xl text-sm shadow-xl border flex items-center gap-2 max-w-[90vw] ${
           toast.type === 'error' ? 'bg-red-500/10 border-red-500/40 text-red-300' :
           toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300' :
           'bg-zinc-900 border-zinc-700 text-zinc-200'
         }`}>
-          {toast.message}
+          <span>
+            {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✓' : 'ℹ️'}
+          </span>
+          <span className="flex-1">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-1 text-xs opacity-70 hover:opacity-100">×</button>
         </div>
       )}
     </div>

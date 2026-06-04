@@ -288,7 +288,7 @@ export default function Page() {
       if (res.status === 401) {
         const data = await res.json().catch(() => ({}))
         if (data.requireAuth) {
-          setShowAuthPrompt(true)
+          showToast('Please sign in to continue generating threads.', 'info')
           setIsGenerating(false)
           return
         }
@@ -374,11 +374,11 @@ export default function Page() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        showToast(data.error || 'Unable to start checkout. Please try again.', 'error')
+        showToast(data.error || 'We couldn’t complete that action right now. Your work is safe in History.', 'error')
       }
     } catch (err) {
       console.error('Checkout error', err)
-      showToast('Failed to connect to payment system. Please try again in a moment.', 'error')
+      showToast('We couldn’t complete that action right now. Your work is safe in History.', 'error')
     }
   }
 
@@ -465,15 +465,7 @@ export default function Page() {
             { label: 'Add X Credits', href: 'https://developer.x.com/en/portal/dashboard' }
           )
         } else {
-          // User-friendly error: strip raw "X API error N: " prefix and show clean message
-          let msg = data.error || 'Could not post to X right now. Please try again in a moment.'
-          if (typeof msg === 'string') {
-            msg = msg.replace(/^X API error \d+:\s*/i, '').replace(/\(code: \d+\)/i, '').trim()
-            if (msg.length > 160) msg = msg.slice(0, 157) + '…'
-            if (/rate|too many|limit/i.test(msg)) msg = 'X rate limit reached. Wait a minute and try again.'
-            else if (/auth|unauthorized|token|connect/i.test(msg)) msg = 'X connection issue. Reconnect your account from Scheduler.'
-            else if (/duplicate|already|posted/i.test(msg)) msg = 'Looks like this was already posted recently. Edit and try again.'
-          }
+          const msg = data.error || 'Something went wrong while posting to X. Please try again in a moment.'
           showToast(msg, 'error')
         }
         return
@@ -498,7 +490,7 @@ export default function Page() {
       setPreviewImageCount(1)
     } catch (err) {
       console.error('Post to X error:', err)
-      showToast('Something went wrong connecting to X. Check your connection or try again in a moment.', 'error')
+      showToast('Something went wrong while posting to X. Please try again in a moment. Your work is safe in History.', 'error')
     } finally {
       setIsPosting(false)
     }
@@ -532,9 +524,9 @@ export default function Page() {
         if (data.requireUpgrade) {
           showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
-          showToast(data.error || 'Please wait before generating more images.', 'info')
+          showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'info')
         } else {
-          showToast(data.error || 'Failed to generate images', 'error')
+          showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
         }
         return
       }
@@ -548,7 +540,7 @@ export default function Page() {
         setShowProPlusTrialBanner(true)
       }
     } catch (e) {
-      showToast('Error generating images for preview. Please try again.', 'error')
+      showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
     } finally {
       setIsGeneratingPreviewImages(false)
     }
@@ -805,9 +797,9 @@ export default function Page() {
         if (data.requireUpgrade) {
           showToast('You have used your one-time Pro+ trial. Subscribe to Pro+ to unlock AI images.', 'info')
         } else if (data.rateLimited) {
-          showToast(data.error || 'Please wait before generating more images.', 'info')
+          showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'info')
         } else {
-          showToast(data.error || 'Failed to generate images', 'error')
+          showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
         }
         return
       }
@@ -822,7 +814,7 @@ export default function Page() {
         setShowProPlusTrialBanner(true)
       }
     } catch (e) {
-      showToast('Error generating images. Please try again.', 'error')
+      showToast('Image generation hit a temporary limit. Try again in 30 seconds or shorten your thread.', 'error')
     } finally {
       setIsGeneratingImages(false)
     }
@@ -2032,9 +2024,9 @@ export default function Page() {
         </div>
       </footer>
 
-      {/* Toast notification - improved */}
+      {/* Toast notification - improved reusable error/success display */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-2xl text-sm shadow-xl flex items-center gap-2 border ${
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-2xl text-sm shadow-xl flex items-center gap-2 border max-w-[90vw] ${
           toast.type === 'error' 
             ? 'bg-red-500/10 border-red-500/40 text-red-300' 
             : toast.type === 'success'
@@ -2044,7 +2036,7 @@ export default function Page() {
           <span>
             {toast.type === 'error' ? '⚠️' : toast.type === 'success' ? '✓' : 'ℹ️'}
           </span>
-          <span>{toast.message}</span>
+          <span className="flex-1">{toast.message}</span>
           {toast.action && (
             toast.action.href ? (
               <a
@@ -2068,6 +2060,7 @@ export default function Page() {
               </button>
             )
           )}
+          <button onClick={() => setToast(null)} className="ml-1 text-xs opacity-70 hover:opacity-100">×</button>
         </div>
       )}
 

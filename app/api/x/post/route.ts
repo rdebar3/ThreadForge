@@ -124,7 +124,8 @@ export async function POST(req: NextRequest) {
         creditsDepleted: true 
       }, { status: 429 })
     }
-    // Pass through improved X API error messages (including reply_settings validation etc.)
-    return NextResponse.json({ error: errMsg }, { status: 500 })
+    // Always return friendly error, never raw API
+    const friendly = 'Something went wrong while posting to X. Please try again in a moment. Your work is safe in History.'
+    return NextResponse.json({ error: friendly }, { status: 500 })
   }
 }

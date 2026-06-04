@@ -23,16 +23,15 @@ export async function POST(req: NextRequest) {
     if (!secretKey) {
       console.error('STRIPE_SECRET_KEY is missing in environment variables')
       return NextResponse.json(
-        { error: 'Payment system not configured. Missing STRIPE_SECRET_KEY.' },
+        { error: 'We couldn’t complete that action right now. Your work is safe in History.' },
         { status: 500 }
       )
     }
 
     if (!priceId) {
-      const missing = plan === 'pro-plus' ? 'STRIPE_PRICE_ID_PRO_PLUS' : 'STRIPE_PRICE_ID'
-      console.error(`${missing} is missing in environment variables`)
+      console.error('Stripe price ID missing')
       return NextResponse.json(
-        { error: `Payment system not configured. Missing ${missing} (must be a recurring price ID from Stripe).` },
+        { error: 'We couldn’t complete that action right now. Your work is safe in History.' },
         { status: 500 }
       )
     }
@@ -89,7 +88,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Stripe checkout error:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create checkout session' },
+      { error: 'We couldn’t complete that action right now. Your work is safe in History.' },
       { status: 500 }
     )
   }
