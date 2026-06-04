@@ -1160,7 +1160,7 @@ export default function Page() {
             {isSignedIn && !hasPro ? (
               <>Free: <span className={`font-semibold ${Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed) === 0 ? 'text-red-400' : 'text-white'}`}>{Math.max(0, MAX_FREE_GENERATIONS - freeGenerationsUsed)}/{MAX_FREE_GENERATIONS}</span> generations left today • Upgrade for unlimited</>
             ) : (
-              <>Free: 3/day • Pro ($9): unlimited + tools • Pro+ ($15 best value): + images + scheduler + analytics. Cancel anytime.</>
+              <>Free: 3/day (full generator) • Pro ($9): unlimited + Post • Pro+ ($15 best value): + images + scheduler + analytics. Cancel anytime.</>
             )}
             {!isSignedIn && <button onClick={() => openSignIn()} className="ml-2 underline text-violet-400 hover:text-violet-300">Sign in</button>}
           </div>
@@ -1371,30 +1371,30 @@ export default function Page() {
               <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-semibold mb-2">PRO — $9/mo</div>
               <div className="premium-tier-title text-2xl font-semibold tracking-tight mb-4">Everything for power users</div>
               <ul className="space-y-3 text-[14px] text-zinc-200 mb-auto">
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Unlimited generations</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Post to X</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> History</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Smart Suggestions</li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> Priority access</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Unlimited generations</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Post to X</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> History</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Smart Suggestions</li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Priority access</li>
               </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features • No AI images or Scheduler</div>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Core Pro features for daily posting. No AI images or Scheduler</div>
             </div>
 
             {/* Pro+ Card - high-impact AI premium pop */}
             <div className="premium-pricing-card premium-pro-plus-card glass-card bg-zinc-900/70 border-2 border-violet-500/60 rounded-3xl p-8 flex flex-col relative">
-              <div className="premium-badge absolute -top-3 right-6 px-4 py-px text-[10px] font-mono tracking-[1.5px] rounded-full shadow-[0_0_16px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
+              <div className="premium-badge absolute -top-3 right-6 px-4 py-1 text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full shadow-[0_0_18px_rgba(167,139,250,0.65)] ring-1 ring-violet-400/40">★ MOST POPULAR</div>
               
               <div className="uppercase text-cyan-400 text-xs tracking-[1.5px] font-semibold mb-2 flex items-center gap-2">PRO+ — $15/mo <span className="text-[9px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">IMAGES + SCHEDULER + ANALYTICS</span></div>
               
               <div className="premium-tier-title text-2xl font-semibold tracking-[-0.5px] mb-4 text-white">Pro + AI Images + Scheduler + Analytics (Pro+ only)</div>
               
               <ul className="space-y-3.5 text-[14px] text-zinc-200 mb-auto">
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><span className="scheduler-modern"><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
-                <li className="premium-feature flex items-start gap-3"><span className="mt-1 text-cyan-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> <strong>Everything in Pro</strong></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><span className="scheduler-modern"><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</span></strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
+                <li className="premium-feature flex items-start gap-3"><span className="mt-0.5 text-cyan-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-cyan-500/10 text-cyan-400 rounded border border-cyan-500/20">Pro+</span></li>
               </ul>
-              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting</div>
+              <div className="mt-6 pt-4 border-t border-white/10 text-xs text-zinc-500">Best for creators who want visuals + auto-posting + insights</div>
             </div>
           </div>
 
@@ -1986,7 +1986,7 @@ export default function Page() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs tracking-[2px] text-zinc-400 mb-3">PRICING</div>
           <h2 className="text-4xl font-semibold tracking-tighter mb-2">Free to start. Pro for power. Pro+ for everything.</h2>
-          <p className="text-zinc-400 max-w-md mx-auto">3 generations free every day. Pro ($9) unlocks unlimited + Post to X, History, suggestions &amp; priority. Pro+ ($15) is the clear best value with AI images, scheduler &amp; analytics included. No long contracts. Cancel anytime.</p>
+          <p className="text-zinc-400 max-w-md mx-auto">Free: full generator with 3/day. Pro ($9): unlimited generations + Post to X + priority. Pro+ ($15 best value): + AI images, scheduler &amp; analytics. No long contracts. Cancel anytime.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
@@ -1997,18 +1997,20 @@ export default function Page() {
               <div className="flex items-end gap-1">
                 <span className="text-[52px] leading-none font-semibold tracking-[-2px]">$0</span>
               </div>
-              <div className="text-sm text-zinc-500 mt-1">No credit card required • Best for testing &amp; casual use</div>
+              <div className="text-sm text-zinc-500 mt-1">No credit card required</div>
             </div>
 
+            <div className="text-emerald-400 text-sm font-medium mb-3">Full generator access. Create, preview &amp; copy unlimited-quality threads – just 3 per day to start.</div>
+
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 5 high-quality thread variants</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> 3 generations per day (resets daily)</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Copy tweets or full thread</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-emerald-400">•</span> Core generator tools</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-emerald-400">✓</span> 5 high-quality thread variants</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-emerald-400">✓</span> 3 generations per day (resets daily)</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-emerald-400">✓</span> Copy tweets or full thread</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-emerald-400">✓</span> Core generator tools</li>
             </ul>
 
             <div className="mt-8 pt-6 border-t border-white/10 text-xs text-zinc-500 leading-snug">
-              Perfect for testing the waters. Upgrade to Pro or Pro+ anytime.
+              Full power of the generator included. Upgrade anytime for unlimited + premium tools.
             </div>
           </div>
 
@@ -2026,12 +2028,14 @@ export default function Page() {
               <div className="text-emerald-400 text-sm mt-0.5 font-medium">Best for serious posters • Cancel anytime • No long-term contract</div>
             </div>
 
+            <div className="text-violet-400 text-sm font-medium mb-3">Unlimited generations + direct posting, history, and priority support for consistent creators.</div>
+
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Everything in Free, plus:</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Unlimited generations</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Post to X</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> History &amp; templates</li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> Smart suggestions + priority</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Everything in Free, plus:</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Unlimited generations</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Post to X</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> History &amp; templates</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> Smart suggestions + priority</li>
             </ul>
 
             {hasPro && !isProPlus ? (
@@ -2039,7 +2043,7 @@ export default function Page() {
                 <div className="w-full py-4 bg-emerald-500/10 text-emerald-400 font-semibold rounded-2xl text-center text-lg border border-emerald-500/30">
                   ✓ You have Pro
                 </div>
-                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage via Stripe • Upgrade to Pro+ anytime</p>
+                <p className="text-center text-[11px] text-zinc-500 mt-3">Manage via Stripe • Upgrade to Pro+ for AI images &amp; more</p>
               </div>
             ) : (
               <>
@@ -2047,7 +2051,7 @@ export default function Page() {
                   onClick={() => handleUpgrade('pro')}
                   className="mt-8 w-full py-4 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-all text-zinc-950 font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] min-h-[52px]"
                 >
-                  Get Pro — $9/mo (Unlimited + Post to X + History)
+                  Upgrade to Pro – $9/mo (Unlimited + Post to X)
                 </button>
                 <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. No long contracts.</p>
               </>
@@ -2056,7 +2060,7 @@ export default function Page() {
 
           {/* Pro+ Tier Card - highlighted as Most Popular */}
           <div className="glass-card rounded-3xl border-2 border-violet-500/70 bg-zinc-900 p-8 flex flex-col relative shadow-xl">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-px text-[10px] font-semibold tracking-[1px] bg-violet-500 text-white rounded-full pro-sparkle shadow-[0_0_12px_rgba(167,139,250,0.6)]">MOST POPULAR</div>
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-5 py-1 text-xs font-semibold tracking-[1.5px] bg-violet-500 text-white rounded-full pro-sparkle shadow-[0_0_20px_rgba(167,139,250,0.7)] ring-1 ring-violet-400/50">★ MOST POPULAR</div>
 
             <div className="mb-6">
               <div className="uppercase text-violet-400 text-xs tracking-[1.5px] font-medium mb-1 flex items-center gap-2 pro-sparkle">
@@ -2070,11 +2074,13 @@ export default function Page() {
               <div className="text-emerald-400 text-sm mt-0.5 font-medium">Best value • Everything in Pro + AI Images + Scheduler + Analytics (Pro+ only) • Cancel anytime</div>
             </div>
 
+            <div className="text-amber-400 text-sm font-medium mb-3">The complete package: visuals, auto-scheduling, and analytics to create &amp; grow faster on X.</div>
+
             <ul className="space-y-[13px] text-[15px] mb-auto text-zinc-200">
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-violet-400">•</span> <strong>Everything in Pro</strong></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> (auto-post at best times) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
-              <li className="flex items-start gap-3"><span className="mt-1.5 text-amber-400">•</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-violet-400">✓</span> <strong>Everything in Pro</strong></li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-amber-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/><line x1="19" y1="3" x2="19" y2="7"/><line x1="17" y1="5" x2="21" y2="5"/></svg> AI Image Generation</strong> (1-4 per thread) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-amber-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="17" cy="16" r="3"/><path d="M17 13v3h2"/></svg> Thread Scheduler</strong> (auto-post at best times) <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 text-amber-400">✓</span> <strong><svg xmlns="http://www.w3.org/2000/svg" className="pro-plus-icon text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/><circle cx="6" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="18" cy="2" r="1" fill="currentColor"/></svg> Analytics &amp; Insights</strong> <span className="text-[9px] font-mono tracking-[1.5px] px-1.5 py-px bg-amber-500/10 text-amber-400 rounded">Pro+</span></li>
             </ul>
 
             {isProPlus ? (
@@ -2090,7 +2096,7 @@ export default function Page() {
                   onClick={() => handleUpgrade('pro-plus')}
                   className="mt-8 w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-semibold rounded-2xl text-lg shadow-sm hover:shadow-[0_0_25px_rgba(167,139,250,0.5)] transition-all min-h-[52px]"
                 >
-                  Get Pro+ — $15/mo (Most Popular • Best Value)
+                  Get Pro+ Now – $15/mo (Most Popular • Best Value)
                 </button>
                 <p className="text-center text-[11px] text-zinc-500 mt-3">Billed monthly. Cancel in seconds. Includes AI Images + Scheduler + Analytics (Pro+ only).</p>
               </>
@@ -2098,7 +2104,7 @@ export default function Page() {
           </div>
         </div>
 
-        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ = everything in Pro + AI images + scheduler + analytics. Best value. Existing Pro users grandfathered in. Cancel anytime.</p>
+        <p className="text-center mt-8 text-xs text-zinc-500">Pro+ includes everything in Pro + AI images + scheduler + analytics. Best value for most creators. Existing Pro users are grandfathered. Cancel anytime.</p>
 
         <div className="text-center mt-6 space-y-1">
           <p className="text-[11px] text-zinc-400">Early access – we’re building in public.</p>
@@ -2170,7 +2176,7 @@ export default function Page() {
           >
             <h3 className="text-2xl font-semibold mb-2 text-emerald-300">You've reached your free limit</h3>
             <p className="text-zinc-400 mb-6">
-              Free: exactly 3 generations per day (resets daily). Sign in for your count, or upgrade to Pro ($9) for unlimited + Post to X, History &amp; priority, or Pro+ ($15) best value with AI images, scheduler + analytics. No long contracts. Cancel anytime.
+              Free: exactly 3 generations per day (resets daily, full generator). Sign in or upgrade to Pro ($9) for unlimited + Post to X + priority, or Pro+ ($15 best value) with AI images + scheduler + analytics. No long contracts. Cancel anytime.
             </p>
 
             <button 
