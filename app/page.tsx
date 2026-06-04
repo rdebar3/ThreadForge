@@ -435,6 +435,7 @@ export default function Page() {
     mediaAssignments: Record<number, number[]> = {},
     titleForHistory?: string
   ) => {
+    console.log("performPostToX started");
     console.log("Post to X performPostToX called for tweets:", tweetsToPost.length);
     if (tweetsToPost.length === 0) return
 
@@ -1512,6 +1513,7 @@ export default function Page() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            console.log("Post button clicked");
                             console.log(" Post to X clicked for thread:", thread.id);
                             copyToX(thread);   // This should open the preview modal
                           }}
@@ -2368,6 +2370,7 @@ export default function Page() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
+                    console.log("Preview modal confirm clicked");
                     console.log("Confirm & Post clicked - calling performPostToX");
                     confirmPostFromPreview();
                   }}

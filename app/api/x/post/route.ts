@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const tweets = Array.isArray(body?.tweets) ? body.tweets : []
+  console.log("[API] /api/x/post called with", tweets.length, "tweets")
   if (tweets.length === 0) return NextResponse.json({ error: 'No tweets' }, { status: 400 })
 
   const accessToken = await getValidXAccessToken(userId)
