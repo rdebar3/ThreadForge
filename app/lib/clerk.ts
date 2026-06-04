@@ -258,9 +258,11 @@ export async function getXAccount(userId: string): Promise<XAccount | null> {
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
     const acct = (user.privateMetadata?.xAccount as XAccount | undefined) || null
+    console.log('[X Account] Found for user', userId, ':', acct ? 'YES' : 'NO')
+    if (acct) console.log('[X Account] Expires at:', acct.expiresAt)
     return acct
   } catch (error) {
-    console.error('Failed to get X account:', error)
+    console.error('[X Account] Failed to get account:', error)
     return null
   }
 }
@@ -304,17 +306,28 @@ export async function disconnectXAccount(userId: string): Promise<void> {
  * Get a valid (non-expired) X access token for a user. Auto-refreshes if needed.
  */
 export async function getValidXAccessToken(userId: string): Promise<string | null> {
+  console.log('[X Token] Checking token for user', userId)
+
   const acct = await getXAccount(userId)
-  if (!acct?.accessToken) return null
+  if (!acct?.accessToken) {
+    console.log('[X Token] No access token found - user needs to connect X account')
+    return null
+  }
 
   if (acct.expiresAt && new Date(acct.expiresAt) > new Date()) {
+    console.log('[X Token] Token is valid')
     return acct.accessToken
   }
 
-  if (!acct.refreshToken) return null
+  console.log('[X Token] Token expired, trying to refresh...')
+  if (!acct.refreshToken) {
+    console.log('[X Token] No refresh token available')
+    return null
+  }
 
   const refreshed = await refreshXToken(acct.refreshToken)
   if (refreshed) {
+    console.log('[X Token] Refresh successful')
     const updated: XAccount = {
       ...acct,
       accessToken: refreshed.accessToken,
@@ -325,6 +338,7 @@ export async function getValidXAccessToken(userId: string): Promise<string | nul
     return refreshed.accessToken
   }
 
+  console.log('[X Token] Refresh failed')
   return null
 }
 
