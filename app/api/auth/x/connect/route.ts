@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
   const codeVerifier = generateCodeVerifier()
   const codeChallenge = generateCodeChallenge(codeVerifier)
 
+  // Proper scopes for posting threads (as required for X OAuth app + scheduler/Post to X)
   const scope = 'tweet.read tweet.write users.read offline.access'
 
   // Store verifier and state in short-lived httpOnly cookies for the callback

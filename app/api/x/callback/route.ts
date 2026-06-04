@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/scheduler?connected=1', req.url))
   } catch (e: any) {
     console.error('[X OAuth Callback] error during exchange/save (threw on failure):', e?.message || e, 'stack:', e?.stack?.substring(0, 500))
-    const errCode = (e?.message || 'unknown').replace(/[^a-z0-9_-]/gi, '_') // sanitize for redirect
+    // Improve error handling: pass specific error from exchange (e.g. token_exchange or config) to UI
+    const errCode = (e?.message || 'unknown').replace(/[^a-z0-9_:-]/gi, '_').substring(0, 100)
     return NextResponse.redirect(new URL(`/scheduler?error=${encodeURIComponent(errCode)}`, req.url))
   }
 }

@@ -262,6 +262,7 @@ export async function exchangeCodeForXTokensAndSave(
   codeVerifier: string,
   redirectUri: string
 ): Promise<void> {
+  // redirectUri must exactly match the one used in connect (local or prod as registered in X app)
   console.log('[X OAuth] exchangeCodeForXTokensAndSave START for user', userId, 'redirectUri:', redirectUri)
 
   const clientId = process.env.X_API_KEY || process.env.X_CLIENT_ID
@@ -296,8 +297,8 @@ export async function exchangeCodeForXTokensAndSave(
     if (!tokenRes.ok) {
       const err = await tokenRes.text()
       console.error('[X OAuth] Token exchange failed:', tokenRes.status, err, 'redirect_uri used:', redirectUri)
-      // Improve error: include more detail if possible, but keep simple for redirect
-      throw new Error(`token_exchange:${tokenRes.status}`)
+      // Improve error handling: include status and details for callback to report accurately
+      throw new Error(`token_exchange_failed:${tokenRes.status}:${err.substring(0,100)}`)
     }
 
     const tokenData = await tokenRes.json()
