@@ -369,10 +369,13 @@ export async function getXAccount(userId: string): Promise<XAccount | null> {
 
 export async function saveXAccount(userId: string, account: XAccount): Promise<void> {
   try {
-    console.log('[X Account] saveXAccount START for', userId)
+    console.log('[X Account] saveXAccount START for', userId, 'username:', account.username || 'unknown')
 
     const client = await clerkClient()
+    console.log('[X Account] Got Clerk client')
+
     const user = await client.users.getUser(userId)
+    console.log('[X Account] Fetched user, privateMetadata keys:', Object.keys(user.privateMetadata || {}).join(','))
 
     await client.users.updateUserMetadata(userId, {
       privateMetadata: {
@@ -380,15 +383,17 @@ export async function saveXAccount(userId: string, account: XAccount): Promise<v
         xAccount: account,
       },
     })
+    console.log('[X Account] Called updateUserMetadata with xAccount')
 
     // Force verification
     const verifyUser = await client.users.getUser(userId)
     const saved = verifyUser.privateMetadata?.xAccount as XAccount | undefined
+    console.log('[X Account] After update, re-fetched user, has saved xAccount:', !!saved, 'has accessToken:', !!saved?.accessToken)
 
     if (saved?.accessToken) {
-      console.log('[X Account] VERIFIED SUCCESS for', userId)
+      console.log('[X Account] VERIFIED SUCCESS for', userId, 'expiresAt:', saved.expiresAt)
     } else {
-      console.error('[X Account] VERIFICATION FAILED')
+      console.error('[X Account] VERIFICATION FAILED - token not saved')
       throw new Error('Token not saved to privateMetadata')
     }
   } catch (error) {
@@ -417,35 +422,40 @@ export async function disconnectXAccount(userId: string): Promise<void> {
  * Get a valid (non-expired) X access token for a user. Auto-refreshes if needed.
  */
 export async function getValidXAccessToken(userId: string): Promise<string | null> {
-  console.log('[X Token] Checking token for user', userId)
+  console.log('[X Token] getValidXAccessToken START for user', userId)
 
   const acct = await getXAccount(userId)
+  console.log('[X Token] getXAccount result for', userId, ': hasAccount=', !!acct, 'hasAccessToken=', !!acct?.accessToken, 'hasRefreshToken=', !!acct?.refreshToken, 'expiresAt=', acct?.expiresAt)
+
   if (!acct?.accessToken) {
     console.log('[X Token] No access token found - user needs to connect X account')
     return null
   }
 
   if (acct.expiresAt && new Date(acct.expiresAt) > new Date()) {
-    console.log('[X Token] Token is valid')
+    console.log('[X Token] Token is valid (not expired)')
     return acct.accessToken
   }
 
-  console.log('[X Token] Token expired, trying to refresh...')
+  console.log('[X Token] Token expired or missing expiry, trying to refresh...')
   if (!acct.refreshToken) {
     console.log('[X Token] No refresh token available')
     return null
   }
 
+  console.log('[X Token] Calling refreshXToken with refreshToken...')
   const refreshed = await refreshXToken(acct.refreshToken)
   if (refreshed) {
-    console.log('[X Token] Refresh successful')
+    console.log('[X Token] Refresh successful, newAccessToken present, newExpiresAt=', refreshed.expiresAt)
     const updated: XAccount = {
       ...acct,
       accessToken: refreshed.accessToken,
       refreshToken: refreshed.refreshToken,
       expiresAt: refreshed.expiresAt,
     }
+    console.log('[X Token] Calling saveXAccount with updated account for', userId)
     await saveXAccount(userId, updated)
+    console.log('[X Token] saveXAccount completed after refresh')
     return refreshed.accessToken
   }
 
