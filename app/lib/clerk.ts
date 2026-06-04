@@ -747,36 +747,41 @@ export async function submitShowcasePost(
     const client = await clerkClient()
     const user = await client.users.getUser(userId)
 
-    const existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+    console.log('[clerk] submitShowcasePost START | user=', userId, '| titleLen=', data.title?.length || 0)
 
-    // Extremely defensive image cleaning
-    let cleanImages: Array<{ url: string; style: string; revisedPrompt?: string }> = []
-    if (Array.isArray(data.images)) {
+    let existing: ShowcasePost[] = (user.publicMetadata?.showcasePosts as ShowcasePost[]) || []
+
+    // Aggressive capping - keep only the 3 most recent showcase posts
+    if (existing.length >= 3) {
+      existing = existing.slice(0, 2); // keep 2 oldest, we'll add new one = max 3
+    }
+
+    // Defensive image cleaning
+    let cleanImages: any[] = []
+    if (Array.isArray(data.images) && data.images.length > 0) {
       cleanImages = data.images
         .filter((img: any) => img && typeof img.url === 'string' && img.url.length > 10)
         .map((img: any) => ({
-          url: String(img.url).trim(),
+          url: String(img.url),
           style: String(img.style || 'cinematic'),
-          revisedPrompt: (img.revisedPrompt || img.revised_prompt) 
-            ? String(img.revisedPrompt || img.revised_prompt) 
-            : undefined,
+          revisedPrompt: (img.revisedPrompt || img.revised_prompt) ? String(img.revisedPrompt || img.revised_prompt) : undefined,
         }))
-        .slice(0, 4)
+        .slice(0, 2) // even more aggressive for metadata size
     }
 
     const newPost: ShowcasePost = {
       id: 'sc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
-      title: (data.title || 'Untitled Thread').trim().slice(0, 120),
-      tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 12) : [],
+      title: (data.title || 'Untitled Thread').trim().slice(0, 100),
+      tweets: Array.isArray(data.tweets) ? data.tweets.slice(0, 8) : [], // shorter tweets too
       images: cleanImages,
       likes: 0,
       createdAt: new Date().toISOString(),
       userId: userId,
     }
 
-    const updatedPosts = [newPost, ...existing].slice(0, 5)
+    const updatedPosts = [newPost, ...existing].slice(0, 3)
 
-    // Ultra-safe metadata update
+    // Ultra safe + minimal metadata update
     const safePublicMetadata = JSON.parse(JSON.stringify({
       ...user.publicMetadata,
       showcasePosts: updatedPosts,
@@ -786,15 +791,15 @@ export async function submitShowcasePost(
       publicMetadata: safePublicMetadata,
     })
 
-    console.log(`[clerk] submitShowcasePost SUCCESS | postId=${newPost.id} | images=${cleanImages.length} | user=${userId}`)
+    console.log('[clerk] submitShowcasePost SUCCESS | postId=', newPost.id, '| totalShowcase=', updatedPosts.length)
     return newPost
 
   } catch (error: any) {
-    console.error('[clerk] submitShowcasePost CRITICAL FAILURE:', {
+    console.error('[clerk] submitShowcasePost FAILED:', {
       message: error?.message,
-      clerkCode: error?.clerkError?.code,
       status: error?.status,
-      fullError: error
+      clerkCode: error?.clerkError?.code,
+      stack: error?.stack?.substring(0, 300)
     })
     return null
   }
